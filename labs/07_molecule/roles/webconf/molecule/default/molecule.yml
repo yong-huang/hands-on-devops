@@ -1,0 +1,29 @@
+---
+# =============================================================================
+# molecule.yml — 场景声明：docker driver + python:3.12-alpine 平台
+#
+# 教学点：
+#   1. role 的测试环境也是声明式：镜像、名字、inventory 全在 YAML 里；
+#   2. 选 python:3.12-alpine 是因为 ansible 模块需要 python3（实验 06 的坑①）；
+#   3. molecule.yml 改了就要 molecule destroy 清旧实例，否则状态错乱。
+# =============================================================================
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: webconf-instance
+    image: python:3.12-slim   # debian 系：自带 bash（molecule driver 默认入口）与 python3
+    pre_build_image: true        # 直接用现成镜像，不在测试里 docker build
+    privileged: false
+provisioner:
+  name: ansible
+  env:
+    # 场景在 role 内部：告诉 ansible 去 labs/07_molecule/roles 找 role
+    ANSIBLE_ROLES_PATH: "${MOLECULE_PROJECT_DIRECTORY}/../"
+  inventory:
+    host_vars:
+      webconf-instance:
+        ansible_python_interpreter: /usr/local/bin/python3
+verifier:
+  name: ansible

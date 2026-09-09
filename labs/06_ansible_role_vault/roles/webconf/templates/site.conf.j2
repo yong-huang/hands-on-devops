@@ -1,0 +1,21 @@
+# =============================================================================
+# 模板：Jinja2 渲染。{{ vault_deploy_token }} 来自 ansible-vault 加密文件——
+# 配置即代码，密钥也是代码的一部分（但密钥的"原文"永远不进 git）
+# =============================================================================
+server {
+    listen 80;
+    server_name localhost;
+
+    # 渲染期注入的部署令牌（每次发布轮换，值在 vault 里）
+    add_header X-Deploy-Token {{ vault_deploy_token }} always;
+
+    location = /healthz {
+        access_log off;
+        return 200 "site={{ webconf_site_name }} token={{ vault_deploy_token }}\n";
+    }
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+    }
+}

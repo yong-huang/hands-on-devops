@@ -1,0 +1,5 @@
+---
+# 容器里没有 systemd：nginx 可能没在跑——reload 失败就冷启动（|| nginx）
+- name: reload nginx
+  ansible.builtin.shell: "nginx -t && (nginx -s reload 2>/dev/null || nginx)"
+  changed_when: false

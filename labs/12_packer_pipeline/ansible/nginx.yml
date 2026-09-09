@@ -1,0 +1,14 @@
+---
+# =============================================================================
+# ansible/nginx.yml — 打通实验 06：复用同一结构的 role 打进镜像
+# （构建期不启动服务，故省略实验 06 的进程探活 task —— 模板/参数化完全同构）
+# =============================================================================
+- name: 把 nginx 配置工程化进镜像
+  hosts: all
+  # packer 的 ansible 插件对 docker builder 生成 docker 连接的 inventory（use_proxy=false）；
+  # 千万不要写 connection: local —— 那会让任务跑在宿主机上！
+  vars:
+    ansible_python_interpreter: /usr/local/bin/python3
+  gather_facts: true
+  roles:
+    - role: nginx-pack

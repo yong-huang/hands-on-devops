@@ -1,0 +1,18 @@
+# =============================================================================
+# 版本二 · 多阶段构建：构建层(pip/venv)与运行层(slim)分离
+#   - 构建层随便脏：编译器、包管理器、缓存都不会进最终镜像
+#   - COPY --from 只搬"运行必需品"
+# =============================================================================
+FROM python:3.12 AS build
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+COPY app/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+FROM python:3.12-slim
+COPY --from=build /opt/venv /opt/venv
+COPY app/flask_app.py /app/flask_app.py
+ENV PATH="/opt/venv/bin:$PATH"
+WORKDIR /app
+EXPOSE 8080
+CMD ["python", "flask_app.py"]

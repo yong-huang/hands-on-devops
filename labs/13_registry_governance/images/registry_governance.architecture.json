@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 13 · Registry 治理：认证、GC 与保留策略",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1060, 520]
+  },
+  "components": [
+    { "id": "anon", "type": "external", "label": "匿名请求", "sublabel": "无凭据", "pos": [50, 110], "size": [160, 56] },
+    { "id": "client", "type": "external", "label": "docker login 客户端", "sublabel": "devops / bcrypt 口令", "pos": [50, 240], "size": [200, 60] },
+    { "id": "auth", "type": "security", "label": "htpasswd 认证", "sublabel": "bcrypt · realm", "pos": [330, 240], "size": [180, 60] },
+    { "id": "api", "type": "backend", "label": "registry :5550", "sublabel": "delete.enabled=true", "pos": [560, 240], "size": [200, 64] },
+    { "id": "store", "type": "database", "label": "/var/lib/registry", "sublabel": "blob + manifest 存储", "pos": [570, 410], "size": [200, 60] },
+    { "id": "gc", "type": "cloud", "label": "garbage-collect", "sublabel": "停写 → mark → sweep", "pos": [280, 410], "size": [210, 60] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "registry:2 容器（治理版）", "wraps": ["auth", "api", "store"] }
+  ],
+  "connections": [
+    { "id": "anon-api", "from": "anon", "to": "api", "label": "401 拒绝", "variant": "security" },
+    { "id": "client-auth", "from": "client", "to": "auth", "label": "Basic 认证", "variant": "emphasis" },
+    { "id": "auth-api", "from": "auth", "to": "api", "fromSide": "right", "toSide": "left" },
+    { "id": "api-store", "from": "api", "to": "store", "label": "push / pull / DELETE", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "gc-store", "from": "gc", "to": "store", "label": "19.5MB → 14.4MB", "variant": "emphasis", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "认证", "items": ["htpasswd 只认 bcrypt", "docker login 凭据在 ~/.docker", "匿名一律 401"] },
+    { "dot": "emerald", "title": "GC 三步", "items": ["API 删 index+子 manifest", "停写 → garbage-collect", "5MB 独立层实测回收"] },
+    { "dot": "rose", "title": "保留策略", "items": ["keep=N 按语义化版本", "prod/* 豁免可脚本化", "策略即代码可 review"] }
+  ]
+}

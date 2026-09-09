@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "实验 16 · Jenkins Pipeline as Code：从种子任务到红灯日志",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      980,
+      620
+    ]
+  },
+  "participants": [
+    {
+      "id": "ops",
+      "type": "external",
+      "label": "工程师",
+      "sublabel": "REST API 触发"
+    },
+    {
+      "id": "seed",
+      "type": "backend",
+      "label": "init.groovy.d",
+      "sublabel": "启动种子脚本"
+    },
+    {
+      "id": "jenkins",
+      "type": "cloud",
+      "label": "Jenkins LTS",
+      "sublabel": ":3350 · 2 executors"
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Built-In Node",
+      "sublabel": "shell 执行"
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 310,
+      "label": "启动即配置"
+    },
+    {
+      "from": 326,
+      "to": 560,
+      "label": "一次构建的一生"
+    }
+  ],
+  "messages": [
+    {
+      "from": "seed",
+      "to": "jenkins",
+      "y": 160,
+      "label": "创建 release-lite 任务",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ops",
+      "to": "jenkins",
+      "y": 210,
+      "label": "POST /build（crumb+会话）",
+      "variant": "emphasis"
+    },
+    {
+      "from": "jenkins",
+      "to": "agent",
+      "y": 250,
+      "label": "分配 executor",
+      "variant": "default"
+    },
+    {
+      "from": "agent",
+      "to": "jenkins",
+      "y": 290,
+      "label": "stage test → build → publish",
+      "variant": "default"
+    },
+    {
+      "from": "jenkins",
+      "to": "ops",
+      "y": 318,
+      "label": "result=SUCCESS + 归档制品",
+      "variant": "return"
+    },
+    {
+      "from": "ops",
+      "to": "jenkins",
+      "y": 396,
+      "label": "触发 release-lite-fail",
+      "variant": "emphasis"
+    },
+    {
+      "from": "agent",
+      "to": "jenkins",
+      "y": 436,
+      "label": "test 阶段 exit 1",
+      "variant": "security"
+    },
+    {
+      "from": "jenkins",
+      "to": "ops",
+      "y": 474,
+      "label": "result=FAILURE + 红灯日志",
+      "variant": "return"
+    }
+  ]
+}

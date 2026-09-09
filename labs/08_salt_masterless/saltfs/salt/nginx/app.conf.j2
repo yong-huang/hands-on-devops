@@ -1,0 +1,16 @@
+# =============================================================================
+# Jinja 模板：grains（机器事实）+ pillar（业务数据）在这里汇合渲染
+# =============================================================================
+server {
+    listen 8080;
+    server_name localhost;
+
+    location = /healthz {
+        access_log off;
+        return 200 "app={{ pillar['app_name'] }} env={{ pillar['app_env'] }}\n";
+    }
+
+    location / {
+        return 200 "{{ pillar['greeting'] }} (grain env={{ grains['env'] }})\n";
+    }
+}

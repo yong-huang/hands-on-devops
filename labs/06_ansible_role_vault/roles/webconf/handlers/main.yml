@@ -1,0 +1,6 @@
+# =============================================================================
+# handler：配置真的变化时才 reload（对比 command 直接跑 = 每次都 changed）
+# =============================================================================
+- name: reload nginx
+  ansible.builtin.command: nginx -s reload
+  changed_when: false

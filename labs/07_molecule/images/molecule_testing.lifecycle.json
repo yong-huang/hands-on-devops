@@ -1,0 +1,106 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "实验 07 · Molecule 测试生命周期：create → converge → 幂等 → verify → destroy",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      980,
+      566
+    ]
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "molecule test 主序列"
+    }
+  ],
+  "states": [
+    {
+      "id": "create",
+      "type": "start",
+      "label": "Create",
+      "sublabel": "拉起测试容器",
+      "lane": "main",
+      "col": 0,
+      "step": "01"
+    },
+    {
+      "id": "converge",
+      "type": "active",
+      "label": "Converge",
+      "sublabel": "应用 role",
+      "lane": "main",
+      "col": 1,
+      "step": "02"
+    },
+    {
+      "id": "idempotence",
+      "type": "decision",
+      "label": "Idempotence",
+      "sublabel": "二跑必须 changed=0",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "gate"
+    },
+    {
+      "id": "verify",
+      "type": "decision",
+      "label": "Verify",
+      "sublabel": "assert 断言内容与 HTTP",
+      "lane": "main",
+      "col": 3,
+      "step": "04",
+      "tag": "gate"
+    },
+    {
+      "id": "destroy",
+      "type": "success",
+      "label": "Destroy",
+      "sublabel": "销毁测试容器",
+      "lane": "main",
+      "col": 4,
+      "step": "05"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "create",
+      "to": "converge"
+    },
+    {
+      "from": "converge",
+      "to": "idempotence"
+    },
+    {
+      "from": "idempotence",
+      "to": "verify"
+    },
+    {
+      "from": "verify",
+      "to": "destroy",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "两个闸门",
+      "items": [
+        "Idempotence：二次 converge 不许有 changed",
+        "Verify：assert 配置内容 + HTTP 真响应"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "红灯即反馈",
+      "items": [
+        "故意写坏端口 → verify 变红（CI 阻断）",
+        "修复 role → 测试回绿",
+        "红灯在本地/CI 被抓，不在生产"
+      ]
+    }
+  ]
+}

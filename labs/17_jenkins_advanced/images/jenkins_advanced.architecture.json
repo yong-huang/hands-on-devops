@@ -1,0 +1,183 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 17 · Jenkins 深水区：并行 + 凭据 + 共享库",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "components": [
+    {
+      "id": "seed",
+      "type": "external",
+      "label": "init.groovy.d 种子",
+      "sublabel": "管理员/token/任务/库",
+      "pos": [
+        50,
+        300
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "cred",
+      "type": "security",
+      "label": "credentials 存储",
+      "sublabel": "registry-pass · 打码",
+      "pos": [
+        330,
+        420
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "job",
+      "type": "backend",
+      "label": "deep-release",
+      "sublabel": "declarative pipeline",
+      "pos": [
+        330,
+        300
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "par",
+      "type": "backend",
+      "label": "parallel 阶段",
+      "sublabel": "build ∥ scan",
+      "pos": [
+        600,
+        90
+      ],
+      "size": [
+        180,
+        56
+      ],
+      "tag": "4 executors"
+    },
+    {
+      "id": "lib",
+      "type": "cloud",
+      "label": "devopslib 共享库",
+      "sublabel": "file:// git 仓 vars/",
+      "pos": [
+        600,
+        230
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "leak",
+      "type": "external",
+      "label": "硬编码反面教材",
+      "sublabel": "明文进日志",
+      "pos": [
+        850,
+        300
+      ],
+      "size": [
+        180,
+        56
+      ]
+    },
+    {
+      "id": "log",
+      "type": "database",
+      "label": "构建日志",
+      "sublabel": "凭据打码 vs 明文",
+      "pos": [
+        620,
+        400
+      ],
+      "size": [
+        180,
+        56
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "seed-all",
+      "from": "seed",
+      "to": "job",
+      "label": "启动即创建",
+      "variant": "emphasis",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "seed-cred",
+      "from": "seed",
+      "to": "cred",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "job-par",
+      "from": "job",
+      "to": "par",
+      "label": "两分支并发",
+      "variant": "emphasis"
+    },
+    {
+      "id": "job-lib",
+      "from": "job",
+      "to": "lib",
+      "variant": "dashed"
+    },
+    {
+      "id": "cred-log",
+      "from": "cred",
+      "to": "log",
+      "label": "掩码 ***",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "leak-log",
+      "from": "leak",
+      "to": "log",
+      "label": "明文（反面）",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "right"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三件套",
+      "items": [
+        "parallel：耗时≈单支而非两支之和",
+        "credentials：日志自动打码",
+        "shared library：两个 Jenkinsfile 复用"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "反面教材",
+      "items": [
+        "明文硬编码 → 日志可 grep 到密码",
+        "withCredentials + *** 才是正解"
+      ]
+    }
+  ]
+}

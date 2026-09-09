@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 02 · 模块化：一处定义、for_each 两处实例化",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      600
+    ]
+  },
+  "components": [
+    {
+      "id": "config",
+      "type": "external",
+      "label": "根模块 configs/",
+      "sublabel": "for_each = {blue, green}",
+      "pos": [
+        24,
+        250
+      ],
+      "size": [
+        170,
+        64
+      ]
+    },
+    {
+      "id": "tflint",
+      "type": "security",
+      "label": "tflint",
+      "sublabel": "静态规则检查",
+      "pos": [
+        30,
+        440
+      ],
+      "size": [
+        160,
+        56
+      ],
+      "tag": "零告警"
+    },
+    {
+      "id": "blueweb",
+      "type": "backend",
+      "label": "blue-web",
+      "sublabel": "nginx :28081",
+      "pos": [
+        680,
+        110
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "bluevol",
+      "type": "database",
+      "label": "blue-content",
+      "sublabel": "卷 · blue 首页",
+      "pos": [
+        680,
+        230
+      ],
+      "size": [
+        160,
+        56
+      ]
+    },
+    {
+      "id": "greenweb",
+      "type": "backend",
+      "label": "green-web",
+      "sublabel": "nginx :28082",
+      "pos": [
+        680,
+        390
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "greenvol",
+      "type": "database",
+      "label": "green-content",
+      "sublabel": "卷 · green 首页",
+      "pos": [
+        680,
+        490
+      ],
+      "size": [
+        160,
+        56
+      ]
+    },
+    {
+      "id": "modsrc",
+      "type": "cloud",
+      "label": "modules/web-service",
+      "sublabel": "镜像+卷+健康检查",
+      "pos": [
+        280,
+        330
+      ],
+      "size": [
+        190,
+        60
+      ],
+      "tag": "唯一来源"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "module.web[\"blue\"] : 实例 blue",
+      "wraps": [
+        "blueweb",
+        "bluevol"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "module.web[\"green\"] : 实例 green",
+      "wraps": [
+        "greenweb",
+        "greenvol"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "cfg-src",
+      "from": "config",
+      "to": "modsrc",
+      "label": "source 复用",
+      "variant": "emphasis"
+    },
+    {
+      "id": "inst-blue",
+      "from": "modsrc",
+      "to": "blueweb",
+      "label": "each.key = blue",
+      "variant": "dashed"
+    },
+    {
+      "id": "inst-green",
+      "from": "modsrc",
+      "to": "greenweb",
+      "label": "each.key = green",
+      "variant": "dashed"
+    },
+    {
+      "id": "blue-mount",
+      "from": "blueweb",
+      "to": "bluevol",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "green-mount",
+      "from": "greenweb",
+      "to": "greenvol",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "lint-gate",
+      "from": "tflint",
+      "to": "config",
+      "label": "apply 前拦截",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "复利",
+      "items": [
+        "改 modules/web-service 一处",
+        "blue/green 两实例同步更新",
+        "新环境 = 实例表加一个键"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "for_each > count",
+      "items": [
+        "按键增删，不牵连其他实例",
+        "count 按序号，删中间引发重建"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "质量关",
+      "items": [
+        "tflint 查 validate 查不了的坑",
+        "terraform graph 可视化依赖图"
+      ]
+    }
+  ]
+}

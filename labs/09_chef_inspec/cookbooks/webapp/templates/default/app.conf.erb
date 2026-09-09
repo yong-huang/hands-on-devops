@@ -1,0 +1,15 @@
+# Chef 模板（ERB）：@variables 传入的实例变量在这里渲染
+server {
+    server_tokens off;
+    listen 8080;
+    server_name localhost;
+
+    location = /healthz {
+        access_log off;
+        return 200 "app=<%= @app_name %> env=<%= @app_env %>\n";
+    }
+
+    location / {
+        return 200 "hello from <%= @app_name %>\n";
+    }
+}

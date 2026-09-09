@@ -1,0 +1,19 @@
+---
+# =============================================================================
+# roles/webconf/tasks — 被测对象：debian 容器里装 nginx + 部署站点配置
+# =============================================================================
+- name: 安装 nginx（apt 模块原生幂等：已装则 ok 不 changed）
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+
+- name: 渲染站点配置
+  ansible.builtin.template:
+    src: app.conf.j2
+    dest: /etc/nginx/conf.d/app.conf
+  notify: reload nginx
+
+- name: 语法校验（nginx -t）
+  ansible.builtin.command: nginx -t
+  changed_when: false

@@ -1,0 +1,168 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 11 · 镜像瘦身与多架构：同一应用的四种出厂形态",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      540
+    ]
+  },
+  "components": [
+    {
+      "id": "src",
+      "type": "external",
+      "label": "app/ 业务代码",
+      "sublabel": "app.py + flask_app.py",
+      "pos": [
+        50,
+        230
+      ],
+      "size": [
+        190,
+        64
+      ]
+    },
+    {
+      "id": "full",
+      "type": "backend",
+      "label": "Dockerfile.full",
+      "sublabel": "单阶段 · 386MB",
+      "pos": [
+        340,
+        90
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "multi",
+      "type": "backend",
+      "label": "Dockerfile.multistage",
+      "sublabel": "venv 搬运 · 50MB",
+      "pos": [
+        340,
+        230
+      ],
+      "size": [
+        200,
+        60
+      ],
+      "tag": "推荐默认"
+    },
+    {
+      "id": "less",
+      "type": "backend",
+      "label": "Dockerfile.distroless",
+      "sublabel": "无 shell · 18MB",
+      "pos": [
+        340,
+        370
+      ],
+      "size": [
+        210,
+        60
+      ],
+      "tag": "最小攻击面"
+    },
+    {
+      "id": "registry",
+      "type": "cloud",
+      "label": "私有 registry :5500",
+      "sublabel": "buildx --push · slim/multiarch:1.0.0",
+      "pos": [
+        720,
+        150
+      ],
+      "size": [
+        220,
+        60
+      ]
+    },
+    {
+      "id": "node",
+      "type": "external",
+      "label": "任意机器 docker run",
+      "sublabel": "自动匹配 amd64/arm64",
+      "pos": [
+        720,
+        330
+      ],
+      "size": [
+        230,
+        60
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "s-full",
+      "from": "src",
+      "to": "full"
+    },
+    {
+      "id": "s-multi",
+      "from": "src",
+      "to": "multi"
+    },
+    {
+      "id": "s-less",
+      "from": "src",
+      "to": "less"
+    },
+    {
+      "id": "multi-reg",
+      "from": "multi",
+      "to": "registry",
+      "variant": "emphasis"
+    },
+    {
+      "id": "reg-node",
+      "from": "registry",
+      "to": "node",
+      "label": "manifest list 分发",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "less-reg",
+      "from": "less",
+      "to": "registry",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "实测数据",
+      "items": [
+        "full 386MB → multistage 50MB",
+        "distroless 18MB（-95%）",
+        "三者 HTTP 冒烟全部 200"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "多架构",
+      "items": [
+        "buildx --platform amd64,arm64",
+        "manifest list 同 tag 双架构",
+        "推靶场 :5500 私有仓"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "dive 分析",
+      "items": [
+        "CI 模式给效率分",
+        "逐层看浪费在哪",
+        "瘦身有证据不靠感觉"
+      ]
+    }
+  ]
+}

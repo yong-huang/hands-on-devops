@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 09 · Chef + InSpec：配置收敛与合规扫描的双闭环",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      540
+    ]
+  },
+  "components": [
+    {
+      "id": "cookbook",
+      "type": "cloud",
+      "label": "cookbook: webapp",
+      "sublabel": "recipe + ERB 模板",
+      "pos": [
+        50,
+        120
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "chef",
+      "type": "backend",
+      "label": "chef-client",
+      "sublabel": "--local-mode 无 server",
+      "pos": [
+        90,
+        300
+      ],
+      "size": [
+        200,
+        64
+      ]
+    },
+    {
+      "id": "nginx",
+      "type": "backend",
+      "label": "nginx",
+      "sublabel": "package/service 资源",
+      "pos": [
+        470,
+        110
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "conf",
+      "type": "database",
+      "label": "app.conf",
+      "sublabel": "模板渲染产物",
+      "pos": [
+        470,
+        250
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "inspec",
+      "type": "security",
+      "label": "InSpec profile",
+      "sublabel": "5 条 control 合规基线",
+      "pos": [
+        770,
+        180
+      ],
+      "size": [
+        200,
+        64
+      ]
+    },
+    {
+      "id": "report",
+      "type": "external",
+      "label": "合规报告",
+      "sublabel": "4红→整改→5绿",
+      "pos": [
+        790,
+        390
+      ],
+      "size": [
+        190,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "节点容器（debian + chef deb，arm64）",
+      "wraps": [
+        "nginx",
+        "conf"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "cb-chef",
+      "from": "cookbook",
+      "to": "chef",
+      "label": "compile + converge",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "chef-nginx",
+      "from": "chef",
+      "to": "nginx",
+      "label": "resource 收敛",
+      "variant": "emphasis"
+    },
+    {
+      "id": "chef-conf",
+      "from": "chef",
+      "to": "conf",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "nginx-inspec",
+      "from": "nginx",
+      "to": "inspec",
+      "label": "扫描目标",
+      "variant": "dashed"
+    },
+    {
+      "id": "conf-inspec",
+      "from": "conf",
+      "to": "inspec",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "left"
+    },
+    {
+      "id": "inspec-report",
+      "from": "inspec",
+      "to": "report",
+      "label": "exit code 100=有失败",
+      "variant": "security",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "双闭环",
+      "items": [
+        "收敛闭环：recipe 声明期望态",
+        "合规闭环：control 声明验收标准",
+        "InSpec 退出码就是 CI 门禁"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Ruby 哲学",
+      "items": [
+        "资源即 Ruby 对象，可编程性最强",
+        "not_if/only_if 表达幂等条件",
+        "notifies 对应 Ansible handler"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 08 · Salt masterless：节点自治的声明式收敛",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1120,
+      520
+    ]
+  },
+  "components": [
+    {
+      "id": "sls",
+      "type": "cloud",
+      "label": "state 树 /srv/salt",
+      "sublabel": "nginx.sls · 声明期望态",
+      "pos": [
+        50,
+        120
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "pillar",
+      "type": "database",
+      "label": "pillar /srv/pillar",
+      "sublabel": "按 grain 分叉的业务数据",
+      "pos": [
+        50,
+        250
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "grains",
+      "type": "security",
+      "label": "grains",
+      "sublabel": "机器事实 · env=dev|staging",
+      "pos": [
+        60,
+        390
+      ],
+      "size": [
+        190,
+        56
+      ]
+    },
+    {
+      "id": "call",
+      "type": "backend",
+      "label": "salt-call --local",
+      "sublabel": "无 master · 节点自治",
+      "pos": [
+        430,
+        230
+      ],
+      "size": [
+        210,
+        64
+      ],
+      "tag": "对比 Ansible push"
+    },
+    {
+      "id": "nginx",
+      "type": "backend",
+      "label": "本机 nginx",
+      "sublabel": "pkg/service 状态收敛",
+      "pos": [
+        750,
+        130
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "conf",
+      "type": "database",
+      "label": "app.conf",
+      "sublabel": "Jinja 渲染产物",
+      "pos": [
+        680,
+        270
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "curl",
+      "type": "external",
+      "label": "curl 验证",
+      "sublabel": "healthz 内容随 env 切换",
+      "pos": [
+        920,
+        400
+      ],
+      "size": [
+        180,
+        56
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "节点容器（自己管理自己）",
+      "wraps": [
+        "call",
+        "nginx",
+        "conf"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "sls-call",
+      "from": "sls",
+      "to": "call",
+      "label": "states 读取",
+      "variant": "emphasis"
+    },
+    {
+      "id": "pillar-call",
+      "from": "pillar",
+      "to": "call",
+      "variant": "dashed"
+    },
+    {
+      "id": "grains-call",
+      "from": "grains",
+      "to": "call",
+      "label": "事实查询",
+      "variant": "dashed"
+    },
+    {
+      "id": "call-nginx",
+      "from": "call",
+      "to": "nginx",
+      "label": "收敛本机服务",
+      "variant": "emphasis"
+    },
+    {
+      "id": "call-conf",
+      "from": "call",
+      "to": "conf"
+    },
+    {
+      "id": "nginx-curl",
+      "from": "curl",
+      "to": "nginx",
+      "label": "healthz 200",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "masterless 价值",
+      "items": [
+        "无 master 单点 / 无消息总线",
+        "一条命令本地收敛",
+        "容器内也能跑（本实验形态）"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "数据分层",
+      "items": [
+        "states=要什么",
+        "pillar=业务数据",
+        "grains=机器事实"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "幂等要点",
+      "items": [
+        "pkg/file 状态原生幂等",
+        "cmd 用 onchanges 触发",
+        "二跑 changed=0"
+      ]
+    }
+  ]
+}

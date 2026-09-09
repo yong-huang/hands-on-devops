@@ -1,0 +1,14 @@
+# EPP 模板：Puppet 的模板引擎（类 Jinja2/ERB），参数化注入
+server {
+    listen 8080;
+    server_name localhost;
+
+    location = /healthz {
+        access_log off;
+        return 200 "app=<%= $app_name %> env=<%= $app_env %>\n";
+    }
+
+    location / {
+        return 200 "hello from <%= $app_name %>\n";
+    }
+}

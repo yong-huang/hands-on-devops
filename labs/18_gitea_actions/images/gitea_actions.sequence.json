@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "实验 18 · Gitea + Actions：git push 到全绿全自动",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [980, 620]
+  },
+  "participants": [
+    { "id": "dev", "type": "external", "label": "开发者", "sublabel": "git push" },
+    { "id": "gitea", "type": "cloud", "label": "Gitea :3352", "sublabel": "Actions 开关开启" },
+    { "id": "runner", "type": "backend", "label": "act_runner", "sublabel": "注册到 Gitea · host 模式" },
+    { "id": "job", "type": "backend", "label": "作业环境", "sublabel": "python:3.12-slim" }
+  ],
+  "segments": [
+    { "from": 140, "to": 340, "label": "注册与触发" },
+    { "from": 356, "to": 560, "label": "流水线执行" }
+  ],
+  "messages": [
+    { "from": "runner", "to": "gitea", "y": 160, "label": "registration token 注册", "variant": "emphasis" },
+    { "from": "dev", "to": "gitea", "y": 208, "label": "git push（含 workflow yml）", "variant": "emphasis" },
+    { "from": "gitea", "to": "runner", "y": 248, "label": "派发 job（匹配 runs-on: lab）", "variant": "emphasis" },
+    { "from": "runner", "to": "gitea", "y": 288, "label": "拉取 workflow 定义", "variant": "dashed" },
+    { "from": "runner", "to": "job", "y": 328, "label": "步骤执行：test → build", "variant": "default" },
+    { "from": "job", "to": "runner", "y": 368, "label": "每步状态回传", "variant": "return" },
+    { "from": "runner", "to": "gitea", "y": 408, "label": "job 结果上报", "variant": "return" },
+    { "from": "gitea", "to": "dev", "y": 448, "label": "commit 状态 ✓（PR 页可见）", "variant": "security" }
+  ]
+}

@@ -1,0 +1,7 @@
+---
+# converge.yml — "应用 role"的动作，molecule 在 converge/idempotence 两步执行它
+- name: Converge
+  hosts: all
+  gather_facts: true
+  roles:
+    - role: webconf

@@ -1,0 +1,137 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 12 · Packer 镜像流水线：IaC 思想造镜像，一条命令出厂即推送",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      560
+    ]
+  },
+  "nodes": [
+    {
+      "id": "hcl",
+      "type": "external",
+      "label": "nginx.pkr.hcl",
+      "sublabel": "构建代码可 review",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "builder",
+      "type": "backend",
+      "label": "docker builder",
+      "sublabel": "python:3.12-slim",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "ansible",
+      "type": "security",
+      "label": "ansible 配置",
+      "sublabel": "复用 role 结构",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "tag",
+      "type": "messagebus",
+      "label": "docker-tag",
+      "sublabel": "1.0.0 + latest",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "push",
+      "type": "backend",
+      "label": "docker-push",
+      "sublabel": "推私有仓",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "registry",
+      "type": "cloud",
+      "label": "registry :5500",
+      "sublabel": "packer-nginx",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "IaC 思想",
+      "items": [
+        "模板进 git，构建可重复",
+        "provisioner 复用 Ansible role",
+        "post-processor 链式出厂",
+        "出厂即 pull + 冒烟验证"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "踩坑记录",
+      "items": [
+        "插件走 hashicorp CDN 可装",
+        "connection:local 会打到宿主机",
+        "平级 post-processor 不接 tag 产物"
+      ]
+    }
+  ],
+  "stages": [
+    {
+      "label": "构建代码"
+    },
+    {
+      "label": "临时容器"
+    },
+    {
+      "label": "配置"
+    },
+    {
+      "label": "打标"
+    },
+    {
+      "label": "出厂"
+    }
+  ],
+  "flows": [
+    {
+      "from": "hcl",
+      "to": "builder",
+      "route": "straight",
+      "label": "packer build",
+      "variant": "emphasis"
+    },
+    {
+      "from": "builder",
+      "to": "ansible",
+      "route": "straight",
+      "label": "use_proxy=false",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ansible",
+      "to": "tag",
+      "route": "straight",
+      "label": "commit=true"
+    },
+    {
+      "from": "tag",
+      "to": "push",
+      "route": "straight",
+      "label": "顺序链"
+    },
+    {
+      "from": "push",
+      "to": "registry",
+      "route": "straight",
+      "variant": "emphasis",
+      "label": "push 到私有仓",
+      "labelDy": 30
+    }
+  ]
+}

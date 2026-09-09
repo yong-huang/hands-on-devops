@@ -1,0 +1,50 @@
+# ---- Terraform（各实验 configs/ 内运行时产生）----
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*.tfplan
+plan.json
+rbac/
+
+# ---- 实验运行时生成的密钥/敏感物（绝不入库）----
+labs/**/tmp/
+*.agekey
+age-key.txt
+cosign.key
+cosign-password.txt
+*.pem
+vault-pass.txt
+kubeconfig-*
+
+# ---- Ansible / Molecule ----
+labs/**/.molecule/
+*.retry
+
+# ---- Chef / InSpec / Puppet ----
+.chef/
+berksfile.lock
+Puppetfile.lock
+
+# ---- 备份产物（实验 29）----
+backups/
+*.tar.gz
+
+# ---- CI 实验的本地数据卷 ----
+labs/**/data/
+
+# ---- Python ----
+__pycache__/
+*.pyc
+.venv/
+
+# ---- Node / 工具噪声 ----
+node_modules/
+
+# ---- OS ----
+.DS_Store

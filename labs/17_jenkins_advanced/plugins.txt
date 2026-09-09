@@ -1,0 +1,4 @@
+workflow-aggregator
+pipeline-stage-view
+git
+credentials

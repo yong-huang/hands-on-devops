@@ -1,0 +1,240 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 01 · Terraform Docker Provider：期望态收敛回路",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1060,
+      540
+    ],
+    "views": [
+      {
+        "id": "main-loop",
+        "label": "收敛主回路",
+        "focus": [
+          "config",
+          "core",
+          "state",
+          "app"
+        ],
+        "note": "配置定义期望态，state 记账，plan 算 diff，apply 收敛。"
+      },
+      {
+        "id": "drift",
+        "label": "漂移检测",
+        "focus": [
+          "app",
+          "core"
+        ],
+        "note": "daemon 里的实际对象被手动改动后，refresh 让 plan 暴露差值。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "config",
+      "type": "external",
+      "label": ".tf 配置",
+      "sublabel": "main.tf · 期望态",
+      "pos": [
+        50,
+        240
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "Terraform Core",
+      "sublabel": "plan = 期望态 vs 实际态",
+      "pos": [
+        290,
+        240
+      ],
+      "size": [
+        170,
+        64
+      ],
+      "tag": "幂等"
+    },
+    {
+      "id": "state",
+      "type": "database",
+      "label": "terraform.tfstate",
+      "sublabel": "期望态底账",
+      "pos": [
+        300,
+        400
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "net",
+      "type": "cloud",
+      "label": "tf01-net",
+      "sublabel": "172.31.100.0/24",
+      "pos": [
+        660,
+        100
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "tf01-nginx",
+      "sublabel": "80 → 28080",
+      "pos": [
+        650,
+        240
+      ],
+      "size": [
+        150,
+        64
+      ],
+      "tag": "healthy"
+    },
+    {
+      "id": "vol",
+      "type": "database",
+      "label": "tf01-content",
+      "sublabel": "index.html 卷",
+      "pos": [
+        660,
+        396
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "seed",
+      "type": "external",
+      "label": "tf01-seed",
+      "sublabel": "写首页后退出",
+      "pos": [
+        840,
+        396
+      ],
+      "size": [
+        130,
+        56
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Docker daemon（实际态）",
+      "wraps": [
+        "net",
+        "app",
+        "vol",
+        "seed"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "config-to-core",
+      "from": "config",
+      "to": "core",
+      "label": "期望态",
+      "variant": "emphasis"
+    },
+    {
+      "id": "core-to-state",
+      "from": "core",
+      "to": "state",
+      "label": "读写底账",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 48
+    },
+    {
+      "id": "core-to-app",
+      "from": "core",
+      "to": "app",
+      "label": "apply 收敛",
+      "variant": "emphasis"
+    },
+    {
+      "id": "app-to-net",
+      "from": "app",
+      "to": "net",
+      "label": "接入",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "app-to-vol",
+      "from": "app",
+      "to": "vol",
+      "label": "只读挂载",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "seed-to-vol",
+      "from": "seed",
+      "to": "vol",
+      "fromSide": "left",
+      "toSide": "right"
+    },
+    {
+      "id": "refresh",
+      "from": "vol",
+      "to": "core",
+      "label": "refresh 实际态 → 检出漂移",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "bottom",
+      "labelAt": [
+        560,
+        500
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "主线",
+      "items": [
+        ".tf 描述期望态，state 记账",
+        "plan = 期望态 vs 实际态 的 diff",
+        "apply 把实际状态推向期望态"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "自愈",
+      "items": [
+        "手动 docker stop = 注入漂移",
+        "plan -detailed-exitcode=2 检出",
+        "apply 回正，服务自愈"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "已踩坑",
+      "items": [
+        "容器 image 要引用 image_id",
+        "ipam 的 subnet+gateway 要写全",
+        "provider 版本必须对上 daemon"
+      ]
+    }
+  ]
+}

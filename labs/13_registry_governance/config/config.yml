@@ -1,0 +1,19 @@
+# =============================================================================
+# config/config.yml — registry 生产化配置：认证 + 删除接口 + 存储路径
+# =============================================================================
+version: 0.1
+log:
+  level: warn
+http:
+  addr: :5000            # 坑：配置文件一旦提供，必须显式声明监听地址，
+  headers:               # 否则只听容器内 127.0.0.1 → 端口映射 Connection reset
+    X-Content-Type-Options: [nosniff]
+storage:
+  filesystem:
+    rootdirectory: /var/lib/registry
+  delete:
+    enabled: true          # GC 与 API 删除的前提；不开 = 仓库只进不出
+auth:
+  htpasswd:
+    realm: basic-realm
+    path: /auth/htpasswd

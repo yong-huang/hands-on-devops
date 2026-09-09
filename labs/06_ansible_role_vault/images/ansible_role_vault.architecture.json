@@ -1,0 +1,204 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 06 · Ansible 深水区：动态清单 + Role + Vault 的 push 模型",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      540
+    ]
+  },
+  "components": [
+    {
+      "id": "inv",
+      "type": "database",
+      "label": "动态清单",
+      "sublabel": "docker_containers 插件",
+      "pos": [
+        50,
+        220
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "control",
+      "type": "backend",
+      "label": "Ansible 控制机",
+      "sublabel": "ansible-playbook",
+      "pos": [
+        320,
+        220
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "vault",
+      "type": "security",
+      "label": "ansible-vault",
+      "sublabel": "加密变量 vault.yml",
+      "pos": [
+        300,
+        420
+      ],
+      "size": [
+        190,
+        60
+      ],
+      "tag": "密文可入 git"
+    },
+    {
+      "id": "role",
+      "type": "cloud",
+      "label": "role: webconf",
+      "sublabel": "template + handler",
+      "pos": [
+        590,
+        220
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "nginx",
+      "type": "backend",
+      "label": "lab-nginx",
+      "sublabel": "alpine 容器",
+      "pos": [
+        850,
+        130
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "conf",
+      "type": "database",
+      "label": "site.conf",
+      "sublabel": "渲染产物 · token 注入",
+      "pos": [
+        850,
+        270
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "drift",
+      "type": "external",
+      "label": "手工改动",
+      "sublabel": "配置漂移",
+      "pos": [
+        850,
+        420
+      ],
+      "size": [
+        170,
+        56
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "靶场容器（docker exec 连接，无需 ssh/agent）",
+      "wraps": [
+        "nginx",
+        "conf"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "inv-control",
+      "from": "inv",
+      "to": "control",
+      "label": "发现 lab-nginx",
+      "variant": "emphasis"
+    },
+    {
+      "id": "control-role",
+      "from": "control",
+      "to": "role",
+      "label": "playbook 调用",
+      "variant": "emphasis"
+    },
+    {
+      "id": "vault-role",
+      "from": "vault",
+      "to": "role",
+      "label": "渲染期注入 token",
+      "variant": "dashed"
+    },
+    {
+      "id": "role-nginx",
+      "from": "role",
+      "to": "nginx",
+      "label": "raw 装python3 → 部署",
+      "variant": "emphasis",
+      "labelAt": [
+        810,
+        204
+      ]
+    },
+    {
+      "id": "nginx-conf",
+      "from": "nginx",
+      "to": "conf",
+      "label": "template 写入",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "drift-conf",
+      "from": "drift",
+      "to": "conf",
+      "label": "重跑即自愈",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "幂等三件套",
+      "items": [
+        "template 内容级比较",
+        "handler 只在真变化时 reload",
+        "changed_when 收敛 command 语义"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "push 模型",
+      "items": [
+        "控制机主动推配置",
+        "目标无需常驻 agent",
+        "连接走 docker exec"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "踩坑记录",
+      "items": [
+        "alpine 无 python3：raw 先装",
+        "插件文件名必须 *.docker.yml",
+        "第三方清单插件要 enable_plugins"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,172 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 15 · 手工发布流水线：make release 一条命令，产物全链路可追溯",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      500
+    ]
+  },
+  "stages": [
+    {
+      "label": "源码"
+    },
+    {
+      "label": "构建"
+    },
+    {
+      "label": "证明"
+    },
+    {
+      "label": "分发"
+    },
+    {
+      "label": "上线"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "src",
+      "type": "external",
+      "label": "app/",
+      "sublabel": "业务代码",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "build",
+      "type": "backend",
+      "label": "distroless 构建",
+      "sublabel": "实验 11",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "sbom",
+      "type": "database",
+      "label": "syft SBOM",
+      "sublabel": "35 包清单",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "cosign",
+      "type": "security",
+      "label": "cosign 签名",
+      "sublabel": "绑定 digest",
+      "stage": 2,
+      "row": 1
+    },
+    {
+      "id": "push",
+      "type": "backend",
+      "label": "推 registry :5500",
+      "sublabel": "镜像 + .sig",
+      "stage": 3,
+      "row": 0
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "部署前验签门",
+      "sublabel": "非零即阻断",
+      "stage": 3,
+      "row": 1
+    },
+    {
+      "id": "deploy",
+      "type": "backend",
+      "label": "部署靶场 :28099",
+      "sublabel": "healthz 冒烟",
+      "stage": 4,
+      "row": 0
+    },
+    {
+      "id": "trace",
+      "type": "database",
+      "label": "追溯清单",
+      "sublabel": "digest+SBOM+签名+时间",
+      "stage": 4,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "src",
+      "to": "build",
+      "label": "docker build",
+      "route": "straight"
+    },
+    {
+      "from": "build",
+      "to": "sbom",
+      "label": "syft 扫描",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "build",
+      "to": "cosign",
+      "label": "digest 引用",
+      "variant": "dashed",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "sbom",
+      "to": "push",
+      "route": "straight",
+      "label": "归档"
+    },
+    {
+      "from": "cosign",
+      "to": "push",
+      "label": "签名 tag 入仓",
+      "variant": "dashed",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "push",
+      "to": "gate",
+      "label": "验证对象",
+      "variant": "dashed",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "gate",
+      "to": "deploy",
+      "label": "放行部署",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "deploy",
+      "to": "trace",
+      "label": "发布留痕",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "一条命令",
+      "items": [
+        "make release VERSION=1.2.3",
+        "构建→SBOM→签名→推送→门→部署",
+        "每步失败即整体失败"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "可追溯",
+      "items": [
+        "镜像 digest 唯一标识",
+        "SBOM 校验和绑定",
+        "签名 tag + 部署时间留痕"
+      ]
+    }
+  ]
+}

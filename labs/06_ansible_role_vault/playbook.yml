@@ -1,0 +1,12 @@
+---
+# =============================================================================
+# playbook.yml — role 的调用入口
+#
+# 结构：web 组（动态清单发现 lab-nginx）→ 应用 webconf role
+# 连接方式由清单的 connection_type: docker-cli 决定（docker exec）
+# =============================================================================
+- name: 配置靶场 nginx（role + vault + 动态清单）
+  hosts: web
+  gather_facts: false          # 容器内跑 facts 慢且少用——关掉提速（教学：按需开）
+  roles:
+    - role: webconf

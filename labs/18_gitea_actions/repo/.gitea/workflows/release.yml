@@ -1,0 +1,24 @@
+# =============================================================================
+# Gitea Actions workflow：GitHub Actions 兼容语法，push 即触发
+# 注意：不用 uses:（外部 action 需访问 gitea.com/github.com）；纯 run 步骤零外网依赖
+# =============================================================================
+name: release
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test-and-build:
+    runs-on: lab
+    steps:
+      - name: 环境
+        run: |
+          python -V
+          echo "runner=$GITHUB_ACTOR repo=$GITHUB_REPOSITORY"
+      - name: 单测
+        run: |
+          python -c "assert 1 + 1 == 2; print('tests pass')"
+      - name: 构建产物
+        run: |
+          echo "app built at $(date +%T)" > app.txt
+          cat app.txt

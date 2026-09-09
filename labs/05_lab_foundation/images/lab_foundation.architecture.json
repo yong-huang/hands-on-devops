@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 05 · 靶场环境：make lab-up 一键拉起整个系列的地基",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      620
+    ]
+  },
+  "components": [
+    {
+      "id": "tf",
+      "type": "external",
+      "label": "Terraform（本实验）",
+      "sublabel": "configs/*.tf 期望态",
+      "pos": [
+        60,
+        250
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "nginx",
+      "type": "backend",
+      "label": "lab-nginx",
+      "sublabel": "目标应用 :28080",
+      "pos": [
+        480,
+        90
+      ],
+      "size": [
+        180,
+        60
+      ]
+    },
+    {
+      "id": "registry",
+      "type": "cloud",
+      "label": "lab-registry",
+      "sublabel": "私有镜像仓 :5500",
+      "pos": [
+        470,
+        210
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "minio",
+      "type": "database",
+      "label": "lab-minio",
+      "sublabel": "S3 :9000 / 控制台 :9001",
+      "pos": [
+        460,
+        330
+      ],
+      "size": [
+        200,
+        60
+      ]
+    },
+    {
+      "id": "gitea",
+      "type": "backend",
+      "label": "lab-gitea",
+      "sublabel": "Git 服务 :3300",
+      "pos": [
+        470,
+        450
+      ],
+      "size": [
+        190,
+        60
+      ]
+    },
+    {
+      "id": "art",
+      "type": "external",
+      "label": "实验 12-15",
+      "sublabel": "镜像与制品线",
+      "pos": [
+        830,
+        120
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "cicd",
+      "type": "external",
+      "label": "实验 18-21",
+      "sublabel": "CI / GitOps",
+      "pos": [
+        830,
+        440
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "obs",
+      "type": "external",
+      "label": "实验 26-29",
+      "sublabel": "可观测 / 备份",
+      "pos": [
+        830,
+        290
+      ],
+      "size": [
+        170,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "devops-lab 网络（容器名即 DNS）· 数据全在命名卷",
+      "wraps": [
+        "nginx",
+        "registry",
+        "minio",
+        "gitea"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "tf-nginx",
+      "from": "tf",
+      "to": "nginx",
+      "label": "apply 收敛",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tf-registry",
+      "from": "tf",
+      "to": "registry",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tf-minio",
+      "from": "tf",
+      "to": "minio",
+      "variant": "emphasis"
+    },
+    {
+      "id": "tf-gitea",
+      "from": "tf",
+      "to": "gitea",
+      "variant": "emphasis"
+    },
+    {
+      "id": "art-registry",
+      "from": "art",
+      "to": "registry",
+      "label": "推/拉镜像",
+      "variant": "dashed"
+    },
+    {
+      "id": "cicd-gitea",
+      "from": "cicd",
+      "to": "gitea",
+      "label": "push / clone",
+      "variant": "dashed"
+    },
+    {
+      "id": "obs-minio",
+      "from": "obs",
+      "to": "minio",
+      "label": "备份 / 恢复",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "一键化",
+      "items": [
+        "make lab-up 幂等拉起",
+        "endpoints 全部 output",
+        "健康检查就绪才返回"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "数据卷",
+      "items": [
+        "registry/minio/gitea 数据进命名卷",
+        "destroy 全清零残留",
+        "备份-恢复在实验 29 演练"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "复用约定",
+      "items": [
+        "registry 5500 / minio 9000",
+        "gitea 3300（管理员 devops）",
+        "后续实验直接消费，不再自建"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 10 · Puppet：agent 拉模型（上）与 puppet apply 实测路径（下）",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 560]
+  },
+  "components": [
+    { "id": "manifest", "type": "cloud", "label": "manifests + modules", "sublabel": "site.pp · class webapp · EPP", "pos": [60, 240], "size": [210, 64] },
+    { "id": "server", "type": "cloud", "label": "Puppet Server", "sublabel": "按节点编译 catalog", "pos": [430, 100], "size": [210, 60], "tag": "标准形态" },
+    { "id": "apply", "type": "backend", "label": "puppet apply", "sublabel": "本地编译并收敛", "pos": [430, 300], "size": [200, 60], "tag": "本实验实测" },
+    { "id": "agent", "type": "backend", "label": "puppet-agent", "sublabel": "30min 定时拉取", "pos": [720, 110], "size": [190, 60] },
+    { "id": "nginx", "type": "backend", "label": "节点 nginx", "sublabel": "package/file/exec 收敛", "pos": [730, 300], "size": [200, 64] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "节点容器（无 systemd · Rosetta 模拟 amd64）", "wraps": ["apply", "agent", "nginx"] }
+  ],
+  "connections": [
+    { "id": "mf-server", "from": "manifest", "to": "server", "label": "同步代码", "variant": "dashed", "fromSide": "top", "toSide": "left" },
+    { "id": "srv-agent", "from": "server", "to": "agent", "label": "catalog 下发", "variant": "dashed" },
+    { "id": "mf-apply", "from": "manifest", "to": "apply", "label": "本地读取", "variant": "emphasis" },
+    { "id": "apply-nginx", "from": "apply", "to": "nginx", "label": "立即收敛", "variant": "emphasis" },
+    { "id": "agent-nginx", "from": "agent", "to": "nginx", "label": "应用 catalog", "variant": "dashed", "fromSide": "bottom", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "拉模型本质", "items": ["节点主动拉期望态", "服务端故障只延迟不破坏", "规模化天然分摊负载"] },
+    { "dot": "rose", "title": "探活记录", "items": ["puppetserver 镜像拉取失败(镜像源 EOF)", "按预案降级 puppet apply", "DSL/资源/幂等目标全部达成"] }
+  ]
+}

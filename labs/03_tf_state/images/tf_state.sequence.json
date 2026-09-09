@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "实验 03 · 远端 state 与锁：两个工程师同时 apply 会发生什么",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      940,
+      560
+    ]
+  },
+  "participants": [
+    {
+      "id": "a",
+      "type": "external",
+      "label": "工程师 A",
+      "sublabel": "tmp/worker-a"
+    },
+    {
+      "id": "minio",
+      "type": "database",
+      "label": "MinIO（S3 后端）",
+      "sublabel": "state + 锁对象"
+    },
+    {
+      "id": "docker",
+      "type": "cloud",
+      "label": "Docker daemon",
+      "sublabel": "实际基础设施"
+    },
+    {
+      "id": "b",
+      "type": "external",
+      "label": "工程师 B",
+      "sublabel": "tmp/worker-b"
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 330,
+      "label": "A 正常 apply"
+    },
+    {
+      "from": 348,
+      "to": 515,
+      "label": "B 撞上锁"
+    }
+  ],
+  "messages": [
+    {
+      "from": "a",
+      "to": "minio",
+      "y": 160,
+      "label": "GET lab03/terraform.tfstate",
+      "variant": "emphasis"
+    },
+    {
+      "from": "a",
+      "to": "minio",
+      "y": 196,
+      "label": "PUT .tflock（条件写，谁先谁得）",
+      "variant": "security"
+    },
+    {
+      "from": "a",
+      "to": "docker",
+      "y": 232,
+      "label": "apply：创建/变更资源",
+      "variant": "emphasis"
+    },
+    {
+      "from": "a",
+      "to": "minio",
+      "y": 268,
+      "label": "PUT state 写回",
+      "variant": "emphasis"
+    },
+    {
+      "from": "a",
+      "to": "minio",
+      "y": 304,
+      "label": "DELETE .tflock 释放锁",
+      "variant": "return"
+    },
+    {
+      "from": "b",
+      "to": "minio",
+      "y": 360,
+      "label": "plan：先要拿锁",
+      "variant": "emphasis"
+    },
+    {
+      "from": "minio",
+      "to": "b",
+      "y": 396,
+      "label": "已存在 .tflock → 拒绝（412）",
+      "variant": "return"
+    },
+    {
+      "from": "minio",
+      "to": "b",
+      "y": 432,
+      "label": "Lock Info：ID / Who / Operation",
+      "variant": "security"
+    },
+    {
+      "from": "b",
+      "to": "minio",
+      "y": 476,
+      "label": "持有人失联时：force-unlock 强删 .tflock",
+      "variant": "dashed"
+    }
+  ]
+}

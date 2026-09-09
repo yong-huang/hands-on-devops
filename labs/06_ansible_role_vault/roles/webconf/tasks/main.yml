@@ -1,0 +1,29 @@
+# =============================================================================
+# roles/webconf/tasks/main.yml — 往靶场 nginx 容器里部署站点配置
+#
+# 幂等三件套：
+#   1. template 模块内容级比较——内容没变就不动；
+#   2. handler 只在模板真的变化时被通知 reload；
+#   3. command 用 changed_when 收敛"执行了 ≠ 变更了"。
+# =============================================================================
+- name: 确保目标有 python3（Ansible 模块的运行前提；raw 模块本身不依赖 python）
+  # 坑：nginx:alpine 没有 python3，template 等模块会报 /usr/bin/python3: not found。
+  # raw 走裸 shell：已有 python 则 test 成功短路跳过 apk，保证幂等
+  ansible.builtin.raw: "test -e /usr/bin/python3 || apk add --no-cache python3"
+  changed_when: false
+
+- name: 渲染站点配置（vault 变量在此参与渲染）
+  ansible.builtin.template:
+    src: site.conf.j2
+    dest: /etc/nginx/conf.d/site.conf
+  notify: reload nginx
+
+- name: 校验 nginx 配置语法（改坏配置就 fail，比 reload 失败好排障）
+  ansible.builtin.command: nginx -t
+  changed_when: false
+
+- name: 确认 nginx 主进程在跑（容器内没有 systemd，直接探 PID 1 的子进程）
+  ansible.builtin.command: pgrep nginx
+  register: nginx_proc
+  changed_when: false
+  failed_when: nginx_proc.rc != 0

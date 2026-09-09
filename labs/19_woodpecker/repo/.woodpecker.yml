@@ -1,0 +1,18 @@
+# =============================================================================
+# .woodpecker.yml — Woodpecker 流水线：极简容器原生语法
+# 每个 step 一个容器（image 指定）；commands 在该容器内执行
+# =============================================================================
+when:
+  - event: push
+    branch: main
+
+steps:
+  test:
+    image: python:3.12-slim
+    commands:
+      - python -V
+      - python -c "assert 1 + 1 == 2; print('tests pass')"
+  report:
+    image: python:3.12-slim
+    commands:
+      - echo "pipeline done on $(date +%T)"

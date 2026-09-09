@@ -1,0 +1,13 @@
+# =============================================================================
+# 动态清单：运行中的 Docker 容器自动发现（不再维护静态 hosts 文件）
+#
+# 教学点：
+#   - 清单是"查出来的"不是"写死的"：靶场起多少容器、叫什么名，清单自动跟上；
+#   - connection_type: docker-cli → Ansible 通过 `docker exec` 进容器，
+#     复用本机 docker CLI 的 context/证书，绕开 Go/SDK 客户端的 socket 坑；
+#   - groups 把名字带 lab-nginx 的容器归入 web 组（Jinja2 条件）。
+# =============================================================================
+plugin: community.docker.docker_containers
+connection_type: docker-cli
+groups:
+  web: "'lab-nginx' in docker_name"

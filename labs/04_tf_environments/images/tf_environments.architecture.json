@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 04 · 多环境矩阵：workspace 法 vs 目录法",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      560
+    ]
+  },
+  "components": [
+    {
+      "id": "ws-cfg",
+      "type": "external",
+      "label": "configs-workspace/",
+      "sublabel": "一份配置 + 参数表",
+      "pos": [
+        70,
+        110
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "ws-dev",
+      "type": "database",
+      "label": "state · dev",
+      "sublabel": "1 副本 · 1.27",
+      "pos": [
+        60,
+        250
+      ],
+      "size": [
+        150,
+        56
+      ]
+    },
+    {
+      "id": "ws-stag",
+      "type": "database",
+      "label": "state · staging",
+      "sublabel": "2 副本 · 1.29",
+      "pos": [
+        240,
+        250
+      ],
+      "size": [
+        160,
+        56
+      ]
+    },
+    {
+      "id": "dir-dev",
+      "type": "external",
+      "label": "envs/dev/",
+      "sublabel": "1 副本 · 1.27",
+      "pos": [
+        540,
+        110
+      ],
+      "size": [
+        160,
+        60
+      ]
+    },
+    {
+      "id": "dir-stag",
+      "type": "external",
+      "label": "envs/staging/",
+      "sublabel": "2 副本 · 1.29",
+      "pos": [
+        730,
+        110
+      ],
+      "size": [
+        170,
+        60
+      ]
+    },
+    {
+      "id": "dir-dev-state",
+      "type": "database",
+      "label": "state（dev 目录）",
+      "sublabel": "天然隔离",
+      "pos": [
+        540,
+        250
+      ],
+      "size": [
+        160,
+        56
+      ]
+    },
+    {
+      "id": "dir-stag-state",
+      "type": "database",
+      "label": "state（staging 目录）",
+      "sublabel": "天然隔离",
+      "pos": [
+        730,
+        250
+      ],
+      "size": [
+        180,
+        56
+      ]
+    },
+    {
+      "id": "module",
+      "type": "cloud",
+      "label": "modules/web",
+      "sublabel": "镜像+count 副本",
+      "pos": [
+        380,
+        420
+      ],
+      "size": [
+        190,
+        60
+      ],
+      "tag": "两法共用"
+    },
+    {
+      "id": "daemon",
+      "type": "backend",
+      "label": "Docker daemon",
+      "sublabel": "6 个 nginx 容器",
+      "pos": [
+        730,
+        420
+      ],
+      "size": [
+        180,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "方式一 · workspace 法：切换靠 select",
+      "wraps": [
+        "ws-cfg",
+        "ws-dev",
+        "ws-stag"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "方式二 · 目录法：切换靠 cd",
+      "wraps": [
+        "dir-dev",
+        "dir-stag",
+        "dir-dev-state",
+        "dir-stag-state"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ws-to-dev",
+      "from": "ws-cfg",
+      "to": "ws-dev",
+      "label": "select dev",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 24
+    },
+    {
+      "id": "ws-to-stag",
+      "from": "ws-cfg",
+      "to": "ws-stag",
+      "label": "select staging",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "dirdev-state",
+      "from": "dir-dev",
+      "to": "dir-dev-state",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "dirstag-state",
+      "from": "dir-stag",
+      "to": "dir-stag-state",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "module-daemon",
+      "from": "module",
+      "to": "daemon",
+      "label": "count = replicas",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "参数差异",
+      "items": [
+        "dev：nginx 1.27 · 1 副本",
+        "staging：nginx 1.29 · 2 副本",
+        "端口段各自独立"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "怎么选",
+      "items": [
+        "环境少且同构 → workspace",
+        "边界要严 → 目录法（生产主流）",
+        "两法都靠 module 复用公共逻辑"
+      ]
+    }
+  ]
+}

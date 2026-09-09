@@ -1,0 +1,154 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "实验 14 · SBOM + cosign：给制品配身份证与防伪签",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      980,
+      528
+    ]
+  },
+  "lanes": [
+    {
+      "id": "prod",
+      "label": "制品生产线"
+    },
+    {
+      "id": "trust",
+      "label": "信任链"
+    },
+    {
+      "id": "attack",
+      "label": "攻击模拟"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "build",
+      "lane": "prod",
+      "col": 0,
+      "type": "backend",
+      "label": "构建",
+      "sublabel": "signed:1.0.0"
+    },
+    {
+      "id": "syft",
+      "lane": "prod",
+      "col": 1,
+      "type": "database",
+      "label": "SBOM",
+      "sublabel": "SPDX 25 包"
+    },
+    {
+      "id": "sign",
+      "lane": "prod",
+      "col": 2,
+      "type": "security",
+      "label": "签名",
+      "sublabel": "私钥签 digest"
+    },
+    {
+      "id": "registry",
+      "lane": "prod",
+      "col": 3,
+      "type": "cloud",
+      "label": "入仓",
+      "sublabel": "镜像+.sig"
+    },
+    {
+      "id": "verify",
+      "lane": "trust",
+      "col": 4,
+      "type": "security",
+      "label": "CI 验签",
+      "sublabel": "公钥对 digest"
+    },
+    {
+      "id": "tamper",
+      "lane": "attack",
+      "col": 5,
+      "type": "security",
+      "label": "篡改拦截",
+      "sublabel": "同 tag 覆盖"
+    },
+    {
+      "id": "deploy",
+      "lane": "trust",
+      "col": 5,
+      "type": "external",
+      "label": "放行",
+      "sublabel": "验签绿才上线"
+    }
+  ],
+  "edges": [
+    {
+      "from": "build",
+      "to": "syft",
+      "label": "配料表",
+      "variant": "emphasis"
+    },
+    {
+      "from": "syft",
+      "to": "sign",
+      "label": "归档"
+    },
+    {
+      "from": "sign",
+      "to": "registry",
+      "label": "签名入仓",
+      "variant": "emphasis"
+    },
+    {
+      "from": "registry",
+      "to": "verify",
+      "label": "拉取验证",
+      "variant": "emphasis"
+    },
+    {
+      "from": "verify",
+      "to": "tamper",
+      "variant": "security"
+    },
+    {
+      "from": "verify",
+      "to": "deploy",
+      "variant": "emphasis"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "SBOM 价值",
+      "items": [
+        "镜像里 25 个包全部可枚举",
+        "漏洞披露时秒级自查",
+        "SPDX JSON 可机读归档"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "签名绑定 digest",
+      "items": [
+        "同 tag 覆盖 → digest 变 → 验签红",
+        "CI verify 非零即拦截",
+        "私钥进 KMS，公钥可公开"
+      ]
+    }
+  ],
+  "phases": [
+    {
+      "id": "produce",
+      "label": "生产",
+      "fromCol": 0,
+      "toCol": 2
+    },
+    {
+      "id": "trust",
+      "label": "验证",
+      "fromCol": 3,
+      "toCol": 5
+    }
+  ]
+}

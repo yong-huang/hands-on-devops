@@ -1,0 +1,33 @@
+---
+# verify.yml — 断言"配出来的世界长什么样"：这就是配置代码的单元测试
+- name: Verify
+  hosts: all
+  tasks:
+    - name: 读取部署后的配置
+      ansible.builtin.slurp:
+        src: /etc/nginx/conf.d/app.conf
+      register: conf
+
+    - name: 断言配置渲染了默认变量
+      ansible.builtin.assert:
+        that:
+          - "'app=molecule-demo' in (conf.content | b64decode)"
+          - "'listen 8080' in (conf.content | b64decode)"
+        success_msg: "配置内容符合期望"
+
+    - name: 服务真在响应（HTTP 层断言，不只是文件在）
+      ansible.builtin.uri:
+        url: http://127.0.0.1:8080/healthz
+        return_content: true
+      register: healthz
+
+    - name: 断言健康端点内容
+      ansible.builtin.assert:
+        that:
+          - healthz.status == 200
+          - "'app=molecule-demo' in healthz.content"
+        success_msg: "healthz 200 且内容正确"
+
+    - name: nginx 语法校验通过
+      ansible.builtin.command: nginx -t
+      changed_when: false
