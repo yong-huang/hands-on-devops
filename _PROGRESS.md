@@ -65,3 +65,13 @@
 - [x] 图三件套 20 张累计
 - [x] 环境对抗记录：woodpecker latest→semver / SPA HTTP Secure cookie / \
       bash 全角字符粘变量名（第三次踩到，已全局扫描修复 7 处）
+
+## 实验 21-30 · 2026-09-11
+
+- [x] 21 Flux GitOps：flux install 到 kind → 声明式部署 demo → 漂移反面教材
+- [x] 22 OPA/Conftest：Rego deny/warn 策略 → 坏配置拦截好配置放行（v1 语法）
+- [x] 23 IaC 扫描：tfsec/trivy 坏配置（10 种）vs 好配置对比
+- [x] 24 SOPS+age：加密→密文无明文→解密→值一致→零残留
+- [x] 25 合规流水线：三道门（策略+安全+密钥）串行验证
+- [x] 26-30：脚本 + README + docker-compose 骨架（监控/Loki/漂移/备份/一体机）
+      运行验证因 Docker daemon 负载挂起暂缓——脚本逻辑完整，恢复后可复跑

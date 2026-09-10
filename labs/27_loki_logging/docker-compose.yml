@@ -1,0 +1,9 @@
+services:
+  loki:
+    image: grafana/loki:latest
+    ports: ["3100:3100"]
+  promtail:
+    image: grafana/promtail:latest
+    volumes:
+      - /var/log:/var/log:ro
+      - ./promtail.yml:/etc/promtail/config.yml
