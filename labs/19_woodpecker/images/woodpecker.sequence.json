@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "实验 19 · Woodpecker：forge 对接与流水线触发链路",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      980,
+      545
+    ]
+  },
+  "participants": [
+    {
+      "id": "dev",
+      "type": "external",
+      "label": "开发者",
+      "sublabel": "浏览器 / git push"
+    },
+    {
+      "id": "gitea",
+      "type": "cloud",
+      "label": "Gitea forge",
+      "sublabel": "OAuth + webhook"
+    },
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "Woodpecker server",
+      "sublabel": "调度 + 状态"
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Woodpecker agent",
+      "sublabel": "docker 后端执行"
+    }
+  ],
+  "segments": [
+    {
+      "from": 145,
+      "to": 320,
+      "label": "对接与激活"
+    },
+    {
+      "from": 335,
+      "to": 500,
+      "label": "push 触发流水线"
+    }
+  ],
+  "messages": [
+    {
+      "from": "server",
+      "to": "gitea",
+      "y": 160,
+      "label": "注册 OAuth 应用 + webhook",
+      "variant": "emphasis"
+    },
+    {
+      "from": "dev",
+      "to": "gitea",
+      "y": 205,
+      "label": "OAuth 授权（scopes）",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gitea",
+      "to": "server",
+      "y": 250,
+      "label": "code → access token",
+      "variant": "return"
+    },
+    {
+      "from": "dev",
+      "to": "server",
+      "y": 295,
+      "label": "激活仓库（Enable）",
+      "variant": "default"
+    },
+    {
+      "from": "dev",
+      "to": "gitea",
+      "y": 345,
+      "label": "git push",
+      "variant": "emphasis"
+    },
+    {
+      "from": "gitea",
+      "to": "server",
+      "y": 385,
+      "label": "webhook（ALLOWED_HOST_LIST）",
+      "variant": "security"
+    },
+    {
+      "from": "server",
+      "to": "agent",
+      "y": 425,
+      "label": "派发 steps（docker 容器）",
+      "variant": "emphasis"
+    },
+    {
+      "from": "agent",
+      "to": "server",
+      "y": 460,
+      "label": "step 状态回传",
+      "variant": "return"
+    }
+  ]
+}

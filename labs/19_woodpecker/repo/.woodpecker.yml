@@ -16,3 +16,7 @@ steps:
     image: python:3.12-slim
     commands:
       - echo "pipeline done on $(date +%T)"
+  bad:
+    image: python:3.12-slim
+    commands:
+      - exit 1

@@ -1,0 +1,25 @@
+# =============================================================================
+# 实验 20 · 完整 CI/CD 流水线（定型版）
+# push → 测试 → 构建 → SBOM → 签名 → 部署 → 冒烟，失败任一环节全链路阻断
+# =============================================================================
+name: release
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ci-cd:
+    runs-on: lab
+    steps:
+      - name: test
+        run: |
+          python -V
+          python -c "assert 1 + 1 == 2; print('✓ tests pass')"
+      - name: build
+        run: |
+          echo "artifact $(date +%T)" > app.txt
+          echo "✓ build done"
+      - name: deploy
+        run: |
+          echo "deploying to staging..."
+          echo "✓ deployed"

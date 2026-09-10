@@ -14,6 +14,18 @@
 _hands_on_docker_env() {
     [ -n "${DOCKER_HOST:-}" ] && return 0
     local s
+    # ORBSTACK=1 时优先探测 OrbStack（与 Docker Desktop 共存，按需切换守护进程）
+    if [ "${ORBSTACK:-0}" = "1" ]; then
+        for s in "$HOME/.orbstack/run/docker.sock" "$HOME/.docker/run/docker.sock" "/var/run/docker.sock"; do
+            [ -S "$s" ] || continue
+            if curl -sS --max-time 3 --unix-socket "$s" http://localhost/_ping >/dev/null 2>&1; then
+                export DOCKER_HOST="unix://$s"
+                return 0
+            fi
+        done
+        echo "    [!] OrbStack 未响应（是否已启动 OrbStack.app？）" >&2
+        return 1
+    fi
     for s in "$HOME/.docker/run/docker.sock" "/var/run/docker.sock" "$HOME/.orbstack/run/docker.sock"; do
         [ -S "$s" ] || continue
         if curl -sS --max-time 3 --unix-socket "$s" http://localhost/_ping >/dev/null 2>&1; then

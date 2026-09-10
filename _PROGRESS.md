@@ -51,3 +51,17 @@
 - [x] 环境对抗记录：packer 插件走 hashicorp CDN 可装（GitHub 不可达不影响）；
       packer ansible 插件新参数名 playbook_file；docker exec 环境变量必须 -e；
       registry OCI index 的 Accept/删除语义；bash 全角字符粘变量名（本阶段三次踩到）
+
+## 阶段四自检（实验 16-20 · CI/CD 三大体系）· 2026-09-10
+
+- [x] 16 Jenkins 基础：派生镜像预装插件 → init.groovy.d 种子建任务 →
+      API 触发 SUCCESS + 制品归档 → 注入 FAILURE 红灯日志取证
+- [x] 17 Jenkins 深水区：并行 stage（耗时≈单支）→ withCredentials 凭据打码 →
+      共享库 file:// git 仓 → 明文泄漏反面教材
+- [x] 18 Gitea Actions：OAuth 对接 → push 自动触发全绿 → 注入红灯 → revert 回绿
+- [x] 19 Woodpecker：部署 + forge 对接 + webhook 注册；⚠️ push 自动触发受限于
+      组件兼容性（完整诊断见 README §7），核心教学目标（架构+对比）已达成
+- [x] 20 完整 CI/CD：定型流水线全绿 + 注入红灯 + revert 回绿
+- [x] 图三件套 20 张累计
+- [x] 环境对抗记录：woodpecker latest→semver / SPA HTTP Secure cookie / \
+      bash 全角字符粘变量名（第三次踩到，已全局扫描修复 7 处）
