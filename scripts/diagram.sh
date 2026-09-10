@@ -5,7 +5,7 @@
 # 用法：scripts/diagram.sh <type> <images/xxx.architecture.json> <images/xxx>
 #   type: architecture | workflow | sequence | dataflow | lifecycle
 # 产出：xxx.html（交互版）+ xxx.svg（双主题矢量，README 内嵌，已做像素居中）
-# 依赖：archify skill（node）+ puppeteer-core + Chrome（hands-on-series/scripts）
+# 依赖：node + puppeteer-core + Chrome（架构图生成与校验工具链）
 # =============================================================================
 set -euo pipefail
 

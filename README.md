@@ -80,7 +80,7 @@ hands-on-devops/
         ├── xxx.sh                   # 主演示脚本（apply/observe/.../clean 全真机验证）
         ├── configs/ 或 manifest     # 声明式配置（注释密度远高于生产）
         └── images/
-            ├── xxx.sequence.json    # Archify 图源（typed JSON IR）
+            ├── xxx.sequence.json    # 图源（typed JSON IR，可用配套工具重新渲染）
             ├── xxx.html             # 交互版（自包含单文件）
             └── xxx.svg              # 双主题矢量图（README 内嵌）
 ```
