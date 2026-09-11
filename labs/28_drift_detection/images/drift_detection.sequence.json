@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "实验 28 · 漂移检测与治理",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      980,
+      520
+    ]
+  },
+  "participants": [
+    {
+      "id": "ops",
+      "type": "external",
+      "label": "运维 / CI",
+      "sublabel": "定时检测"
+    },
+    {
+      "id": "tf",
+      "type": "backend",
+      "label": "terraform plan",
+      "sublabel": "-detailed-exitcode"
+    },
+    {
+      "id": "cluster",
+      "type": "cloud",
+      "label": "基础设施",
+      "sublabel": "实际状态"
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 340,
+      "label": "检测"
+    },
+    {
+      "from": 356,
+      "to": 440,
+      "label": "治理"
+    }
+  ],
+  "messages": [
+    {
+      "from": "ops",
+      "to": "tf",
+      "y": 160,
+      "label": "terraform plan",
+      "variant": "emphasis"
+    },
+    {
+      "from": "tf",
+      "to": "cluster",
+      "y": 210,
+      "label": "读取实际状态",
+      "variant": "default"
+    },
+    {
+      "from": "tf",
+      "to": "ops",
+      "y": 260,
+      "label": "exit 0 = 无漂移 / exit 2 = 有漂移",
+      "variant": "return"
+    },
+    {
+      "from": "ops",
+      "to": "cluster",
+      "y": 350,
+      "label": "git push 修复 → apply 回正",
+      "variant": "emphasis"
+    },
+    {
+      "from": "cluster",
+      "to": "ops",
+      "y": 410,
+      "label": "实际状态回到期望状态",
+      "variant": "return"
+    }
+  ]
+}

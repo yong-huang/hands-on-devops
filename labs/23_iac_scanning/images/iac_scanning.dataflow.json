@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 23 · IaC 安全扫描：tfsec/trivy 检出基线偏离",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      400
+    ]
+  },
+  "stages": [
+    {
+      "label": "输入"
+    },
+    {
+      "label": "扫描引擎"
+    },
+    {
+      "label": "报告"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "bad",
+      "type": "external",
+      "label": "坏配置",
+      "sublabel": "10 种漏洞",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "good",
+      "type": "external",
+      "label": "好配置",
+      "sublabel": "安全基线",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "tfsec",
+      "type": "backend",
+      "label": "tfsec",
+      "sublabel": "TF 专用扫描",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "trivy",
+      "type": "backend",
+      "label": "trivy config",
+      "sublabel": "通用 IaC 扫描",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "report",
+      "type": "database",
+      "label": "扫描报告",
+      "sublabel": "CRITICAL 阻断",
+      "stage": 2,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "bad",
+      "to": "tfsec",
+      "label": "扫描",
+      "route": "straight"
+    },
+    {
+      "from": "bad",
+      "to": "trivy",
+      "label": "扫描",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "tfsec",
+      "to": "report",
+      "label": "4 problems",
+      "variant": "security",
+      "route": "straight"
+    },
+    {
+      "from": "trivy",
+      "to": "report",
+      "label": "汇总",
+      "route": "vertical-channel"
+    }
+  ]
+}

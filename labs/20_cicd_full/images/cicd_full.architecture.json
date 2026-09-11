@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 20 · 完整 CI/CD：定型流水线与失败阻断",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 480]
+  },
+  "components": [
+    { "id": "dev", "type": "external", "label": "开发者", "sublabel": "git push", "pos": [50, 180], "size": [160, 64] },
+    { "id": "gitea", "type": "cloud", "label": "Gitea Actions", "sublabel": "push 触发", "pos": [310, 180], "size": [190, 64] },
+    { "id": "runner", "type": "backend", "label": "act_runner", "sublabel": "docker 容器执行", "pos": [600, 180], "size": [200, 64] },
+    { "id": "stages", "type": "backend", "label": "test → build → deploy", "sublabel": "失败即阻断全链路", "pos": [610, 380], "size": [210, 56] },
+    { "id": "inj", "type": "external", "label": "失败注入", "sublabel": "exit 1 → ❌ 阻断", "pos": [310, 380], "size": [180, 56] }
+  ],
+  "connections": [
+    { "id": "dev-gitea", "from": "dev", "to": "gitea", "label": "git push", "variant": "emphasis" },
+    { "id": "gitea-runner", "from": "gitea", "to": "runner", "label": "派发 job", "variant": "emphasis" },
+    { "id": "runner-stages", "from": "runner", "to": "stages", "label": "串行执行", "variant": "emphasis", "fromSide": "bottom", "toSide": "top" },
+    { "id": "inj-stages", "from": "inj", "to": "stages", "label": "注入 → ❌", "variant": "security", "fromSide": "right", "toSide": "left" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "定型", "items": ["test → build → deploy 串行", "失败任一环节全链路阻断"] },
+    { "dot": "rose", "title": "该红就红", "items": ["注入 exit 1 → ❌", "revert → 回绿", "好 CI 的标志是能变红"] }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 26 · 监控栈：Prometheus + Grafana + Node Exporter",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 480]
+  },
+  "components": [
+    { "id": "node", "type": "backend", "label": "Node Exporter", "sublabel": "主机指标 :9100", "pos": [50, 180], "size": [190, 64] },
+    { "id": "prom", "type": "backend", "label": "Prometheus", "sublabel": "Pull 抓取 :9090", "pos": [380, 180], "size": [200, 64], "tag": "5s 间隔" },
+    { "id": "graf", "type": "cloud", "label": "Grafana", "sublabel": "可视化 :3001", "pos": [700, 180], "size": [190, 64] },
+    { "id": "query", "type": "external", "label": "PromQL 查询", "sublabel": "up / rate / histogram", "pos": [380, 400], "size": [210, 56] }
+  ],
+  "connections": [
+    { "id": "prom-node", "from": "prom", "to": "node", "label": "Pull 抓取", "variant": "emphasis", "fromSide": "left", "toSide": "right" },
+    { "id": "graf-prom", "from": "graf", "to": "prom", "label": "数据源", "variant": "dashed", "fromSide": "bottom", "toSide": "right" },
+    { "id": "query-prom", "from": "query", "to": "prom", "label": "PromQL", "variant": "dashed", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Pull 模型", "items": ["Prometheus 主动抓取，不开入站端口", "5s 抓取间隔，适配快速迭代"] },
+    { "dot": "emerald", "title": "三种角色", "items": ["Node Exporter 提供主机指标", "Prometheus 存储 + 查询", "Grafana 可视化 + 告警"] }
+  ]
+}

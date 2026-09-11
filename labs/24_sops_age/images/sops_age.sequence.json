@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "实验 24 · SOPS + age：密钥加密与解密",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "column_fit": "spread",
+    "viewBox": [
+      980,
+      560
+    ]
+  },
+  "participants": [
+    {
+      "id": "ops",
+      "type": "external",
+      "label": "运维",
+      "sublabel": "写入明文"
+    },
+    {
+      "id": "sops",
+      "type": "backend",
+      "label": "SOPS",
+      "sublabel": "字段级加密"
+    },
+    {
+      "id": "age",
+      "type": "security",
+      "label": "age",
+      "sublabel": "密钥对"
+    },
+    {
+      "id": "git",
+      "type": "cloud",
+      "label": "Git",
+      "sublabel": "密文入库"
+    }
+  ],
+  "segments": [
+    {
+      "from": 140,
+      "to": 340,
+      "label": "加密入库"
+    },
+    {
+      "from": 356,
+      "to": 440,
+      "label": "解密使用"
+    }
+  ],
+  "messages": [
+    {
+      "from": "ops",
+      "to": "sops",
+      "y": 160,
+      "label": "明文 secrets.yaml",
+      "variant": "default"
+    },
+    {
+      "from": "sops",
+      "to": "age",
+      "y": 210,
+      "label": "age 公钥加密",
+      "variant": "security"
+    },
+    {
+      "from": "sops",
+      "to": "git",
+      "y": 260,
+      "label": "密文入库（无明文）",
+      "variant": "emphasis"
+    },
+    {
+      "from": "ops",
+      "to": "sops",
+      "y": 386,
+      "label": "sops --decrypt",
+      "variant": "emphasis"
+    },
+    {
+      "from": "sops",
+      "to": "ops",
+      "y": 436,
+      "label": "明文（age 私钥解密）",
+      "variant": "return"
+    }
+  ]
+}

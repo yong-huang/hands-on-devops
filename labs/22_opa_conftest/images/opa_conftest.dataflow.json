@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 22 · 策略即代码：Rego 规则拦截违规配置",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      420
+    ]
+  },
+  "stages": [
+    {
+      "label": "输入"
+    },
+    {
+      "label": "策略引擎"
+    },
+    {
+      "label": "结果"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "bad",
+      "type": "external",
+      "label": "违规配置",
+      "sublabel": "latest / 无 limits",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "good",
+      "type": "external",
+      "label": "合规配置",
+      "sublabel": "固定 tag + limits",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "opa",
+      "type": "backend",
+      "label": "conftest",
+      "sublabel": "Rego deny/warn",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "fail",
+      "type": "security",
+      "label": "FAIL",
+      "sublabel": "非零退出阻断",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "pass",
+      "type": "external",
+      "label": "PASS",
+      "sublabel": "放行",
+      "stage": 2,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "bad",
+      "to": "opa",
+      "label": "输入",
+      "route": "straight"
+    },
+    {
+      "from": "good",
+      "to": "opa",
+      "label": "输入",
+      "route": "vertical-channel"
+    },
+    {
+      "from": "opa",
+      "to": "fail",
+      "label": "deny 非空",
+      "variant": "security",
+      "route": "straight"
+    },
+    {
+      "from": "opa",
+      "to": "pass",
+      "label": "deny 为空",
+      "variant": "emphasis",
+      "route": "vertical-channel"
+    }
+  ]
+}

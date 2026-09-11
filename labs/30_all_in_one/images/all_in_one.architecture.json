@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 30 · DevOps 一体机：全链路串联",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 560]
+  },
+  "components": [
+    { "id": "iac", "type": "backend", "label": "IaC", "sublabel": "Terraform", "pos": [40, 220], "size": [140, 56] },
+    { "id": "cm", "type": "backend", "label": "配置管理", "sublabel": "Ansible / Chef", "pos": [220, 220], "size": [150, 56] },
+    { "id": "img", "type": "cloud", "label": "镜像", "sublabel": "Packer / buildx", "pos": [400, 220], "size": [150, 56] },
+    { "id": "ci", "type": "backend", "label": "CI", "sublabel": "Gitea Actions", "pos": [580, 220], "size": [140, 56] },
+    { "id": "cd", "type": "cloud", "label": "GitOps", "sublabel": "Flux", "pos": [760, 220], "size": [130, 56] },
+    { "id": "policy", "type": "security", "label": "策略", "sublabel": "OPA / trivy", "pos": [400, 380], "size": [150, 56] },
+    { "id": "secret", "type": "security", "label": "密钥", "sublabel": "SOPS + age", "pos": [580, 380], "size": [150, 56] },
+    { "id": "monitor", "type": "database", "label": "监控", "sublabel": "Prom / Grafana", "pos": [760, 380], "size": [150, 56] }
+  ],
+  "connections": [
+    { "id": "iac-cm", "from": "iac", "to": "cm", "variant": "emphasis" },
+    { "id": "cm-img", "from": "cm", "to": "img", "variant": "emphasis" },
+    { "id": "img-ci", "from": "img", "to": "ci", "variant": "emphasis" },
+    { "id": "ci-cd", "from": "ci", "to": "cd", "variant": "emphasis" },
+    { "id": "policy-ci", "from": "policy", "to": "ci", "label": "门禁", "variant": "dashed", "fromSide": "top", "toSide": "bottom" },
+    { "id": "secret-policy", "from": "secret", "to": "policy", "variant": "dashed" },
+    { "id": "monitor-cd", "from": "monitor", "to": "cd", "label": "反馈", "variant": "dashed", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "八层串联", "items": ["IaC → 配置管理 → 镜像 → CI → GitOps", "策略/密钥/监控作为横切关注点贯穿全链路"] }
+  ]
+}

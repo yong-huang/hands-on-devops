@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 29 · 备份与灾难恢复",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 480]
+  },
+  "components": [
+    { "id": "state", "type": "database", "label": "TF state", "sublabel": "S3 远端后端", "pos": [50, 120], "size": [170, 56] },
+    { "id": "gitea", "type": "database", "label": "Gitea 数据卷", "sublabel": "仓库 + 用户", "pos": [50, 250], "size": [170, 56] },
+    { "id": "registry", "type": "database", "label": "Registry 存储", "sublabel": "镜像 blob", "pos": [50, 380], "size": [170, 56] },
+    { "id": "backup", "type": "backend", "label": "备份脚本", "sublabel": "tar czf → 定期", "pos": [350, 250], "size": [180, 64], "tag": "RPO 决定频率" },
+    { "id": "restore", "type": "security", "label": "恢复脚本", "sublabel": "反向操作 + 健康检查", "pos": [620, 250], "size": [200, 64], "tag": "RTO 决定自动化" }
+  ],
+  "connections": [
+    { "id": "state-backup", "from": "state", "to": "backup", "variant": "dashed" },
+    { "id": "gitea-backup", "from": "gitea", "to": "backup", "variant": "dashed" },
+    { "id": "reg-backup", "from": "registry", "to": "backup", "variant": "dashed" },
+    { "id": "backup-restore", "from": "backup", "to": "restore", "label": "灾难 → 恢复", "variant": "emphasis" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "RPO / RTO", "items": ["RPO：可以丢多少数据 → 决定备份频率", "RTO：可以停多久 → 决定恢复自动化程度"] }
+  ]
+}

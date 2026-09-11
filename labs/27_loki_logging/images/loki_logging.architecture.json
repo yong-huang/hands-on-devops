@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 27 · 集中日志：Loki + Promtail",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 480]
+  },
+  "components": [
+    { "id": "log", "type": "external", "label": "容器日志", "sublabel": "stdout / 文件", "pos": [50, 180], "size": [180, 64] },
+    { "id": "promtail", "type": "backend", "label": "Promtail", "sublabel": "日志收集 Agent", "pos": [330, 180], "size": [190, 64] },
+    { "id": "loki", "type": "database", "label": "Loki", "sublabel": "标签索引存储 :3100", "pos": [620, 180], "size": [190, 64], "tag": "只索引标签" },
+    { "id": "query", "type": "external", "label": "LogQL 查询", "sublabel": "{container=\"nginx\"} |= error", "pos": [380, 400], "size": [220, 56] }
+  ],
+  "connections": [
+    { "id": "log-promtail", "from": "log", "to": "promtail", "label": "发现并收集", "variant": "emphasis" },
+    { "id": "promtail-loki", "from": "promtail", "to": "loki", "label": "推送日志流", "variant": "emphasis" },
+    { "id": "loki-query", "from": "query", "to": "loki", "label": "LogQL 查询", "variant": "dashed", "fromSide": "top", "toSide": "bottom" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Loki vs ELK", "items": ["只索引标签，不索引全文", "存储成本低一个量级", "LogQL 类 PromQL 语法"] }
+  ]
+}

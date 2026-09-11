@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 21 · Flux GitOps：声明式调谐",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 520]
+  },
+  "components": [
+    { "id": "git", "type": "cloud", "label": "Git 仓库", "sublabel": "期望状态 YAML", "pos": [50, 200], "size": [170, 64] },
+    { "id": "flux", "type": "backend", "label": "Flux 控制器", "sublabel": "source + kustomize", "pos": [330, 200], "size": [200, 64], "tag": "Pull 模型" },
+    { "id": "demo", "type": "backend", "label": "demo-app", "sublabel": "python:3.12-slim", "pos": [640, 200], "size": [180, 64] },
+    { "id": "drift", "type": "external", "label": "手动修改", "sublabel": "kubectl scale → 漂移", "pos": [640, 400], "size": [180, 56] }
+  ],
+  "connections": [
+    { "id": "git-flux", "from": "git", "to": "flux", "label": "声明拉取", "variant": "emphasis" },
+    { "id": "flux-demo", "from": "flux", "to": "demo", "label": "持续调谐", "variant": "emphasis" },
+    { "id": "drift-demo", "from": "drift", "to": "demo", "label": "无纳管不回正", "variant": "dashed" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Pull vs Push", "items": ["Flux 集群内主动拉取，不开入站端口", "Push 模型（Jenkins）需暴露凭据给 CI"] },
+    { "dot": "emerald", "title": "调谐", "items": ["声明 = 期望状态", "实际 ≠ 声明 → 自动回正", "永不漂移"] }
+  ]
+}

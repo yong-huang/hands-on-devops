@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 25 · 合规流水线：三道门串行验证",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      400
+    ]
+  },
+  "stages": [
+    {
+      "label": "输入"
+    },
+    {
+      "label": "策略门"
+    },
+    {
+      "label": "安全门"
+    },
+    {
+      "label": "密钥门"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "src",
+      "type": "external",
+      "label": "IaC 配置",
+      "sublabel": "TF / K8s",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "opa",
+      "type": "backend",
+      "label": "conftest",
+      "sublabel": "Rego deny/warn",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "scan",
+      "type": "backend",
+      "label": "trivy / tfsec",
+      "sublabel": "CRITICAL 阻断",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "secret",
+      "type": "security",
+      "label": "明文扫描",
+      "sublabel": "密码 / API key",
+      "stage": 3,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "src",
+      "to": "opa",
+      "label": "输入",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "opa",
+      "to": "scan",
+      "label": "策略通过",
+      "route": "straight"
+    },
+    {
+      "from": "scan",
+      "to": "secret",
+      "label": "扫描通过",
+      "route": "straight"
+    }
+  ]
+}
