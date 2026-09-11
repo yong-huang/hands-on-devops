@@ -22,7 +22,7 @@ FAIL - bad-deployment - Container 'web' uses :latest tag
 - **Conftest**：OPA 的 CLI 包装，接受 JSON/YAML/HCL 输入
 - **CI 门禁**：conftest 的非零退出码阻断 pipeline
 
-## 面试要点
+## 深入要点
 
 - Rego 的 `deny contains msg if` 语法是 OPA v1 的规则声明式写法
 - 策略分层：deny（阻断）> warn（告警）> info（提示）

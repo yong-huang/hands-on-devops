@@ -124,7 +124,7 @@ resource "docker_container" "gitea" {
 └── images/                 # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **为什么用 IaC 管理测试环境？** 环境可重现、可销毁、可审计；"临时的环境"更需要
   声明式——手工搭的靶场没人敢删，IaC 的靶场 `destroy` 毫无心理负担。

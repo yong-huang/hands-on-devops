@@ -107,7 +107,7 @@ http:
 └── images/                      # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **registry 的 GC 为什么要停写？** GC 是 mark-and-sweep：写并发可能让"正在上传的
   blob"被误回收。生产用只读模式或维护窗口；云厂商托管 registry（GCR/ACR）替你处理。

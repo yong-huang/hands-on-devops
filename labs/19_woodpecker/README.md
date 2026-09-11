@@ -149,7 +149,7 @@ steps:
 VM 或 docker compose 全家桶）下，woodpecker 2.4.1 + gitea 1.24 是经过广泛验证的
 组合；macOS 桌面 Docker 的 socket 共享与 DNS 限制是本机特有的额外障碍。
 
-## 8. 面试要点
+## 8. 深入要点
 
 - **server/agent 分离的好处？** 执行资源独立伸缩、故障域隔离、多队列多平台
   （不同 agent 标签跑不同架构/环境）。

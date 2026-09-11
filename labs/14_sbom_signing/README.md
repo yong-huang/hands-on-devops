@@ -98,7 +98,7 @@ cosign verify --key tmp/cosign.pub "$IMG"       # 退出码非零 = 拦截
 └── images/                # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **SBOM 的两种主流格式？** SPDX（Linux 基金会，本实验）与 CycloneDX（OWASP）；
   核心都是"包名+版本+校验和+依赖关系"，选型看下游工具链兼容。

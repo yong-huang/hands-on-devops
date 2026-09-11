@@ -76,7 +76,7 @@ hands-on-devops/
 │   └── tf-mirror/                   # kreuzwerker/docker provider 离线包
 └── labs/
     └── NN_short_name/
-        ├── README.md                # 8 节教程（为什么→图→快速开始→概念→字段→结构→面试→总结）
+        ├── README.md                # 8 节教程（为什么→图→快速开始→概念→字段→结构→深入→总结）
         ├── xxx.sh                   # 主演示脚本（apply/observe/.../clean 全真机验证）
         ├── configs/ 或 manifest     # 声明式配置（注释密度远高于生产）
         └── images/

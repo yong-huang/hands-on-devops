@@ -137,7 +137,7 @@ resource "docker_container" "app" {
 └── images/                    # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **workspace 和目录法本质区别？** workspace 是"同配置多状态"，目录是"多配置多状态"。
   前者优化零重复，后者优化隔离性与差异可见性。

@@ -11,7 +11,7 @@ ORBSTACK=1 ./monitoring_stack.sh down
 
 Prometheus: http://localhost:9090 | Grafana: http://localhost:3001 (admin/admin)
 
-## 面试要点
+## 深入要点
 - Pull 模型：Prometheus 主动抓取，不做推送
 - PromQL：`up`, `rate(node_cpu_seconds_total[5m])`, `histogram_quantile()`
 - 四种指标类型：Counter / Gauge / Histogram / Summary

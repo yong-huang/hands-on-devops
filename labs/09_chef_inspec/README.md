@@ -124,7 +124,7 @@ end
 └── images/                                # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **Chef 的核心抽象？** resource（幂等资源声明）→ recipe（资源编排）→ cookbook（分发
   单元）→ run_list（节点应用哪些 recipe）；compile 阶段生成资源集合，converge 阶段执行。

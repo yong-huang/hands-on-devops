@@ -137,7 +137,7 @@ Ansible 是 push：控制机主动 SSH/exec 到目标执行，目标不需要常
 └── images/                          # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **幂等怎么实现？** 模块化设计：每个模块知道如何读取当前状态并只在偏离期望时改动；
   command/shell 这类"哑模块"靠 changed_when/creates 手工声明幂等语义。

@@ -131,7 +131,7 @@ provisioner:
         └── verify.yml                   # 断言：内容 + HTTP + 语法
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **Molecule 的 test sequence 有哪些阶段？** dependency → lint → syntax → create →
   prepare → converge → idempotence → side_effect → verify → cleanup → destroy；

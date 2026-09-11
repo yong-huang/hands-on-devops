@@ -155,7 +155,7 @@ resource "docker_container" "app" {
     └── tf_docker_provider.svg                # 双主题矢量图（README 内嵌）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **plan/apply 各做了什么？** plan = 刷新实际状态 + 与期望态做 diff 得出执行计划（不改基础设施）；
   apply = 按计划调 provider API 把实际状态推向期望态。

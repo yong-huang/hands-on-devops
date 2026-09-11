@@ -11,6 +11,6 @@ cd labs/27_loki_logging
 
 Loki: http://localhost:3100/ready
 
-## 面试要点
+## 深入要点
 - Loki vs ELK：Loki 只索引标签（不索引全文），存储成本低一个量级
 - LogQL：`{container="nginx"} |= "error" | json | line_format "{{.msg}}"`

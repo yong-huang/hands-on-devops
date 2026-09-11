@@ -102,7 +102,7 @@ post-processors {                     # 嵌套块 = 顺序链：tag 的产物交
         └── handlers/main.yml        # reload（被通知才跑）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **Packer 与 Dockerfile 的关系？** Dockerfile 描述单镜像构建步骤；Packer 编排
   "多目标（docker/cloud/虚拟机）+ 多 provisioner + 多发布目标"的构建流水线，

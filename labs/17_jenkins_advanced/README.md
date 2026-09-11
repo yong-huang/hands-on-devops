@@ -121,7 +121,7 @@ store.addCredentials(Domain.global(),
 └── images/                          # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **parallel stage 的执行模型？** 每个分支占一个 executor 同时执行；任一分支失败
   默认整体失败（failFast 可加速互斥失败场景）。

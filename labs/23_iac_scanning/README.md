@@ -15,7 +15,7 @@ cd labs/23_iac_scanning
 - **trivy config**：通用 IaC 扫描（支持 TF/K8s/Dockerfile）
 - 坏配置样例含 10 种常见漏洞：开放 SG、公网 IP、明文密码、公开 S3 等
 
-## 面试要点
+## 深入要点
 
 - 静态扫描 vs 动态审计：tfsec 扫代码（shift-left），CloudTrail 审计行为
 - CI 门禁：CRITICAL 阻断，HIGH 告警

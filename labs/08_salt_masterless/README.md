@@ -137,7 +137,7 @@ nginx live:
 └── images/                       # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **masterless 和 master-minion 怎么选？** masterless 用于单节点自管/镜像构建/小型部署；
   master-minion 用于大规模实时编排与事件驱动（如自动响应证书过期）。

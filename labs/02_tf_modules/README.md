@@ -144,7 +144,7 @@ variable "image" {                    # 升级变量提在根模块：
 └── images/                      # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **module 的 input/output 相当于函数的什么？** variables=形参、outputs=返回值；
   模块组合形成树，`module.web["blue"].url` 就是取深层返回值。

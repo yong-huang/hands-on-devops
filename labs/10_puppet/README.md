@@ -129,7 +129,7 @@ exec { 'first-start-nginx':
 └── images/                          # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **Puppet 的 catalog 是什么？** DSL 编译出的资源依赖图（该节点的期望态快照），
   执行按图进行；编译期即可发现引用错误——先规划后执行的声明式典范。

@@ -116,7 +116,7 @@ jobs:
 └── images/                          # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **Gitea Actions 与 GitHub Actions 的兼容边界？** workflow 语法/缓存/ARTIFACT 兼容；
   差异在生态：`uses:` 的 action 市场默认指向 gitea.com，私网需自建 mirror 或纯 run 步骤。

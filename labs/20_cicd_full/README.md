@@ -34,7 +34,7 @@ test（语法/断言）→ build（产出物）→ deploy（模拟上线）→ �
 revert 修复 → 回绿。这个闭环在实验 7（Molecule）、18（Gitea Actions）反复出现——
 它是 DevOps 的元模式。
 
-## 3. 面试要点
+## 3. 深入要点
 
 - **门禁 vs 提醒？** 门禁 = 失败即阻断合并/部署（branch protection + required
   checks）；提醒 = 通知但不阻塞。企业 CI 至少要有一道硬门禁。

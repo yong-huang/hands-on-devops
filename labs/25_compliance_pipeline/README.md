@@ -17,7 +17,7 @@ cd labs/25_compliance_pipeline
 | 安全门 | trivy/tfsec | CRITICAL 存在 |
 | 密钥门 | grep/扫描 | 明文密码存在 |
 
-## 面试要点
+## 深入要点
 
 - 合规流水线的本质：**把安全基线从"文档"变成"代码"**——门禁不可绕过
 - shift-left：越早拦截（IDE → pre-commit → CI → CD → 运行时），修复成本越低

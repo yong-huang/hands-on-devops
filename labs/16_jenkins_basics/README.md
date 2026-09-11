@@ -1,6 +1,6 @@
 # 16 · Jenkins 基础：Pipeline as Code 与一次构建的一生
 
-> Jenkins 是 CI 的活化石，也是面试高频区。本实验不点鼠标：派生镜像预装插件、
+> Jenkins 是 CI 的活化石，也是 CI 深水区。本实验不点鼠标：派生镜像预装插件、
 > `init.groovy.d` 种子脚本启动即建任务、REST API 触发构建、断言 SUCCESS 与制品归档——
 > 全部代码化，与 Web UI 操作一一对应。失败 stage 的红灯与日志，也一并取证。
 
@@ -120,7 +120,7 @@ jenkins.setNumExecutors(2)                  // 并行 stage（实验 17）需要
 └── images/                      # 图三件套（json/html/svg）
 ```
 
-## 7. 面试要点
+## 7. 深入要点
 
 - **声明式与脚本式 pipeline 的取舍？** 声明式结构固定（stages/post）、易读易审计；
   脚本式（Groovy 自由代码）表达力强但难维护。默认声明式，个别逻辑下沉到共享库。

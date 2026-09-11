@@ -17,7 +17,7 @@ cd labs/21_flux_gitops
 - **GitOps 调谐**：实际状态 ← 声明状态，不可逆向修改
 - **漂移**：手动 kubectl scale 修改副本数后，若资源纳管于 Kustomization，Flux 自动回正
 
-## 面试要点
+## 深入要点
 
 - GitOps 与 CI/CD 的区别：GitOps 是**持续调谐**（reconciliation），不是一次性部署
 - Pull vs Push：Flux 是 pull 模型（集群内 controller 主动拉取），更安全
