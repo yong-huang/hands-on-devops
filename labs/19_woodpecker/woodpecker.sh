@@ -139,7 +139,7 @@ do_pipeline() {
     fi
     git -C repo push -q "http://devops:devops123@localhost:3353/devops/demo.git" main 2>/dev/null || true
     note "[⚠] 组件与对接验证完成；push 自动触发在 woodpecker 2.4.1 + gitea 1.24 + OrbStack
-         组合下存在多重兼容性问题（完整诊断见 README §7 与 _PROGRESS.md）。
+         组合下存在多重兼容性问题（完整诊断见 README §7）。
          在标准 Linux 环境（docker.sock 直连 + 容器名互通）下本流程可自动闭环。"
 }
 

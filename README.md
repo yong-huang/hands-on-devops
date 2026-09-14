@@ -5,7 +5,7 @@
 Prometheus/Loki/Grafana · SOPS/Vault · cosign/syft 等工具链。
 **零云依赖**：Docker 容器当被管节点（"靶场环境"），macOS 本机全部可跑、全部免费。
 
-> 配套清单：`devops.md`（30 项目 · 6 阶段 · 每项目带验收标准与 AI 提示词）
+> 配套清单：`docs/devops.md`（30 项目 · 6 阶段 · 每项目带验收标准与 AI 提示词）
 
 ## 环境要求
 
@@ -66,8 +66,8 @@ cd labs/06_ansible_role_vault && ./ansible_role_vault.sh
 ```
 hands-on-devops/
 ├── README.md                        # 本文件
-├── devops.md                        # 原始 30 项目清单
-├── _PROGRESS.md                     # 阶段自检记录
+├── docs/
+│   └── devops.md                    # 原始 30 项目清单
 ├── Makefile                         # 统一入口（lab-up / lab-down / demo）
 ├── scripts/
 │   ├── load_resources.sh            # 镜像预载（含 daocloud 回源）
