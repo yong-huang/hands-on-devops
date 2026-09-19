@@ -38,9 +38,53 @@ do_init() {
     $TF init -input=false
 }
 
+# 地址是否已在 state 记账（精确匹配 terraform state list 输出）
+in_state() { $TF state list 2>/dev/null | grep -qxF "$1"; }
+
+# 场前对账：docker 里存在、state 里没记账的 tf01-* 资源即“孤儿”（上次运行
+# 中断或 state 丢失所致）——terraform 只认账本，apply 对孤儿直接撞名失败。
+# 必须按类型用各自的命令删：OrbStack 的 `docker rm -f <网络名>` 打印报错却
+# 返回 0，跨类型 try-chain 会在第一跳假成功终止。卷永不撞名（同名 create
+# 被 daemon 静默采用），列出仅提示。
+drop_orphans() {
+    if ! in_state docker_container.seed; then
+        local c
+        for c in $(docker ps -a --format '{{.Names}}' | grep '^tf01-seed-' || true); do
+            note "- 清理孤儿容器 $c"
+            docker rm -f "$c" >/dev/null 2>&1 || true
+        done
+    fi
+    if docker inspect tf01-nginx >/dev/null 2>&1 && ! in_state docker_container.app; then
+        note "- 清理孤儿容器 tf01-nginx"
+        docker rm -f tf01-nginx >/dev/null 2>&1 || true
+    fi
+    if docker network inspect tf01-net >/dev/null 2>&1 && ! in_state docker_network.lab; then
+        note "- 清理孤儿网络 tf01-net"
+        docker network rm tf01-net >/dev/null 2>&1 || true
+    fi
+    if docker volume inspect tf01-content >/dev/null 2>&1 && ! in_state docker_volume.web_content; then
+        note "- 发现孤儿卷 tf01-content（不冲突，交由 apply 静默收编）"
+    fi
+}
+
+# 无条件清掉 tf01-* 容器与网络（卷不冲突：docker 对同名 volume create 静默采用）。
+# 已记账的资源被误删也没关系：terraform refresh 发现缺失会自动重建。
+force_clean_names() {
+    local c
+    for c in $(docker ps -a --format '{{.Names}}' | grep '^tf01' || true); do
+        docker rm -f "$c" >/dev/null 2>&1 || true
+    done
+    docker network rm tf01-net >/dev/null 2>&1 || true
+}
+
 do_apply() {
     step "apply" "创建 网络+卷+播种容器+nginx（依赖图自动排序）"
-    $TF apply -auto-approve -input=false
+    drop_orphans
+    if ! $TF apply -auto-approve -input=false; then
+        note "[!] apply 失败——有同名资源未清干净，无条件清场后重试一次"
+        force_clean_names
+        $TF apply -auto-approve -input=false
+    fi
     local url
     url=$($TF output -raw app_url)
     note "curl 验证首页（应命中 TF 播种的标题；若命中别的服务说明端口被占）"

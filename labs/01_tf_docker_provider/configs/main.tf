@@ -44,9 +44,11 @@ resource "docker_container" "seed" {
   # 跑完自动退出；不会常驻
   must_run = false
 
-  # 防止每次 plan 都因镜像更新检测产生 diff；log_opts/network_mode 同 app（假漂移）
+  # 防止每次 plan 都因镜像更新检测产生 diff（假漂移）；log_opts 是 OrbStack
+  # 内置的日志轮转默认值，provider 会记进 state，不忽略则每次 plan 都 forces
+  # replacement（另一种假漂移，Docker Desktop 无此默认值故平时不可见）
   lifecycle {
-    ignore_changes = [image]
+    ignore_changes = [image, log_opts]
   }
 }
 
@@ -91,6 +93,12 @@ resource "docker_container" "app" {
   }
 
   restart = "no" # 漂移实验要手动 stop；若配 always 会被 daemon 拉起来，演示失败
+
+  # OrbStack 内置日志轮转默认值会被 provider 记进 state（同 seed 的说明），
+  # 不忽略则每次 plan 都 forces replacement
+  lifecycle {
+    ignore_changes = [log_opts]
+  }
 
   # 关键：seeder 与 app 无字段引用，必须显式依赖保证"先播种、后开服"
   depends_on = [docker_container.seed]
