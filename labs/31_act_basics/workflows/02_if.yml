@@ -1,0 +1,29 @@
+# 02 · if：条件执行——事件判断、always() 收尾
+#
+# if 接一个表达式，在 workflow 解析期求值。
+# 教学点①：act 默认按 push 事件跑，github.event_name == 'push' 恒真——
+#          换 -e 事件文件就能改写条件走向，这就是本地回路的价值。
+# 教学点②：if: always() 的收尾 job 无视上游成败（清理解构专用），
+#          注意它不写 needs 时与 gate 并行——写 needs 才是"gate 完了必跑"。
+name: "02 · if 条件执行"
+
+on: push
+
+jobs:
+  only-push:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' # 真：本地默认就是 push 事件
+    steps:
+      - run: echo "push 事件专属任务（发布/部署通常挂这里）"
+
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "普通任务，成败不影响收尾"
+
+  cleanup:
+    needs: gate
+    if: always() # gate 红了也要收尾——CI 里的"验尸官"语义
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "IF-OK 条件与收尾分支都执行了"

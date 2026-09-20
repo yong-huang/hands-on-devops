@@ -1,0 +1,17 @@
+# 03 · timeout-minutes：给每个 job 上"预算"
+#
+# 没有超时的 job 挂起来会烧光并发额度——GitHub 上排队任务全被它堵死。
+# 教学点：timeout 是"上限"不是"时长"，快任务照常秒级完成。
+# ⚠️ 实测：act 0.2.89 引擎不执行 timeout-minutes（真仓库按分钟强杀）——
+#        被杀的完整演示在 90_timeout_kill.yml：step 层用 shell timeout 实现同一语义。
+# 语法注意：只接受整数分钟，写 0.5 直接校验报错。
+name: "03 · timeout 超时预算"
+
+on: push
+
+jobs:
+  quick:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1 # 预算 1 分钟，实际毫秒级完成
+    steps:
+      - run: echo "快任务在预算内完成，TIMEOUT-OK"

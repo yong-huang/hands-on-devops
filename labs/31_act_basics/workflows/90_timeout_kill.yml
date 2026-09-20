@@ -1,0 +1,30 @@
+# 90 · 超时击杀（fail 阶段专用）——timeout 不是摆设
+#
+# ⚠️ 实测（2026-09-19，act 0.2.89）：act 引擎不执行 timeout-minutes——
+#    本文件最初写 sleep 120 + timeout-minutes: 1，结果 120 秒跑满还全绿。
+#    真仓库会按分钟强杀 job 容器，该差异在实验 32 云端取证。
+#    本地演示改用 shell timeout 命令在 step 层实现同一语义：
+#    预算到点强杀 → exit 124 → step 红 → job 红 → 流水线阻断。
+#    这也是生产实务：真要卡死循环，step 层 timeout 比依赖平台更可靠。
+name: "90 · 超时击杀演示"
+
+on: push
+
+jobs:
+  hang:
+    runs-on: ubuntu-latest
+    timeout-minutes: 1 # 语法照写：真仓库生效；act 下不强制（见上）
+    steps:
+      - name: 故意超预算（step 层击杀）
+        run: |
+          echo "sleep 120，预算 5 秒——等着被 timeout 杀"
+          set +e
+          timeout 5 sleep 120 # 到点 SIGTERM
+          code=$?
+          set -e
+          if [ "$code" = "124" ]; then
+            echo "TIMEOUT-KILLED 退出码 124=超预算强杀，流水线必须红"
+            exit 1 # 红是演练目标：证明门禁真能拦
+          fi
+          echo "活过了预算（不该出现），退出码 $code"
+          exit 1

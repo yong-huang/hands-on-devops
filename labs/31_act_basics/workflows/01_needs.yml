@@ -1,0 +1,28 @@
+# 01 · needs：job 依赖图——下游等上游，全绿才轮到汇总
+#
+# needs 是 workflow 的"执行计划"：act 解析后按依赖关系调度，不是从上到下傻跑。
+# 教学点：report 同时 needs 两个上游，任何一个缺席它就没机会跑（断路器见 91）。
+name: "01 · needs 依赖链"
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 产出构建标记
+        run: echo "build done $(date +%H:%M:%S)" > build.txt
+
+  test:
+    needs: build # 依赖图边：test ← build
+    runs-on: ubuntu-latest
+    steps:
+      - name: 模拟测试
+        run: echo "test passed"
+
+  report:
+    needs: [build, test] # 汇总节点：两个上游都绿才执行
+    runs-on: ubuntu-latest
+    steps:
+      - name: 汇总断言
+        run: echo "NEEDS-OK 三个 job 按依赖序完成"

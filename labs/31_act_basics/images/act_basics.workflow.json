@@ -1,0 +1,144 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "实验 31 · act 本地回路：一条 workflow 的本机一生",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "animation": "trace",
+    "subtitle": "写 → 装 → 容器 → 步骤 → 取证，红灯也要有断言"
+  },
+  "lanes": [
+    {
+      "id": "repo",
+      "label": "仓库"
+    },
+    {
+      "id": "engine",
+      "label": "act 引擎"
+    },
+    {
+      "id": "container",
+      "label": "job 容器"
+    },
+    {
+      "id": "local",
+      "label": "本地产物"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "wf",
+      "lane": "repo",
+      "col": 0,
+      "type": "frontend",
+      "label": "workflows/01–10.yml",
+      "sublabel": "一个语法特性一个文件",
+      "width": 160
+    },
+    {
+      "id": "act",
+      "lane": "engine",
+      "col": 1,
+      "type": "backend",
+      "label": "act -W 逐个装载",
+      "sublabel": "解析 → needs 依赖图",
+      "width": 160
+    },
+    {
+      "id": "inject",
+      "lane": "engine",
+      "col": 2,
+      "type": "security",
+      "label": "-s / --env 注入",
+      "sublabel": "secrets → env 显式映射",
+      "width": 160
+    },
+    {
+      "id": "job",
+      "lane": "container",
+      "col": 2,
+      "type": "backend",
+      "label": "job 容器（矩阵展开）",
+      "sublabel": "catthehacker ubuntu 镜像",
+      "width": 160
+    },
+    {
+      "id": "steps",
+      "lane": "container",
+      "col": 3,
+      "type": "backend",
+      "label": "steps 顺序执行",
+      "sublabel": "shell 步骤 + node actions",
+      "width": 160
+    },
+    {
+      "id": "artifacts",
+      "lane": "local",
+      "col": 4,
+      "type": "database",
+      "label": ".artifacts 制品服务",
+      "sublabel": "upload/download 走 HTTP",
+      "width": 160
+    },
+    {
+      "id": "logs",
+      "lane": "local",
+      "col": 5,
+      "type": "database",
+      "label": ".logs/*.log 断言取证",
+      "sublabel": "grep 标记 / md5 对账",
+      "width": 160
+    }
+  ],
+  "edges": [
+    {
+      "from": "wf",
+      "to": "act",
+      "label": "-W 装载",
+      "role": "main"
+    },
+    {
+      "from": "act",
+      "to": "job",
+      "label": "派生 job 容器",
+      "role": "main"
+    },
+    {
+      "from": "inject",
+      "to": "job",
+      "label": "secrets/env",
+      "role": "branch"
+    },
+    {
+      "from": "job",
+      "to": "steps",
+      "label": "顺序执行",
+      "role": "main"
+    },
+    {
+      "from": "steps",
+      "to": "artifacts",
+      "label": "upload-artifact",
+      "role": "main"
+    },
+    {
+      "from": "artifacts",
+      "to": "steps",
+      "label": "download 跨 job 回传",
+      "role": "return"
+    },
+    {
+      "from": "steps",
+      "to": "logs",
+      "label": "日志留档 → 逐条断言",
+      "role": "main"
+    },
+    {
+      "from": "steps",
+      "to": "logs",
+      "label": "fail 注入：篡改/超时/断路 → 红",
+      "role": "error"
+    }
+  ]
+}

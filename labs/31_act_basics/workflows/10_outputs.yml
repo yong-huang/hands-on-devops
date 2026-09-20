@@ -1,0 +1,27 @@
+# 10 · outputs：job 之间传"值"（不是传文件）
+#
+# artifact 传文件太重——下游只要一个版本号/一个开关时用 outputs：
+# 上游 step 写 $GITHUB_OUTPUT → 上游 job 声明 outputs → 下游 needs.xxx.outputs 取。
+# 教学点：三级接力缺一不可（step id → job outputs → needs 上下文），
+# 中间层不声明，下游就拿不到。
+name: "10 · outputs 跨 job 传值"
+
+on: push
+
+jobs:
+  gen:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.ver }} # ② job 层声明：暴露给下游
+    steps:
+      - id: v # ① step 层产出：必须带 id
+        run: echo "ver=v1.2.3" >> "$GITHUB_OUTPUT"
+
+  consume:
+    needs: gen # ③ 下游经 needs 上下文取用
+    runs-on: ubuntu-latest
+    steps:
+      - name: 消费上游输出
+        run: |
+          echo "拿到版本 ${{ needs.gen.outputs.version }}"
+          [ "${{ needs.gen.outputs.version }}" = "v1.2.3" ] && echo "OUTPUTS-OK 三级接力打通"

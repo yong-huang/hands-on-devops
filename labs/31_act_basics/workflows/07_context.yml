@@ -1,0 +1,33 @@
+# 07 · 表达式上下文：${{ }} 与 $VAR 是两套语言
+#
+# ${{ github.xxx }} 在 workflow 【解析期】由引擎求值；
+# $GITHUB_xxx     在容器【运行期】由进程环境提供。
+# 教学点①：两者能力不同——env 上下文、needs 输出只有表达式能拿到；
+# 教学点②：env 同名变量三层覆盖，step > job > workflow（就近胜出）；
+# 教学点③：act 下 github.actor 默认是 nektos/act，真仓库才是你的用户名
+#          ——上下文值因环境而异，别写死断言。
+name: "07 · 表达式上下文与 env 覆盖"
+
+on: push
+
+env:
+  TIER: workflow # ① 全局层
+
+jobs:
+  ctx:
+    runs-on: ubuntu-latest
+    env:
+      TIER: job # ② job 层覆盖全局
+    steps:
+      - name: 上下文速览
+        env:
+          TIER: step # ③ step 层再覆盖——最终胜出
+        run: |
+          echo "repo=${{ github.repository }} event=${{ github.event_name }} os=${{ runner.os }} actor=${{ github.actor }}"
+          echo "TIER=$TIER"
+          [ "$TIER" = "step" ] && echo "CONTEXT-OK 三层 env 就近覆盖"
+
+      - name: 表达式 vs shell 变量的求值时机
+        run: |
+          echo "解析期求值：${{ github.event_name }}"
+          echo "运行期求值：$GITHUB_EVENT_NAME" # 同一个事实的两副面孔

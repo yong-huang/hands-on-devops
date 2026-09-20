@@ -1,0 +1,34 @@
+# 91 · needs 断路器（fail 阶段专用）——上游红，下游跳；验尸官除外
+#
+# 与 01 的区别：build 挂了。看两个下游的不同命运——
+#   test  没写 if → 默认条件 success()：上游红 → 直接 skipped（连容器都不起）
+#   report 写了 if: always() → 无视上游照跑："验尸官"语义，收尾/清理/告警专用
+# ⚠️ 实测注：act 0.2.89 忠实还原了这对语义——最初本实验断言 report 也不跑，
+#    被真机打脸（GitHub 语义里 always() 就是会跑）。CI 门禁的正确姿势：
+#    发布动作绝不挂 always()；挂了它的是验尸，不是放行。
+name: "91 · needs 断路器演示"
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 必然失败
+        run: |
+          echo "构建炸了（故意注入）"
+          exit 1
+
+  test:
+    needs: build # 上游红 → 本 job skipped（断路器本体）
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "TEST-JOB-RAN 不该出现——断路器失效了"
+
+  report:
+    needs: [build, test]
+    if: always() # 验尸官：上游红/skip 也照跑（收尾、告警、清理）
+    runs-on: ubuntu-latest
+    steps:
+      - name: 验尸报告
+        run: echo "REPORT-OK 上游状态 build=failure / test=skipped，验尸不等于放行"

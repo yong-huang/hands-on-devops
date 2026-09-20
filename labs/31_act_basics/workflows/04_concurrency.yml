@@ -1,0 +1,19 @@
+# 04 · concurrency：并发组——同一分支连推时只留最新
+#
+# GitHub 语义：同 group 的多个 run 互斥，cancel-in-progress: true 时旧的被直接取消。
+# 真机行为（诚实标注）：act 单机一次只跑一个 run，没有"多个 run 抢同组"的场景，
+# 所以取消/互斥在这里只能验证"语法被正确解析、任务照常执行"；
+# 取消行为的真仓库取证在实验 32（矩阵与并发治理）。
+name: "04 · concurrency 并发组"
+
+on: push
+
+concurrency:
+  group: deploy-${{ github.ref }} # 按分支分组：同分支互斥，跨分支互不影响
+  cancel-in-progress: false # true = 新 run 顶掉旧 run（省 CI 分钟数）
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "CONCURRENCY-OK 语法解析通过，act 下单 run 顺序执行"

@@ -1,0 +1,26 @@
+# 09 · defaults：run 的默认 shell 与工作目录
+#
+# 20 个 step 都是 bash、都进同一个子目录？逐个写 working-directory 迟早漏一处。
+# defaults 一次声明全局生效；单个 step 显式写回的值优先级更高（就近覆盖）。
+# 教学点：working-directory 不会自动 mkdir——目录不存在第一步就炸，这是高频坑。
+name: "09 · defaults 默认值"
+
+on: push
+
+defaults:
+  run:
+    shell: bash
+    working-directory: svc # 本实验先手动建好这个目录（见第一步）
+
+jobs:
+  d:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 准备子目录（此步显式留在仓库根）
+        working-directory: . # 显式写回，覆盖 defaults
+        run: mkdir -p svc
+
+      - name: 受 defaults 影响的步骤（已在 svc 内）
+        run: |
+          pwd
+          [ "$(basename "$PWD")" = "svc" ] && echo "DEFAULTS-OK 默认工作目录生效"

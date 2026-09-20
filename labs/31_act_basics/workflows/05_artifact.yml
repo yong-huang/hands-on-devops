@@ -1,0 +1,55 @@
+# 05 · artifact：制品上传下载 + md5 完整性断言
+#
+# job 之间不共享文件系统（GitHub 上是不同机器）——传东西只能走 artifact 服务。
+# act 本地也忠实模拟这一点：起一个本地制品服务（--artifact-server-path 指定落盘目录），
+# upload/download 两个 node action 走 HTTP 与它对话，和真仓库行为同构。
+# fail 阶段会带 --env TAMPER=1 重跑本文件：下载后篡改内容 → md5 断言红 → job 失败。
+name: "05 · artifact 传递与 md5 断言"
+
+on: push
+
+jobs:
+  upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 生成制品与其校验和
+        run: |
+          echo "act artifact demo $(date +%s)" > release.txt
+          md5sum release.txt > release.md5
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg # 下载端按这个名字取
+          path: release.txt
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pkg-md5 # 校验和单独一份——篡改后两边对不上才抓得住
+          path: release.md5
+
+  download:
+    needs: upload # 上游没传完就下载，必然找不到 artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: pkg
+          path: dl
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: pkg-md5
+          path: dl
+
+      - name: 篡改注入（默认关；fail 阶段 --env TAMPER=1 打开）
+        run: |
+          if [ "${TAMPER:-0}" = "1" ]; then
+            echo "!!! TAMPER 注入：往 release.txt 尾部追加一行"
+            echo "tampered-line" >> dl/release.txt
+          fi
+
+      - name: md5 完整性断言
+        run: |
+          cd dl
+          md5sum -c release.md5 # -c：按记录的校验和逐个核对
+          echo "MD5-OK 跨 job 制品一致"
