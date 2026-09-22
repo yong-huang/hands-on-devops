@@ -21,7 +21,7 @@ step() { echo; echo "=====> [$1] $2"; }
 note() { echo "        $1"; }
 
 # 公共 act 参数：镜像钉死 + 离线 + 制品服务落盘到实验目录
-ACT=(act --pull=false -P "ubuntu-latest=$IMG" --artifact-server-path "$ART")
+ACT=(act --pull=false -P "ubuntu-latest=$IMG" --artifact-server-path "$ART" --action-offline-mode)
 
 # run_wf <file> [extra...]：跑一个 workflow，日志留档，退出码透传（pipefail 下 tee 不吞错）
 run_wf() {
