@@ -38,6 +38,10 @@ backups/
 # ---- CI 实验的本地数据卷 ----
 labs/**/data/
 
+# ---- Pulumi（各实验程序内运行时产生）----
+.pulumi-state/
+pulumi/**/.logs/
+
 # ---- Python ----
 __pycache__/
 *.pyc

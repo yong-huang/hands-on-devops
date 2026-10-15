@@ -1,0 +1,6 @@
+encryptionsalt: v1:xrF/9wenzOc=:v1:nf82FjFMRYWMjI4E:E/pqyVXDEFD6ZzsZGo0kjrhvuDecMA==
+config:
+  pulumi03-stack-config:port: "28202"
+  pulumi03-stack-config:image: nginx:1.25-alpine
+  pulumi03-stack-config:greeting:
+    secure: v1:Dndx4zmw9S4u3dht:N3MVKrerg3Fxh6F4n7le7ZhDsjfnbQwkOxR7N9lGGfcASzbZ

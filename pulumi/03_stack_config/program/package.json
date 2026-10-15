@@ -1,0 +1,12 @@
+{
+    "name": "pulumi03-stack-config",
+    "main": "index.ts",
+    "dependencies": {
+        "@pulumi/docker": "5.2.0",
+        "@pulumi/pulumi": "3.268.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.5.0"
+    }
+}

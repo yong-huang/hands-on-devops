@@ -1,0 +1,6 @@
+name: pulumi03-stack-config
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 03 · Stack 与配置——多环境 + Secrets（hands-on-devops 配套实验）

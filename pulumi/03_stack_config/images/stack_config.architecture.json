@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 03 · Stack 与配置：一份程序，两套环境",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      560
+    ],
+    "views": [
+      {
+        "id": "loop",
+        "label": "一份程序两套环境",
+        "focus": [
+          "program",
+          "cfg-dev",
+          "ctr-dev"
+        ],
+        "note": "同一程序按 dev 配置执行一次、按 prod 配置执行一次，各建自己的资源。"
+      },
+      {
+        "id": "isolation",
+        "label": "隔离与轮换",
+        "focus": [
+          "ctr-dev",
+          "ctr-prod"
+        ],
+        "note": "销毁或轮换 dev，prod 毫发无损——两栈账本独立。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "sublabel": "一份代码 · getStack()",
+      "pos": [
+        60,
+        218
+      ],
+      "size": [
+        150,
+        68
+      ]
+    },
+    {
+      "id": "cfg-dev",
+      "type": "external",
+      "label": "Pulumi.dev.yaml",
+      "sublabel": "port 28201 · [secret]",
+      "pos": [
+        300,
+        100
+      ],
+      "size": [
+        185,
+        64
+      ]
+    },
+    {
+      "id": "ctr-dev",
+      "type": "backend",
+      "label": "web · dev",
+      "sublabel": "pulumi03-dev-web :28201",
+      "pos": [
+        565,
+        100
+      ],
+      "size": [
+        175,
+        64
+      ]
+    },
+    {
+      "id": "st-dev",
+      "type": "database",
+      "label": "state 账本",
+      "sublabel": "dev.json（独立）",
+      "pos": [
+        820,
+        100
+      ],
+      "size": [
+        165,
+        60
+      ]
+    },
+    {
+      "id": "cfg-prod",
+      "type": "external",
+      "label": "Pulumi.prod.yaml",
+      "sublabel": "port 28202 · [secret]",
+      "pos": [
+        300,
+        340
+      ],
+      "size": [
+        185,
+        64
+      ]
+    },
+    {
+      "id": "ctr-prod",
+      "type": "backend",
+      "label": "web · prod",
+      "sublabel": "pulumi03-prod-web :28202",
+      "pos": [
+        565,
+        340
+      ],
+      "size": [
+        175,
+        64
+      ]
+    },
+    {
+      "id": "st-prod",
+      "type": "database",
+      "label": "state 账本",
+      "sublabel": "prod.json（独立）",
+      "pos": [
+        820,
+        340
+      ],
+      "size": [
+        165,
+        60
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "stack dev",
+      "wraps": [
+        "cfg-dev",
+        "ctr-dev",
+        "st-dev"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "stack prod",
+      "wraps": [
+        "cfg-prod",
+        "ctr-prod",
+        "st-prod"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "program-to-cfg-dev",
+      "from": "program",
+      "to": "cfg-dev",
+      "label": "up -s dev",
+      "variant": "emphasis"
+    },
+    {
+      "id": "program-to-cfg-prod",
+      "from": "program",
+      "to": "cfg-prod",
+      "label": "up -s prod",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cfg-dev-to-ctr-dev",
+      "from": "cfg-dev",
+      "to": "ctr-dev",
+      "label": "参数"
+    },
+    {
+      "id": "cfg-prod-to-ctr-prod",
+      "from": "cfg-prod",
+      "to": "ctr-prod",
+      "label": "参数"
+    },
+    {
+      "id": "ctr-dev-to-st-dev",
+      "from": "ctr-dev",
+      "to": "st-dev",
+      "label": "记账",
+      "variant": "dashed"
+    },
+    {
+      "id": "ctr-prod-to-st-prod",
+      "from": "ctr-prod",
+      "to": "st-prod",
+      "label": "记账",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三件套",
+      "items": [
+        "同一程序：差异不进代码",
+        "Pulumi.<stack>.yaml：差异进配置",
+        "每栈独立 state 账本"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "隔离（实测）",
+      "items": [
+        "destroy dev：prod 毫发无损",
+        "轮换 dev 密钥：只换 dev 容器",
+        "stack ls：两栈并列各记各的账"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "at rest 密文",
+      "items": [
+        "yaml 里 secure: 密文",
+        "state 全目录明文 0 命中",
+        "config 表格 [secret]（get 打明文）"
+      ]
+    }
+  ]
+}

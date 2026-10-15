@@ -1,0 +1,6 @@
+name: pulumi02-language-features
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 02 · 编程语言的力量——循环/条件/函数 vs HCL（hands-on-devops 配套实验）

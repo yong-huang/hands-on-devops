@@ -1,0 +1,6 @@
+name: pulumi01-docker-provider
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 01 · Docker Provider——Pulumi 的第一个程序与本机 CLI 回路（hands-on-devops 配套实验）

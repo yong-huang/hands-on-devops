@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 02 · 编程语言的力量：数据数组 → 循环 → N 个站点容器",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1170,
+      600
+    ],
+    "views": [
+      {
+        "id": "loop",
+        "label": "数组驱动循环",
+        "focus": [
+          "sites",
+          "program",
+          "core",
+          "gamma"
+        ],
+        "note": "数组里每一项经条件与函数加工成一条资源声明，循环展开成 N 个容器。"
+      },
+      {
+        "id": "incremental",
+        "label": "增量收敛",
+        "focus": [
+          "gamma",
+          "core"
+        ],
+        "note": "数组 2→3 只创建 gamma（+1 to create），3→2 只删除 gamma。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "sites",
+      "type": "database",
+      "label": "sites.ts 站点清单",
+      "sublabel": "数据 · alpha / beta",
+      "pos": [
+        60,
+        90
+      ],
+      "size": [
+        150,
+        64
+      ]
+    },
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "sublabel": "循环 · 条件 · 函数",
+      "pos": [
+        280,
+        90
+      ],
+      "size": [
+        160,
+        68
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "Pulumi 引擎",
+      "sublabel": "与 state 对账",
+      "pos": [
+        510,
+        90
+      ],
+      "size": [
+        160,
+        64
+      ],
+      "tag": "差集"
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "docker provider",
+      "sublabel": "插件进程",
+      "pos": [
+        740,
+        90
+      ],
+      "size": [
+        160,
+        64
+      ]
+    },
+    {
+      "id": "net",
+      "type": "cloud",
+      "label": "net",
+      "sublabel": "三容器接入",
+      "pos": [
+        470,
+        350
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "alpha",
+      "type": "backend",
+      "label": "alpha",
+      "sublabel": ":28091",
+      "pos": [
+        640,
+        350
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "beta",
+      "type": "backend",
+      "label": "beta",
+      "sublabel": ":28092",
+      "pos": [
+        810,
+        350
+      ],
+      "size": [
+        140,
+        56
+      ]
+    },
+    {
+      "id": "gamma",
+      "type": "backend",
+      "label": "gamma",
+      "sublabel": ":28093",
+      "pos": [
+        980,
+        350
+      ],
+      "size": [
+        140,
+        56
+      ],
+      "tag": "新增 +1"
+    }
+  ],
+  "boundaries": [],
+  "connections": [
+    {
+      "id": "sites-to-program",
+      "from": "sites",
+      "to": "program",
+      "label": "数组驱动",
+      "variant": "emphasis"
+    },
+    {
+      "id": "program-to-core",
+      "from": "program",
+      "to": "core",
+      "label": "执行程序",
+      "variant": "emphasis"
+    },
+    {
+      "id": "core-to-provider",
+      "from": "core",
+      "to": "provider",
+      "label": "指令"
+    },
+    {
+      "id": "provider-to-alpha",
+      "from": "provider",
+      "to": "alpha",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "provider-to-beta",
+      "from": "provider",
+      "to": "beta",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "provider-to-gamma",
+      "from": "provider",
+      "to": "gamma",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "provider-to-net",
+      "from": "provider",
+      "to": "net",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三件事",
+      "items": [
+        "循环：数组几项就几个资源",
+        "条件：三元分流镜像 tag（有类型检查）",
+        "函数：做法封装一次，数据变它跟着变"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "增量收敛（实测）",
+      "items": [
+        "2→3：+1 to create / 4 unchanged",
+        "3→2：-1 deleted，只动差集",
+        "输出 urls 数组自动增减"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "编译期防线",
+      "items": [
+        "tsc --noEmit 拒绝类型错误",
+        "属性类型是 Input<T> 包装",
+        "逻辑名即身份，别用数组下标"
+      ]
+    }
+  ]
+}

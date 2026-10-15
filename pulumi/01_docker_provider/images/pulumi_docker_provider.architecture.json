@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 01 · Pulumi Docker Provider：程序驱动的期望态收敛",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      540
+    ],
+    "views": [
+      {
+        "id": "main-loop",
+        "label": "收敛主回路",
+        "focus": [
+          "program",
+          "core",
+          "provider",
+          "app"
+        ],
+        "note": "程序声明期望态，引擎对账后经 provider 驱动 daemon 收敛。"
+      },
+      {
+        "id": "drift",
+        "label": "漂移与自愈",
+        "focus": [
+          "app",
+          "core"
+        ],
+        "note": "容器被手动删除后，refresh 从实际状态检出删除，up 重建恢复。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "sublabel": "期望态 · TypeScript",
+      "pos": [
+        50,
+        240
+      ],
+      "size": [
+        155,
+        68
+      ]
+    },
+    {
+      "id": "core",
+      "type": "backend",
+      "label": "Pulumi 引擎",
+      "sublabel": "执行程序 → 资源图",
+      "pos": [
+        300,
+        240
+      ],
+      "size": [
+        175,
+        68
+      ],
+      "tag": "幂等"
+    },
+    {
+      "id": "provider",
+      "type": "backend",
+      "label": "docker provider",
+      "sublabel": "插件进程 · gRPC",
+      "pos": [
+        565,
+        240
+      ],
+      "size": [
+        170,
+        68
+      ]
+    },
+    {
+      "id": "state",
+      "type": "database",
+      "label": "state 记账本",
+      "sublabel": ".pulumi-state/dev.json",
+      "pos": [
+        302,
+        412
+      ],
+      "size": [
+        170,
+        62
+      ]
+    },
+    {
+      "id": "net",
+      "type": "cloud",
+      "label": "pulumi01-net",
+      "sublabel": "自定义网络",
+      "pos": [
+        845,
+        100
+      ],
+      "size": [
+        150,
+        58
+      ]
+    },
+    {
+      "id": "app",
+      "type": "backend",
+      "label": "pulumi01-nginx",
+      "sublabel": "80 → 28081",
+      "pos": [
+        840,
+        240
+      ],
+      "size": [
+        160,
+        68
+      ],
+      "tag": "healthy"
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Docker daemon（实际态）",
+      "wraps": [
+        "net",
+        "app"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "program-to-core",
+      "from": "program",
+      "to": "core",
+      "label": "执行程序",
+      "variant": "emphasis"
+    },
+    {
+      "id": "core-to-provider",
+      "from": "core",
+      "to": "provider",
+      "label": "资源指令",
+      "variant": "emphasis"
+    },
+    {
+      "id": "core-to-state",
+      "from": "core",
+      "to": "state",
+      "label": "读写账本",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelDy": 46
+    },
+    {
+      "id": "provider-to-app",
+      "from": "provider",
+      "to": "app",
+      "label": "Docker API"
+    },
+    {
+      "id": "app-to-net",
+      "from": "app",
+      "to": "net",
+      "label": "接入",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "refresh",
+      "from": "app",
+      "to": "core",
+      "label": "refresh 对账 → 检出漂移",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom",
+      "labelAt": [
+        640,
+        500
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "主线",
+      "items": [
+        "程序声明期望态，Output 引用即依赖边",
+        "preview 算 diff 不落地",
+        "up 收敛并记账，destroy 逆序清空"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "自愈",
+      "items": [
+        "docker rm 注入漂移",
+        "refresh 检出 delete 并写回账本",
+        "up 按期望态重建、服务恢复"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "与 TF 的差异",
+      "items": [
+        "裸 preview 默认不刷新实际状态",
+        "本地后端 + 口令，零云自托管",
+        "provider 按需自动下载"
+      ]
+    }
+  ]
+}

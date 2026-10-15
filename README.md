@@ -6,6 +6,8 @@ Prometheus/Loki/Grafana · SOPS/Vault · cosign/syft 等工具链。
 **零云依赖**：Docker 容器当被管节点（"靶场环境"），macOS 本机全部可跑、全部免费。
 
 > 配套清单：`docs/devops.md`（30 项目 · 6 阶段 · 每项目带验收标准与 AI 提示词）
+> 进阶系列：`docs/cicd.md`（CI/CD 进阶 16 项目 · GitHub Actions 为轴 · 实验在 `cicd/` 目录）
+> 互补线：`docs/pulumi.md`（Pulumi 快速上手 12 项目 · TS 主线 + Python 对照 · Docker/kind/LocalStack 三 Provider 零云）
 
 ## 环境要求
 
@@ -61,28 +63,82 @@ cd labs/06_ansible_role_vault && ./ansible_role_vault.sh
 | 29 | 备份与灾难恢复 | — | ⬜ |
 | 30 | 终极串联——DevOps 一体机 | 全部 | ⬜ |
 
+## CI/CD 进阶系列（cicd/）
+
+devops.md 的互补进阶线：**GitHub Actions 为轴**，本机 act 离线迭代 + 真仓库免费额度，
+不与 labs/ 01-30 重复（关系对照见 `docs/cicd.md` 文末）。清单：`docs/cicd.md`。
+
+| 编号 | 实验 | 工具 | 状态 |
+|:---|:---|:---|:---|
+| 01 | act 本地回路与 workflow 语法深潜 | act | ✅ 真机验证 |
+| 02 | 矩阵构建与并发治理 | Actions ☁️ | ⬜ |
+| 03 | 可复用工作流与复合动作 | Actions | ⬜ |
+| 04 | 缓存与构建加速 | Actions/buildx | ⬜ |
+| 05 | self-hosted runner 与标签路由 | Actions ☁️ | ⬜ |
+| 06 | Environments 部署保护与审批流 | Actions ☁️ | ⬜ |
+| 07 | OIDC 短时凭据 | Actions ☁️ | ⬜ |
+| 08 | 流水线供应链加固 | Actions ☁️ | ⬜ |
+| 09 | 蓝绿部署 | Compose/nginx | ⬜ |
+| 10 | 金丝雀发布与指标门禁 | nginx | ⬜ |
+| 11 | 滚动更新与健康门禁 | kind | ⬜ |
+| 12 | 版本账本与一键回滚 | Compose | ⬜ |
+| 13 | monorepo 增量构建 | Actions | ⬜ |
+| 14 | flaky test 治理 | pytest | ⬜ |
+| 15 | semantic-release 版本工程 | Actions ☁️ | ⬜ |
+| 16 | 🏁 终极串联：生产级发布系统 | 全部 ☁️ | ⬜ |
+
+> ☁️ = 需推送 GitHub 真仓库（公共仓库免费）；其余纯本机可跑。
+
+## Pulumi 互补线（pulumi/）
+
+devops.md 的互补线：IaC 的「通用编程语言」视角，与 labs/ 01-05 的 Terraform 同题对照
+（关系对照见 `docs/pulumi.md` 文末）。清单：`docs/pulumi.md`。
+
+| 编号 | 实验 | Provider/工具 | 状态 |
+|:---|:---|:---|:---|
+| 01 | 第一个程序——Docker Provider 与 CLI 回路 | Docker | ✅ 真机验证 |
+| 02 | 编程语言的力量——循环/条件/函数 vs HCL | Docker | ✅ 真机验证 |
+| 03 | Stack 与配置——多环境 + Secrets | Docker | ✅ 真机验证 |
+| 04 | 状态管理——本地文件 → MinIO S3 后端 | MinIO | ⬜ |
+| 05 | ComponentResource——对标 TF module | Docker | ⬜ |
+| 06 | 给 IaC 写测试——Mocks 单测 + Policy 拦截 | CrossGuard | ⬜ |
+| 07 | Python 对照——同题重写 | Python SDK | ⬜ |
+| 08 | Output 编程模型深水区——apply 陷阱与依赖图 | Docker | ⬜ |
+| 09 | Kubernetes Provider——kind 部署应用 | kind | ⬜ |
+| 10 | AWS Provider——LocalStack 上管云资源 | LocalStack | ⬜ |
+| 11 | ⛓️ 多 Provider 混合编排——一次跨三栈 | 三栈 | ⬜ |
+| 12 | 🏁 交付闭环——preview 门禁进 CI | 全部 | ⬜ |
+
+> 零云：Docker + kind + LocalStack 全本机免费；TypeScript 主线，项目 7 用 Python 对照。
+
 ## 目录结构
 
 ```
 hands-on-devops/
 ├── README.md                        # 本文件
 ├── docs/
-│   └── devops.md                    # 原始 30 项目清单
+│   ├── devops.md                    # DevOps 主线 30 项目清单
+│   ├── cicd.md                      # CI/CD 进阶 16 项目清单
+│   └── pulumi.md                    # Pulumi 快速上手 12 项目清单（互补线）
 ├── Makefile                         # 统一入口（lab-up / lab-down / demo）
 ├── scripts/
 │   ├── load_resources.sh            # 镜像预载（含 daocloud 回源）
 │   ├── tfrc.sh                      # Terraform provider 离线镜像
-│   ├── docker-env.sh                # Docker socket 自动探测
+│   ├── docker-env.sh                # Docker socket 自动探测（默认 OrbStack 优先）
 │   └── tf-mirror/                   # kreuzwerker/docker provider 离线包
-└── labs/
-    └── NN_short_name/
-        ├── README.md                # 8 节教程（为什么→图→快速开始→概念→字段→结构→深入→总结）
-        ├── xxx.sh                   # 主演示脚本（apply/observe/.../clean 全真机验证）
-        ├── configs/ 或 manifest     # 声明式配置（注释密度远高于生产）
-        └── images/
-            ├── xxx.sequence.json    # 图源（typed JSON IR，可用配套工具重新渲染）
-            ├── xxx.html             # 交互版（自包含单文件）
-            └── xxx.svg              # 双主题矢量图（README 内嵌）
+├── labs/                            # DevOps 主线（01-30，编号与 devops.md 对应）
+│   └── NN_short_name/
+│       ├── README.md                # 8 节教程（为什么→图→快速开始→概念→字段→结构→深入→总结）
+│       ├── xxx.sh                   # 主演示脚本（apply/observe/.../clean 全真机验证）
+│       ├── configs/ 或 manifest     # 声明式配置（注释密度远高于生产）
+│       └── images/
+│           ├── xxx.sequence.json    # 图源（typed JSON IR，可用配套工具重新渲染）
+│           ├── xxx.html             # 交互版（自包含单文件）
+│           └── xxx.svg              # 双主题矢量图（README 内嵌）
+├── cicd/                            # CI/CD 进阶线（01-16，编号与 cicd.md 项目号 1:1 对应）
+│   └── NN_short_name/               # 结构与 labs/ 一致；声明式配置按领域取名为 workflows/ 等
+└── pulumi/                          # Pulumi 互补线（01-12，编号与 pulumi.md 项目号 1:1 对应）
+    └── NN_short_name/               # README 六段式 + 主脚本 + program/（TS 程序）+ images 图三件套
 ```
 
 ## 每实验脚本约定
@@ -101,8 +157,8 @@ hands-on-devops/
 
 - **GitHub 不可达**：Terraform provider 走仓库内离线镜像（`scripts/tfrc.sh`）；
   Docker 镜像自动回源 daocloud（`scripts/load_resources.sh`）
-- **Docker socket**：`scripts/docker-env.sh` 自动探测 Desktop/OrbStack 并导出
-  `DOCKER_HOST`（Go/SDK 客户端不认 docker context）
+- **Docker socket**：`scripts/docker-env.sh` 自动探测并导出 `DOCKER_HOST`
+  （Go/SDK 客户端不认 docker context）；默认 OrbStack 优先，`DOCKERDESKTOP=1` 切回
 - **实验 19 Woodpecker**：SPA 会话 + webhook 触发在 macOS HTTP 环境受限，
   完整诊断见其 README §7
 
