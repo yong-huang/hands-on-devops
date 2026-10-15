@@ -1,0 +1,6 @@
+name: pulumi05-component-resource
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 05 · ComponentResource——对标 TF module（hands-on-devops 配套实验）

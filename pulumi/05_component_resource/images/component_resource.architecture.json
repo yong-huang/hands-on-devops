@@ -1,0 +1,135 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 05 · ComponentResource：一份组件，两套实例",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1100, 560],
+    "views": [
+      {
+        "id": "instantiate",
+        "label": "实例化与封装",
+        "focus": ["cls", "alpha-net", "alpha-web"],
+        "note": "调用方只见 args 与 url；网络和容器藏在组件内部。"
+      },
+      {
+        "id": "evolve",
+        "label": "一处改动两处生效",
+        "focus": ["alpha-web", "beta-web"],
+        "note": "改组件一行，alpha 与 beta 的容器一起 replace。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "cls",
+      "type": "external",
+      "label": "WebService 组件类",
+      "sublabel": "args 入参 · url 输出 · 内部资源不可见",
+      "pos": [60, 240],
+      "size": [180, 74]
+    },
+    {
+      "id": "alpha-net",
+      "type": "database",
+      "label": "alpha-net",
+      "sublabel": "pulumi05-alpha-net",
+      "pos": [420, 85],
+      "size": [175, 62]
+    },
+    {
+      "id": "alpha-web",
+      "type": "backend",
+      "label": "alpha-web",
+      "sublabel": "nginx:1.27 · :28401",
+      "pos": [685, 85],
+      "size": [185, 66]
+    },
+    {
+      "id": "beta-net",
+      "type": "database",
+      "label": "beta-net",
+      "sublabel": "pulumi05-beta-net",
+      "pos": [420, 395],
+      "size": [175, 62]
+    },
+    {
+      "id": "beta-web",
+      "type": "backend",
+      "label": "beta-web",
+      "sublabel": "nginx:1.25 · :28402",
+      "pos": [685, 395],
+      "size": [185, 66]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "组件实例 alpha",
+      "wraps": ["alpha-net", "alpha-web"]
+    },
+    {
+      "kind": "region",
+      "label": "组件实例 beta",
+      "wraps": ["beta-net", "beta-web"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "cls-to-alpha-net",
+      "from": "cls",
+      "to": "alpha-net",
+      "label": "实例化 · parent",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cls-to-beta-net",
+      "from": "cls",
+      "to": "beta-net",
+      "label": "实例化 · parent",
+      "variant": "emphasis"
+    },
+    {
+      "id": "alpha-net-to-alpha-web",
+      "from": "alpha-net",
+      "to": "alpha-web",
+      "label": "挂网"
+    },
+    {
+      "id": "beta-net-to-beta-web",
+      "from": "beta-net",
+      "to": "beta-web",
+      "label": "挂网"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "对标 TF module",
+      "items": [
+        "module \"alpha\" ↔ new WebService(…)",
+        "args = module 变量 · outputs = 出参",
+        "内部资源是组件私有，调用方不可见"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "URN 父子树（实测）",
+      "items": [
+        "WebService$docker:…::alpha-web",
+        "$ 前是 parent，账本 parent 字段记全",
+        "pulumi stack --show-urns 直接打印树"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "演化（实测）",
+      "items": [
+        "组件加一行 envs（index.ts 零改动）",
+        "alpha 与 beta 一起 replace [diff: +envs]",
+        "改一处，处处生效——组件即复用单位"
+      ]
+    }
+  ]
+}

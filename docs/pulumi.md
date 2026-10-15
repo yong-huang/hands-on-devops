@@ -17,12 +17,12 @@
 
 ## 📊 总进度
 
-进度：████░░░░░░░░░░░░░░░░ 4/12 (33%)
+进度：█████░░░░░░░░░░░░░░░ 5/12 (42%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 3 |
-| 第二阶段：工程化——组件、测试与编程模型 | 4 | 0 |
+| 第二阶段：工程化——组件、测试与编程模型 | 4 | 1 |
 | 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 0 |
 | **合计** | **12** | **3** |
 
@@ -108,21 +108,22 @@
 
 > **目标**：把 IaC 当程序写工程化——组件抽象、自动化测试、跨语言对照、Output 模型无盲区
 
-### [ ] 项目 5：ComponentResource——对标 TF module
+### [x] 项目 5：ComponentResource——对标 TF module
 
 | 项目信息 | 详情 |
 |:---|:---|
 | **行数** | ~150 行 TypeScript |
 | **核心知识点** | ComponentResource 类封装（容器 + 网络 + 端口输出）、args 输入/outputs 输出、子资源 parent/URN 树、一个组件类复用两套实例 |
 | **前置** | 项目 1 |
-| **选做** | `pulumi convert --from terraform` 把 labs/02 的 TF 模块转成 TS 初稿，对比生成代码与手写组件的差距 |
+| **选做** | `pulumi convert --from terraform` 把 labs/02 的 TF 模块转成 TS 初稿，对比生成代码与手写组件的差距（未做，convert 深潜在本清单跳过项） |
 | **验收标准** | 组件实例化两套服务后改组件一处两实例同步更新；`pulumi stack --show-urns` 资源呈父子树结构（put into README 截图或文本） |
+| **实验目录** | `pulumi/05_component_resource/`（✅ `all` 全程 exit=0 连跑两遍；两实例同步 replace +envs 与 URN 父子树全断言） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「ComponentResource」。请给我完整 TypeScript 代码约 150 行：web-service 组件类（容器+网络+端口输出），同程序实例化两套服务，附 pulumi stack --show-urns 验证父子关系。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① `pulumi stack export` 的资源在 `.deployment.resources` 下（不在顶层）——解析账本别取错层；② 新增 env 的 diff 标记是 `[diff: +envs]`（改已有值才是 `~envs`，对照项目 3 轮换），env 变更走 replace；③ 组件本身是账本里的一条资源（`hands-on:service:WebService alpha`），`+7 created`/`-7 deleted` 计数都含组件；④ `pulumi stack --show-urns` 直接打印父子树，子资源 URN 带 `$`（`…WebService$docker:index/container:Container::alpha-web`），state 每条资源的 parent 字段记全链；⑤ 演化段 sed 改组件源码必须配 trap 还原（项目 2 同款），main 里 `trap - EXIT` 后手动 mv 防二次还原
 
 ---
 
