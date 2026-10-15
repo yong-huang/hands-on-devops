@@ -1,0 +1,6 @@
+name: pulumi07-python-parity
+runtime:
+  name: python
+  options:
+    virtualenv: .venv
+description: 07 · Python 对照——同题重写（hands-on-devops 配套实验）

@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 07 · Python 对照：两种外壳，一本账",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": { "mode": "auto" },
+    "viewBox": [1100, 560],
+    "views": [
+      {
+        "id": "parity",
+        "label": "同题对照",
+        "focus": ["ts", "py", "ts-st", "py-st"],
+        "note": "两份程序两种语言，export 出的账本键名逐字一致。"
+      },
+      {
+        "id": "coexist",
+        "label": "并存",
+        "focus": ["web-ts", "web-py"],
+        "note": "TS 栈 28081 与 Python 栈 28511 同时在线，互不干扰。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "ts",
+      "type": "external",
+      "label": "index.ts（TS 版）",
+      "sublabel": "01 号实验 · :28081",
+      "pos": [60, 85],
+      "size": [180, 70]
+    },
+    {
+      "id": "py",
+      "type": "external",
+      "label": "__main__.py（Python 版）",
+      "sublabel": "07 号实验 · :28511",
+      "pos": [60, 400],
+      "size": [180, 70]
+    },
+    {
+      "id": "ts-st",
+      "type": "database",
+      "label": "TS 栈账本",
+      "sublabel": "file 后端 · 栈 dev",
+      "pos": [410, 85],
+      "size": [200, 66]
+    },
+    {
+      "id": "py-st",
+      "type": "database",
+      "label": "PY 栈账本",
+      "sublabel": "file 后端 · 栈 py",
+      "pos": [410, 400],
+      "size": [200, 66]
+    },
+    {
+      "id": "web-ts",
+      "type": "backend",
+      "label": "pulumi01-nginx",
+      "sublabel": "nginx:1.27 · :28081",
+      "pos": [750, 85],
+      "size": [195, 66]
+    },
+    {
+      "id": "web-py",
+      "type": "backend",
+      "label": "pulumi07-…-nginx",
+      "sublabel": "nginx:1.27 · :28511",
+      "pos": [750, 400],
+      "size": [195, 66]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ts-to-ts-st",
+      "from": "ts",
+      "to": "ts-st",
+      "label": "pulumi up",
+      "variant": "emphasis"
+    },
+    {
+      "id": "py-to-py-st",
+      "from": "py",
+      "to": "py-st",
+      "label": "pulumi up",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ts-st-to-py-st",
+      "from": "ts-st",
+      "to": "py-st",
+      "label": "export 逐项对比 · 同构",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [510, 276]
+    },
+    {
+      "id": "ts-st-to-web-ts",
+      "from": "ts-st",
+      "to": "web-ts",
+      "label": "收敛"
+    },
+    {
+      "id": "py-st-to-web-py",
+      "from": "py-st",
+      "to": "web-py",
+      "label": "收敛"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "写法对照",
+      "items": [
+        "对象字面量 ↔ kwargs 传参",
+        "camelCase ↔ snake_case 属性名",
+        "模板串 `${…}` ↔ f-string"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Args 类",
+      "items": [
+        "复杂属性 = 一个 *Args 类",
+        "ContainerPortArgs(internal=80)",
+        "ContainerNetworksAdvancedArgs 跟随属性名"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "同构（实测）",
+      "items": [
+        "类型 + 逻辑名完全一致",
+        "inputs 键名逐字一致",
+        "差异只有端口与真名前缀"
+      ]
+    }
+  ]
+}

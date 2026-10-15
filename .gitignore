@@ -46,6 +46,7 @@ pulumi/**/.logs/
 __pycache__/
 *.pyc
 .venv/
+.venv/
 
 # ---- Node / 工具噪声 ----
 node_modules/

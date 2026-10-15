@@ -17,12 +17,12 @@
 
 ## 📊 总进度
 
-进度：██████░░░░░░░░░░░░░░ 6/12 (50%)
+进度：███████░░░░░░░░░░░░░ 7/12 (58%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 3 |
-| 第二阶段：工程化——组件、测试与编程模型 | 4 | 2 |
+| 第二阶段：工程化——组件、测试与编程模型 | 4 | 3 |
 | 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 0 |
 | **合计** | **12** | **3** |
 
@@ -145,7 +145,7 @@
 
 ---
 
-### [ ] 项目 7：Python 对照——同题重写
+### [x] 项目 7：Python 对照——同题重写
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -153,12 +153,13 @@
 | **核心知识点** | Python SDK（venv + pip 清华源装 pulumi/pulumi-docker）、Output 与 args 字典的写法差异、同一引擎多语言、两栈并存互操作 |
 | **前置** | 项目 1（拿 TS 版成品逐行对照） |
 | **验收标准** | Python 版与 TS 版部署等价资源：`pulumi stack export` 资源清单逐项对比一致；两 stack 并存且互不干扰 |
+| **实验目录** | `pulumi/07_python_parity/`（✅ `all` 全程 exit=0 连跑两遍；export 对比类型/逻辑名/inputs 键名逐字一致，两栈 28081/28511 并存 + 隔离验证） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「Python 对照」。请给我完整 Python 代码约 100 行（venv + pip 装 pulumi/pulumi-docker）：与 TS 版同题（nginx 容器+网络），演示 Python SDK 的 args/Output 写法，附与 TS 版逐步对照说明。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① Python SDK 的 Args 类名跟随 camelCase 属性名 PascalCase 化：挂网是 `ContainerNetworksAdvancedArgs`（想当然写 ContainerNetworkArgs 会 AttributeError），拿不准 `dir(pulumi_docker)` 查；② 程序侧 snake_case，账本 inputs 键名统一 camelCase（provider schema 形态）——export 对比时别按语言习惯找键；③ `Pulumi.yaml` 配 `runtime.options.virtualenv: .venv` 后 CLI 自动取用 venv，无需激活；④ 本机 Python 已是 3.13.9（原记 3.10 已漂移），pulumi 3.268/pulumi-docker 5.2.0 的 PyPI 包 3.13 可装可用；⑤ 对照两项目并存时端口必须走配置错开（TS 版 28081 写死、PY 版 28511 走 config）
 
 ---
 
@@ -323,7 +324,7 @@ kind get clusters                           # 项目 9/11：pulumi-lab 存在
 | get.pulumi.com 插件源 | 全部 | ✅ 直连可达（docker/kubernetes/aws 插件包 HEAD 200）；docker provider 插件实测自动下载安装成功（实验 01） |
 | npmmirror @pulumi/* SDK | 1-6、8-12 | ✅ pulumi 3.268.0 / docker 5.2.0 / kubernetes 4.34.2 / aws 7.50.0 均可查 |
 | Node 22 运行时 | 全部 TS 项目 | ✅ v22.23.2；tsc --noEmit 编译期拦截实测通过（实验 02） |
-| Python + pip 清华源 | 7 | ✅ 3.10.20；venv + pulumi 包装配首跑验证 |
+| Python + pip 清华源 | 7 | ✅ 3.13.9（anaconda；原记 3.10 已漂移）；venv + pulumi==3.268/pulumi-docker==5.2.0 全流程真机验证（2026-10-15） |
 | kind | 9、11 | ✅ 0.32.0，集群在跑；开工建专用集群 `pulumi-lab` 探活 |
 | LocalStack | 10、11 | ⚠️ CLI 2026.8.0 已装但当前 stopped；hands-on-aws 30 实验已验证；2026-03 起需免费 token |
 | MinIO 当 S3 后端 | 4 | ✅ labs/03（TF）与 pulumi/04（Pulumi s3 backend）双真机验证（2026-10-15）；建桶 mc 镜像优先、宿主 aws CLI 兜底 |
