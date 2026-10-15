@@ -5,8 +5,8 @@
 ## 快速开始
 ```bash
 cd labs/26_monitoring_stack
-ORBSTACK=1 ./monitoring_stack.sh up
-ORBSTACK=1 ./monitoring_stack.sh down
+./monitoring_stack.sh up
+./monitoring_stack.sh down
 ```
 
 Prometheus: http://localhost:9090 | Grafana: http://localhost:3001 (admin/admin)

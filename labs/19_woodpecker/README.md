@@ -24,7 +24,7 @@ push 事件经 webhook 到达 server，server 派发 job 给 agent，agent 在�
 
 ```bash
 cd labs/19_woodpecker
-ORBSTACK=1 ./woodpecker.sh apply    # macOS + OrbStack（详见环境节）
+./woodpecker.sh apply    # macOS + OrbStack（详见环境节）
 ./woodpecker.sh clean               # 零残留
 ```
 
