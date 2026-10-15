@@ -1,0 +1,6 @@
+name: pulumi04-state-backend
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 04 · 状态管理——本地 file 后端 → MinIO S3 后端（hands-on-devops 配套实验）

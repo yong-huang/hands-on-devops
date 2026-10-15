@@ -17,7 +17,7 @@
 
 ## 📊 总进度
 
-进度：███░░░░░░░░░░░░░░░░ 3/12 (25%)
+进度：████░░░░░░░░░░░░░░░░ 4/12 (33%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
@@ -86,7 +86,7 @@
 
 ---
 
-### [ ] 项目 4：状态管理——本地文件 → MinIO S3 后端
+### [x] 项目 4：状态管理——本地文件 → MinIO S3 后端
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -94,12 +94,13 @@
 | **核心知识点** | 本地 file backend 目录结构、`pulumi login s3://...`（docker 起 MinIO 当 S3，复用本仓库 labs/03 模式）、state 迁移（export/import）、`pulumi import` 接管已存在容器、`pulumi refresh` 检出漂移 |
 | **前置** | 项目 1 |
 | **验收标准** | state 迁到 MinIO 后 `pulumi up` 零 diff；手动 `docker rm -f` 一个容器后 `pulumi refresh` 检出漂移；`pulumi import` 接管手工创建的容器后 `pulumi destroy` 能全清 |
+| **实验目录** | `pulumi/04_state_backend/`（✅ `all` 全程 exit=0，连跑两遍验证重跑幂等；零 diff/漂移检出/接管全清全断言） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「状态管理」。请给我约 120 行：本地 file backend → MinIO s3:// backend 的登录与迁移脚本、pulumi import 接管已存在容器的命令序列、pulumi refresh 漂移检出演示（docker 起 MinIO 的方式参考本仓库 labs/03）。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① p-docker（@pulumi/docker）5.2.0 的 `import` 只认容器 64 位长 ID，给名字报 `resource does not exist`——先 `docker inspect --format '{{.Id}}'` 取 ID；② Pulumi 的 s3 backend **不认** `AWS_ENDPOINT_URL`/`AWS_S3_FORCE_PATH_STYLE` 环境变量（报 `InvalidBucketName`），端点与 path-style 只能写进 `s3://桶?endpoint=…&s3ForcePathStyle=true` 的 URL 查询参数；③ `pulumi -C program` 下 `stack import --file` 的相对路径相对 `program/` 解析，必须给绝对路径；④ MinIO 响应不带校验和会刷 SDK WARN，`AWS_RESPONSE_CHECKSUM_VALIDATION=WHEN_REQUIRED` 消音；⑤ 当期网络 mc 镜像三源全挂（ustc EOF/daocloud denied/quay 401），脚本兜底用宿主 aws CLI 建桶；⑥ `PULUMI_BACKEND_URL` 环境变量选后端等价 `pulumi login` 但不碰全局登录态（clean 零痕迹）；⑦ 自管后端（file/s3）无并发锁，协作要靠约定或上 Pulumi Cloud
 
 ---
 
@@ -323,7 +324,7 @@ kind get clusters                           # 项目 9/11：pulumi-lab 存在
 | Python + pip 清华源 | 7 | ✅ 3.10.20；venv + pulumi 包装配首跑验证 |
 | kind | 9、11 | ✅ 0.32.0，集群在跑；开工建专用集群 `pulumi-lab` 探活 |
 | LocalStack | 10、11 | ⚠️ CLI 2026.8.0 已装但当前 stopped；hands-on-aws 30 实验已验证；2026-03 起需免费 token |
-| MinIO 当 S3 后端 | 4 | ✅ labs/03 已完成同款（TF state 存 MinIO）；Pulumi s3 backend 首跑验证 |
+| MinIO 当 S3 后端 | 4 | ✅ labs/03（TF）与 pulumi/04（Pulumi s3 backend）双真机验证（2026-10-15）；建桶 mc 镜像优先、宿主 aws CLI 兜底 |
 | CrossGuard Policy Pack | 6 | ⚠️ 首跑验证（CrossGuard 随 CLI 分发，无需单独装插件） |
 | act 本地 CI | 12 | ✅ cicd/01 真机验证（act 0.2.89 离线回路） |
 | aws provider 插件体积 | 10、11 | ⚠️ 包较大首次下载慢；建议 `pulumi plugin install resource aws` 预装 |

@@ -99,7 +99,7 @@ devops.md 的互补线：IaC 的「通用编程语言」视角，与 labs/ 01-05
 | 01 | 第一个程序——Docker Provider 与 CLI 回路 | Docker | ✅ 真机验证 |
 | 02 | 编程语言的力量——循环/条件/函数 vs HCL | Docker | ✅ 真机验证 |
 | 03 | Stack 与配置——多环境 + Secrets | Docker | ✅ 真机验证 |
-| 04 | 状态管理——本地文件 → MinIO S3 后端 | MinIO | ⬜ |
+| 04 | 状态管理——本地文件 → MinIO S3 后端 | MinIO | ✅ 真机验证 |
 | 05 | ComponentResource——对标 TF module | Docker | ⬜ |
 | 06 | 给 IaC 写测试——Mocks 单测 + Policy 拦截 | CrossGuard | ⬜ |
 | 07 | Python 对照——同题重写 | Python SDK | ⬜ |

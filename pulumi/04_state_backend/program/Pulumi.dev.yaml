@@ -1,0 +1,3 @@
+encryptionsalt: v1:uTfGVTp9Omk=:v1:CyTLqLqG1uj7vaOl:nKmJ49MhDp7sxscDjrqSdUjQ2//4vw==
+config:
+  pulumi04-state-backend:port: "28301"

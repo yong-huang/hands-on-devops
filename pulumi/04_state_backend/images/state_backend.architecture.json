@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 04 · 状态管理：账本搬家与两次对账",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1100, 560],
+    "views": [
+      {
+        "id": "migrate",
+        "label": "账本搬家",
+        "focus": ["program", "local-st", "minio"],
+        "note": "export 导出 JSON、import 回灌新后端——容器不动，服务不断。"
+      },
+      {
+        "id": "reconcile",
+        "label": "对账与接管",
+        "focus": ["web", "stray"],
+        "note": "refresh 把账本对齐现实，import 把手工资源收进账本。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "sublabel": "同一份 · 只管读配置",
+      "pos": [60, 240],
+      "size": [150, 68]
+    },
+    {
+      "id": "local-st",
+      "type": "database",
+      "label": "本地 file 后端",
+      "sublabel": ".pulumi-state/ · dev.json",
+      "pos": [300, 95],
+      "size": [210, 74]
+    },
+    {
+      "id": "minio",
+      "type": "database",
+      "label": "MinIO 桶（S3 兼容）",
+      "sublabel": "s3://pulumi04-state · 同路径对象",
+      "pos": [300, 380],
+      "size": [210, 74]
+    },
+    {
+      "id": "web",
+      "type": "backend",
+      "label": "pulumi04-web",
+      "sublabel": "nginx :28301 · 账本搬家它不动",
+      "pos": [640, 110],
+      "size": [195, 68]
+    },
+    {
+      "id": "stray",
+      "type": "backend",
+      "label": "pulumi04-stray",
+      "sublabel": "手工 docker run · 账本外",
+      "pos": [640, 385],
+      "size": [195, 68]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "本地 file 后端",
+      "wraps": ["local-st"]
+    },
+    {
+      "kind": "region",
+      "label": "MinIO（S3 兼容）后端",
+      "wraps": ["minio"]
+    },
+    {
+      "kind": "region",
+      "label": "现实 · docker daemon",
+      "wraps": ["web", "stray"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "program-to-local-st",
+      "from": "program",
+      "to": "local-st",
+      "label": "up · file://",
+      "variant": "emphasis"
+    },
+    {
+      "id": "program-to-minio",
+      "from": "program",
+      "to": "minio",
+      "label": "up · s3://桶",
+      "variant": "emphasis"
+    },
+    {
+      "id": "local-st-to-minio",
+      "from": "local-st",
+      "to": "minio",
+      "label": "export → import 搬家",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [405, 270]
+    },
+    {
+      "id": "web-to-local-st",
+      "from": "web",
+      "to": "local-st",
+      "label": "记账",
+      "variant": "dashed"
+    },
+    {
+      "id": "stray-to-minio",
+      "from": "stray",
+      "to": "minio",
+      "label": "import 接管",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "后端切换（零痕迹）",
+      "items": [
+        "PULUMI_BACKEND_URL 选后端",
+        "端点与 pathStyle 写进 URL 参数",
+        "不碰 ~/.pulumi 全局登录态"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "迁移三步",
+      "items": [
+        "stack export：账本导出为 JSON",
+        "stack init：新后端建空栈",
+        "stack import 回灌 → up 零 diff"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "接管与自愈（实测）",
+      "items": [
+        "import 要容器的 64 位长 ID",
+        "账本里有、程序里没有 → up 就删",
+        "rm -f 后 refresh 检出、up 自愈"
+      ]
+    }
+  ]
+}
