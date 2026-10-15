@@ -3,7 +3,7 @@
 # strategy.matrix 是"模板填空"：引擎做笛卡尔积，每个组合派一个独立 job。
 # 教学点：job 名会带 (version, variant) 后缀——日志/断言按组合精确匹配；
 #        act 串行跑矩阵（默认 1 个并发容器），真仓库才是并行——语义相同、只差速度。
-# 裁剪语法 exclude/include 在实验 32 深挖，这里先立住"积"的概念。
+# 裁剪语法 exclude/include 在实验 02 深挖，这里先立住"积"的概念。
 name: "08 · matrix 矩阵组合"
 
 on: push

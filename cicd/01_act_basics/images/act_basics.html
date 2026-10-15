@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 2.17.0-dev.1">
-  <title>实验 31 · act 本地回路：一条 workflow 的本机一生</title>
+  <title>实验 01 · act 本地回路：一条 workflow 的本机一生</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -4955,7 +4955,7 @@
            data-preset-badge-blueprint="蓝图 / 修订 01"
            data-preset-badge-editorial="编辑风格 / 现场笔记">
         <div class="pulse-dot"></div>
-        <h1>实验 31 · act 本地回路：一条 workflow 的本机一生</h1>
+        <h1>实验 01 · act 本地回路：一条 workflow 的本机一生</h1>
       </div>
       <p class="subtitle">写 → 装 → 容器 → 步骤 → 取证，红灯也要有断言</p>
     </div>
@@ -5005,8 +5005,8 @@
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read"
          data-preset-badge-editorial-plate="ARCHIFY / 图版 04">
-      <svg viewBox="0 0 1025 652" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase">
-        <title id="archify-diagram-title">实验 31 · act 本地回路：一条 workflow 的本机一生</title>
+      <svg viewBox="0 0 1037 652" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase">
+        <title id="archify-diagram-title">实验 01 · act 本地回路：一条 workflow 的本机一生</title>
         <desc id="archify-diagram-description">写 → 装 → 容器 → 步骤 → 取证，红灯也要有断言</desc>
         <!-- Definitions -->
         <defs>
@@ -5055,8 +5055,8 @@
         <path data-edge-from="inject" data-edge-to="job" data-edge-label="secrets/env" data-edge-key="2" data-composition-points="496,243;512,243;512,290;416,290;416,341" d="M 496 243 L 512 243 L 512 290 L 416 290 L 416 341" class="a-default" data-animate="edge" style="--step:2" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="job" data-edge-to="steps" data-edge-label="顺序执行" data-edge-key="3" data-composition-points="496,367;552.4,367" d="M 496 367 L 552.4 367" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="steps" data-edge-to="artifacts" data-edge-label="upload-artifact" data-edge-key="4" data-composition-points="632.4,393;632.4,544;752.4,544;752.4,517" d="M 632.4 393 L 632.4 544 L 752.4 544 L 752.4 517" class="a-default" data-animate="edge" style="--step:4" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="steps" data-edge-to="logs" data-edge-label="fail 注入：篡改/超时/断路 → 红" data-edge-key="5" data-composition-points="712.4,367;913.4,367;913.4,465" d="M 712.4 367 L 913.4 367 L 913.4 465" class="a-default" data-animate="edge" style="--step:5" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="steps" data-edge-to="logs" data-edge-label="日志留档 → 逐条断言" data-edge-key="6" data-composition-points="632.4,341;632.4,284;920.4,284;920.4,465" d="M 632.4 341 L 632.4 284 L 920.4 284 L 920.4 465" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="steps" data-edge-to="logs" data-edge-label="fail 注入：篡改/超时/断路 → 红" data-edge-key="5" data-composition-points="712.4,367;1021,367;1021,491;1000.4,491" d="M 712.4 367 L 1021 367 L 1021 491 L 1000.4 491" class="a-dashed" data-animate="edge" style="--step:5" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="steps" data-edge-to="logs" data-edge-label="日志留档 → 逐条断言" data-edge-key="6" data-composition-points="632.4,341;632.4,325;776.4,325;776.4,449;920.4,449;920.4,465" d="M 632.4 341 L 632.4 325 L 776.4 325 L 776.4 449 L 920.4 449 L 920.4 465" class="a-default" data-animate="edge" style="--step:6" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="wf" data-edge-to="act" data-edge-label="-W 装载" data-edge-key="7" data-composition-points="208,119;248,119;248,217" d="M 208 119 L 248 119 L 248 217" class="a-default" data-animate="edge" style="--step:7" stroke-width="1.4" marker-end="url(#arrowhead)"/>
 
         <!-- Nodes -->
@@ -5165,12 +5165,12 @@
           <text x="692.4" y="534" class="t-muted" font-size="8" text-anchor="middle">upload-artifact</text>
         </g>
         <g data-detail="context" data-edge-from="steps" data-edge-to="logs" data-edge-label="fail 注入：篡改/超时/断路 → 红" data-edge-key="5">
-          <rect x="735.9" y="347" width="154" height="14" rx="3" class="c-mask"/>
-          <text x="812.9" y="357" class="t-muted" font-size="8" text-anchor="middle">fail 注入：篡改/超时/断路 → 红</text>
+          <rect x="789.7" y="347" width="154" height="14" rx="3" class="c-mask"/>
+          <text x="866.7" y="357" class="t-database" font-size="8" text-anchor="middle">fail 注入：篡改/超时/断路 → 红</text>
         </g>
         <g data-detail="context" data-edge-from="steps" data-edge-to="logs" data-edge-label="日志留档 → 逐条断言" data-edge-key="6">
-          <rect x="725.8" y="264" width="101.2" height="14" rx="3" class="c-mask"/>
-          <text x="776.4" y="274" class="t-muted" font-size="8" text-anchor="middle">日志留档 → 逐条断言</text>
+          <rect x="653.8" y="305" width="101.2" height="14" rx="3" class="c-mask"/>
+          <text x="704.4" y="315" class="t-muted" font-size="8" text-anchor="middle">日志留档 → 逐条断言</text>
         </g>
         <g data-detail="context" data-edge-from="wf" data-edge-to="act" data-edge-label="-W 装载" data-edge-key="7">
           <rect x="206.2" y="99" width="43.6" height="14" rx="3" class="c-mask"/>

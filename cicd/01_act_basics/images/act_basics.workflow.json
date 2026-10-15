@@ -2,7 +2,7 @@
   "schema_version": 2,
   "diagram_type": "workflow",
   "meta": {
-    "title": "实验 31 · act 本地回路：一条 workflow 的本机一生",
+    "title": "实验 01 · act 本地回路：一条 workflow 的本机一生",
     "locale": "zh-CN",
     "quality_profile": "showcase",
     "animation": "trace",
@@ -138,7 +138,9 @@
       "from": "steps",
       "to": "logs",
       "label": "fail 注入：篡改/超时/断路 → 红",
-      "role": "error"
+      "role": "error",
+      "variant": "dashed",
+      "route": "outside-right"
     }
   ]
 }

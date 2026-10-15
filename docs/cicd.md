@@ -16,15 +16,15 @@
 
 ## 📊 总进度
 
-进度：░░░░░░░░░░░░░░░░░░░░ 0/16 (0%)
+进度：█░░░░░░░░░░░░░░░░░░░ 1/16 (6%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
-| 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 0 |
+| 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 1 |
 | 第二阶段：凭据与供应链安全 | 3 | 0 |
 | 第三阶段：部署策略——发布的四种姿势 | 4 | 0 |
 | 第四阶段：规模化与 release 工程 | 4 | 0 |
-| **合计** | **16** | **0** |
+| **合计** | **16** | **1** |
 
 ---
 
@@ -32,7 +32,7 @@
 
 > **目标**：脱离「改一行 push 一次看结果」的原始回路——本地 act 秒级迭代，矩阵、复用、缓存、自托管 runner 全部在手
 
-### [ ] 项目 1：act 本地回路与 workflow 语法深潜
+### [x] 项目 1：act 本地回路与 workflow 语法深潜
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -40,12 +40,13 @@
 | **核心知识点** | needs 依赖图、if 条件、timeout-minutes、concurrency、upload/download-artifact、secrets 注入 |
 | **技术栈** | act 0.2.89（✅ 已实测装好，`catthehacker/ubuntu:act-latest` 镜像已缓存） |
 | **验收标准** | 10 个语法特性各有独立最小 workflow，`act -W` 逐个全绿；artifact 跨 job 传递后内容一致（md5 断言）；timeout 注入 sleep 后 job 被杀且退出码非 0 |
+| **实验目录** | `cicd/01_act_basics/`（✅ `all` 全程 exit=0，OrbStack 引擎） |
 
 **🤖 开始提示词**：
 > `我要开始 CI/CD 项目「act 本地回路与 workflow 语法深潜」。请给我 10 个最小 workflow（needs/if/timeout/concurrency/artifact 传递/secrets 各一）约 150 行 + 一个逐条断言的验收脚本，act 0.2.89 可跑，macOS 可执行。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-09-19
+**踩坑记录**：① act 0.2.89 不执行 `timeout-minutes`（sleep 120 跑满还绿）——改用 shell `timeout` 在 step 层演示击杀（exit 124 取证），引擎侧行为留给实验 02 真仓库；② `-s` 注入的 secret 只进 `secrets` 上下文，必须 `env:` 显式映射才进进程环境（GitHub 正确语义）；③ `if: always()` 的 job 上游红也照跑——最初断言它被 skip 被真机打脸，act 是对的；④ 主脚本断言别在活管道上 `grep -q`（SIGPIPE 坑），先落档再对文件断言；⑤ bash 变量后紧跟 CJK 全角字符会把字节并进变量名，`${name}` 加花括号才稳
 
 ---
 
@@ -394,6 +395,8 @@ gh auth status                             # ☁️ 项目额外确认
 | 能力 | 涉及项目 | 实测结论 |
 |:---|:---|:---|
 | act 本地跑 workflow | 1-4、13 | ✅ act 0.2.89 已装，基础镜像已缓存（2026-09-19） |
+| Docker 引擎 | 全部 | ✅ 已切 OrbStack（arm64 原生，29.4.0），`docker-env.sh` 默认 OrbStack 优先，`DOCKERDESKTOP=1` 切回 |
+| act 执行 timeout-minutes | 1 | ❌ 实测不强制（2026-09-19）；step 层 `timeout` 命令演示同语义，引擎行为留实验 2 真仓库 |
 | gh CLI 云端操作 | 5-8、15、16 | ⚠️ 已装未登录，`gh auth login` 后复测 |
 | GitHub 公共仓库免费额度 | 全部 ☁️ 项目 | ⚠️ 官方宣称公共仓库 Actions 免费，未实测配额——项目 5 首跑即验证 |
 | act 并发取消 / environments / OIDC | 2、6、7 | ❌ act 平台性不支持（本地无 GitHub 服务端），走真仓库 |
@@ -401,3 +404,5 @@ gh auth status                             # ☁️ 项目额外确认
 | kind 起集群做滚动更新 | 11 | ✅ kind 0.32.0 已装；起集群开工探活 |
 | nginx 权重切分与 upstream 切换 | 9、10 | ⚠️ 未实测，镜像拉取后首跑验证 |
 | pytest + rerunfailures | 14 | ⚠️ 待安装后验证 |
+
+> 动手实验统一放 `cicd/NN_short_name/`，编号与本清单项目号 1:1 对应；结构与 devops 主线 labs/ 一致（README 六段/八节 + 主脚本 + 声明式配置 + 图三件套）。
