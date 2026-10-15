@@ -17,12 +17,12 @@
 
 ## 📊 总进度
 
-进度：█████░░░░░░░░░░░░░░░ 5/12 (42%)
+进度：██████░░░░░░░░░░░░░░ 6/12 (50%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 3 |
-| 第二阶段：工程化——组件、测试与编程模型 | 4 | 1 |
+| 第二阶段：工程化——组件、测试与编程模型 | 4 | 2 |
 | 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 0 |
 | **合计** | **12** | **3** |
 
@@ -127,7 +127,7 @@
 
 ---
 
-### [ ] 项目 6：给 IaC 写测试——Mocks 单测 + Policy 拦截
+### [x] 项目 6：给 IaC 写测试——Mocks 单测 + Policy 拦截
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -135,6 +135,7 @@
 | **核心知识点** | `pulumi.runtime.setMocks` 单测（mocha，`npm test`）、断言资源属性、CrossGuard Policy Pack 拦截违规（如镜像禁用 latest、资源必须带标签） |
 | **前置** | 项目 1 |
 | **验收标准** | `npm test` 全绿且断言了资源属性（非空跑）；故意写违规配置在 `pulumi preview --policy-pack` 下被拦截（红） |
+| **实验目录** | `pulumi/06_policy_test/`（✅ `all` 全程 exit=0 连跑两遍；4 断言全绿 + evil 配置双拦截退出码 1 全断言） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「IaC 测试」。请给我完整 TypeScript 代码约 130 行：pulumi.runtime.setMocks 的 mocha 单测（断言资源属性）+ CrossGuard policy pack（拦截 latest 镜像与缺标签），附 npm test 与 policy 拦截演示命令。只输出代码。`
@@ -174,8 +175,8 @@
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「Output 深水区」。请给我完整 TypeScript 代码约 120 行：演示 Output<T> 的 apply 组合、错误的嵌套 apply 最小复现、pulumi.all 聚合、显式 dependsOn 与隐式依赖，附 pulumi stack graph 导出与 --parallel 对照实验。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① `@pulumi/docker` 5.2.0 的 labels 是 `{label, value}` 数组（Terraform SDK 桥接形态），不是字符串 map——类型即文档；② PolicyPack 要求策略目录 package.json 带 `version`（缺了报 `Version must be defined`）；③ `@pulumi/policy` 1.21.0 的 index.d.ts 有打包缺陷（proxy.d.ts 空 export），tsc 直查报 TS2305，策略目录 tsconfig 加 `skipLibCheck` 绕过；④ `validateResource` 不是导出成员，未类型化检查用内联回调；⑤ mocks 单测解 Output 用 apply 包 Promise（`pulumi.unwrap` 不在公共 API），setMocks 的 mocks 对象必须同时给 newResource 与 call；⑥ 绿灯 preview 只打印 `Policies: ✅ 包名@版本` 不逐条列策略，红灯才逐条列 [mandatory] 违规——两态断言别写错
 
 ---
 
@@ -326,7 +327,7 @@ kind get clusters                           # 项目 9/11：pulumi-lab 存在
 | kind | 9、11 | ✅ 0.32.0，集群在跑；开工建专用集群 `pulumi-lab` 探活 |
 | LocalStack | 10、11 | ⚠️ CLI 2026.8.0 已装但当前 stopped；hands-on-aws 30 实验已验证；2026-03 起需免费 token |
 | MinIO 当 S3 后端 | 4 | ✅ labs/03（TF）与 pulumi/04（Pulumi s3 backend）双真机验证（2026-10-15）；建桶 mc 镜像优先、宿主 aws CLI 兜底 |
-| CrossGuard Policy Pack | 6 | ⚠️ 首跑验证（CrossGuard 随 CLI 分发，无需单独装插件） |
+| CrossGuard Policy Pack | 6 | ✅ 6/12 真机验证（绿/红两态 + 退出码 1 断言，2026-10-15）；@pulumi/policy 1.21.0 可用但 d.ts 有打包缺陷（skipLibCheck 绕过） |
 | act 本地 CI | 12 | ✅ cicd/01 真机验证（act 0.2.89 离线回路） |
 | aws provider 插件体积 | 10、11 | ⚠️ 包较大首次下载慢；建议 `pulumi plugin install resource aws` 预装 |
 

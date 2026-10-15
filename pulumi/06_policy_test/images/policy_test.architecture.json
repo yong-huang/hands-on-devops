@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 06 · 给 IaC 写测试：两道门禁，零真实资源",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": { "mode": "auto" },
+    "viewBox": [1100, 580],
+    "views": [
+      {
+        "id": "gates",
+        "label": "两道门禁",
+        "focus": ["infra", "mocha", "crossguard"],
+        "note": "单测管声明对不对，策略管声明合不合规范。"
+      },
+      {
+        "id": "intercept",
+        "label": "拦截",
+        "focus": ["evil", "crossguard"],
+        "note": "evil 配置在 mandatory 策略下被拦，preview 退出码 1。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "infra",
+      "type": "external",
+      "label": "infra.ts 期望态声明",
+      "sublabel": "nginx 容器 + 网络 · evil 开关",
+      "pos": [60, 240],
+      "size": [175, 74]
+    },
+    {
+      "id": "mocha",
+      "type": "backend",
+      "label": "门禁 1 · mocks 单测",
+      "sublabel": "npm test → 4 passing",
+      "pos": [450, 95],
+      "size": [205, 70]
+    },
+    {
+      "id": "crossguard",
+      "type": "backend",
+      "label": "门禁 2 · CrossGuard 策略",
+      "sublabel": "preview --policy-pack",
+      "pos": [450, 390],
+      "size": [205, 70]
+    },
+    {
+      "id": "evil",
+      "type": "database",
+      "label": "evil 配置",
+      "sublabel": "latest 镜像 · 丢标签",
+      "pos": [60, 445],
+      "size": [175, 62]
+    },
+    {
+      "id": "up",
+      "type": "external",
+      "label": "pulumi up 真实部署",
+      "sublabel": "绿了才轮到它 · 本实验不执行",
+      "pos": [790, 240],
+      "size": [190, 74]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "部署前的质量门禁",
+      "wraps": ["mocha", "crossguard"]
+    }
+  ],
+  "connections": [
+    {
+      "id": "infra-to-mocha",
+      "from": "infra",
+      "to": "mocha",
+      "label": "断言声明的属性",
+      "variant": "emphasis"
+    },
+    {
+      "id": "infra-to-crossguard",
+      "from": "infra",
+      "to": "crossguard",
+      "label": "体检每条资源",
+      "variant": "emphasis"
+    },
+    {
+      "id": "evil-to-crossguard",
+      "from": "evil",
+      "to": "crossguard",
+      "label": "mandatory 拦截",
+      "variant": "dashed"
+    },
+    {
+      "id": "mocha-to-up",
+      "from": "mocha",
+      "to": "up",
+      "label": "绿了才部署",
+      "variant": "dashed"
+    },
+    {
+      "id": "crossguard-to-up",
+      "from": "crossguard",
+      "to": "up",
+      "label": "绿了才部署",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "单测（mocks）",
+      "items": [
+        "setMocks 拦下真实 API 调用",
+        "newResource 回填程序传入的 inputs",
+        "秒级离线，Docker 不用跑"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "策略（CrossGuard）",
+      "items": [
+        "mandatory 违规 = preview 直接失败",
+        "绿灯：Policies 行 ✅ 包名",
+        "红灯：逐条列出违规与理由"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "实测",
+      "items": [
+        "4 个断言全绿（2ms）",
+        "evil 配置双拦截，退出码 1",
+        "全程零真实资源，止步 preview"
+      ]
+    }
+  ]
+}

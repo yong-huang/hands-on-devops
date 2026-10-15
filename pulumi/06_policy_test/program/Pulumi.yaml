@@ -1,0 +1,6 @@
+name: pulumi06-policy-test
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 06 · 给 IaC 写测试——Mocks 单测 + CrossGuard 策略拦截（hands-on-devops 配套实验）

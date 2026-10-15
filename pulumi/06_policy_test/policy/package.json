@@ -1,0 +1,12 @@
+{
+    "name": "pulumi06-policy",
+    "version": "0.1.0",
+    "main": "index.ts",
+    "dependencies": {
+        "@pulumi/policy": "1.21.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.5.0"
+    }
+}
