@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 12 · 交付闭环：两种门禁卡在部署前后",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1000,
+      560
+    ],
+    "views": [
+      {
+        "id": "gates",
+        "label": "门禁链",
+        "focus": [
+          "preview",
+          "deploy",
+          "drift"
+        ],
+        "note": "preview 展示变更，绿了才部署；部署后再复核无漂移。"
+      },
+      {
+        "id": "backend",
+        "label": "共用后端",
+        "focus": [
+          "state"
+        ],
+        "note": "本地与 CI 共用 LocalStack S3 上的同一本账。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "sublabel": "期望态 · 内容走 config",
+      "pos": [
+        60,
+        90
+      ],
+      "size": [
+        190,
+        70
+      ]
+    },
+    {
+      "id": "preview",
+      "type": "backend",
+      "label": "job 1 · preview --diff",
+      "sublabel": "门禁：只读展示变更",
+      "pos": [
+        430,
+        75
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "deploy",
+      "type": "backend",
+      "label": "job 2 · up --yes",
+      "sublabel": "按计划执行部署",
+      "pos": [
+        430,
+        225
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "drift",
+      "type": "backend",
+      "label": "job 3 · 漂移门禁",
+      "sublabel": "--expect-no-changes 有变更即红",
+      "pos": [
+        430,
+        375
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "state",
+      "type": "database",
+      "label": "state 桶",
+      "sublabel": "LocalStack S3 · 本地与 CI 共用",
+      "pos": [
+        60,
+        375
+      ],
+      "size": [
+        190,
+        70
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "program-to-preview",
+      "from": "program",
+      "to": "preview",
+      "label": "声明期望态",
+      "variant": "emphasis"
+    },
+    {
+      "id": "preview-to-deploy",
+      "from": "preview",
+      "to": "deploy",
+      "label": "绿了才部署",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        538,
+        188
+      ]
+    },
+    {
+      "id": "deploy-to-drift",
+      "from": "deploy",
+      "to": "drift",
+      "label": "复核无漂移",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        538,
+        338
+      ]
+    },
+    {
+      "id": "preview-to-state",
+      "from": "preview",
+      "to": "state",
+      "label": "读写账本",
+      "variant": "dashed"
+    },
+    {
+      "id": "drift-to-state",
+      "from": "drift",
+      "to": "state",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "两种门禁",
+      "items": [
+        "preview --diff 只读展示变更",
+        "up --expect-no-changes 有变更即红",
+        "都以退出码说话，CI 直接当卡点"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "CI 环境",
+      "items": [
+        "state 桶也用 LocalStack S3",
+        "假凭证 + endpoints 三服务覆写",
+        "挂载缓存卷复用二进制与插件"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "实测",
+      "items": [
+        "act 三 job 全绿",
+        "--diff 亮出 v1 => v2 变更条目",
+        "漂移门禁退出码 0"
+      ]
+    }
+  ]
+}

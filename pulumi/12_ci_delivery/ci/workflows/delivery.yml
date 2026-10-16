@@ -1,0 +1,56 @@
+name: pulumi-delivery
+on: push
+
+# CI 的全部环境：state 后端也用 LocalStack 的 S3（呼应实验 4 的自建后端）
+env:
+  PULUMI_BACKEND_URL: "s3://pulumi12-state?endpoint=http://localhost:4566&s3ForcePathStyle=true"
+  AWS_ACCESS_KEY_ID: test
+  AWS_SECRET_ACCESS_KEY: test
+  AWS_REGION: us-east-1
+  AWS_EC2_METADATA_DISABLED: "true"
+  PULUMI_CONFIG_PASSPHRASE: ci-passphrase
+  PULUMI_SKIP_UPDATE_CHECK: "true"
+
+jobs:
+  preview-gate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pulumi（幂等：挂载卷缓存二进制与插件）
+        run: |
+          if [ ! -x /root/.pulumi/bin/pulumi ]; then
+            curl -fsSL https://get.pulumi.com | bash -s -- --version 3.268.0
+          fi
+          echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
+      - name: Preview gate（--diff 只读展示变更，不执行）
+        working-directory: program
+        run: |
+          pulumi stack select ci || pulumi stack init ci
+          pulumi preview --diff --stack ci
+
+  deploy:
+    needs: preview-gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pulumi
+        run: |
+          if [ ! -x /root/.pulumi/bin/pulumi ]; then
+            curl -fsSL https://get.pulumi.com | bash -s -- --version 3.268.0
+          fi
+          echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
+      - name: Deploy（up --yes）
+        working-directory: program
+        run: pulumi up --yes --stack ci
+
+  drift-gate:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install pulumi
+        run: |
+          if [ ! -x /root/.pulumi/bin/pulumi ]; then
+            curl -fsSL https://get.pulumi.com | bash -s -- --version 3.268.0
+          fi
+          echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
+      - name: Drift gate（--expect-no-changes：有未声明变更即红）
+        working-directory: program
+        run: pulumi up --yes --expect-no-changes --stack ci

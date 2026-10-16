@@ -17,14 +17,14 @@
 
 ## 📊 总进度
 
-进度：███████████░░░░░░░░░ 11/12 (92%)
+进度：████████████░░░░░░░░ 12/12 (100%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 4 |
 | 第二阶段：工程化——组件、测试与编程模型 | 4 | 4 |
-| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 3 |
-| **合计** | **12** | **11** |
+| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 4 |
+| **合计** | **12** | **12** |
 
 ---
 
@@ -242,7 +242,7 @@
 
 ---
 
-### [ ] 项目 12：🏁 交付闭环——preview 门禁进 CI
+### [x] 项目 12：🏁 交付闭环——preview 门禁进 CI
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -250,12 +250,13 @@
 | **核心知识点** | `pulumi preview --diff` 作 PR 门禁、`pulumi up --yes` 部署、`--expect-no-changes` 漂移门禁、CI 内凭证注入（假凭证 + LocalStack 端点）、复用 cicd/01 的 act 本地回路 |
 | **前置** | 项目 4（state 后端）、项目 9 或 10 |
 | **验收标准** | act 本地跑通 preview → up 链路（真仓库推送选做）；故意改资源后 preview `--diff` 显示变更条目；无变更时 `pulumi up --expect-no-changes` 退出码 0 |
+| **实验目录** | `pulumi/12_ci_delivery/`（✅ `all` 全程 exit=0 连跑两遍；act 三 job 全绿 + --diff 变更条目 + 漂移门禁退出码 0 全断言；🏁 系列收官） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「交付闭环」。请给我约 150 行：GitHub Actions workflow（可用本仓库 cicd/01 的 act 本地跑）执行 pulumi preview --diff 门禁 + pulumi up --yes + --expect-no-changes 漂移检查，含 secret 注入方式。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① act 0.2.89 的 flag 必须全放根层级（`push` 子命令后解析不了）；`-v` 是 --verbose 简写不是卷挂载——挂缓存卷用 `--container-options "-v 宿主:容器"`；② 非 `--bind` 模式下 `working-directory` 子目录 chdir 失败（act#107，只复制顶层）；③ aws 插件数百 MB 容器内直连下载全败——宿主 `curl -C -` 断点续传插件 tar 后解压进缓存卷（续传拼接可能损坏二进制，`file` 看 ELF 头异常就重下）；④ 两个栈（dev/ci）别共用桶名（BucketAlreadyExists），按栈名派生 `pulumi12-app-${stack}`；⑤ CI 栈用独立 `PULUMI_CONFIG_PASSPHRASE` 创建，本地清理要用对应口令（incorrect passphrase 教训）；⑥ diff 断言匹配 `=> ` 形态（`~ content: "v1" => "v2"`），不是行首 +/-
 
 ---
 
@@ -272,7 +273,7 @@
 
 - [x] **完成项目 1-4** → 「Pulumi 操作手」：CLI 回路、stack/state 全掌握，与 Terraform 逐条对照无障碍
 - [x] **完成项目 5-8** → 「组件工程师」：组件化 / 测试 / 跨语言 / Output 模型无盲区
-- [ ] **完成项目 9-12** → 「多云编排者」：三 provider 混合交付 + preview 门禁 CI 闭环
+- [x] **完成项目 9-12** → 「多云编排者」：三 provider 混合交付 + preview 门禁 CI 闭环
 
 ## 📝 每日日志
 
@@ -296,6 +297,7 @@ brew install pulumi                     # brew 已收录 3.268.0
 # 2. 按阶段用到时装
 #    项目 7（Python 对照）：
 python3 -m venv .venv && source .venv/bin/activate && pip install pulumi pulumi-docker
+#    项目 12（CI）：act 0.2.89（✅ 已装，cicd/01 验证）；LocalStack 需免费 token
 #    项目 4（state 后端）：复用 labs/03 的 docker 起 MinIO 方式，无需新装
 #    项目 9：kind create cluster --name pulumi-lab
 #    项目 10：localstack start -d && localstack status   # 需免费账号 token（本机已配）

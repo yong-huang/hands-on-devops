@@ -1,0 +1,6 @@
+name: pulumi12-ci-delivery
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 12 · 交付闭环——preview 门禁进 CI（hands-on-devops 配套实验）
