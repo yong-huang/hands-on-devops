@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 10 · AWS Provider：endpoint 决定环境",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1100,
+      560
+    ],
+    "views": [
+      {
+        "id": "provider",
+        "label": "provider 四件事",
+        "focus": [
+          "program",
+          "provider"
+        ],
+        "note": "endpoints 指向 LocalStack + 假凭证 + 两个 skip 开关。"
+      },
+      {
+        "id": "verify",
+        "label": "交叉验证",
+        "focus": [
+          "bucket",
+          "obj"
+        ],
+        "note": "aws cli 对同一个桶读写——Pulumi 声明的就是真实 S3。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "pos": [
+        60,
+        240
+      ],
+      "size": [
+        180,
+        74
+      ],
+      "sublabel": "与真 AWS 写法完全一致"
+    },
+    {
+      "id": "provider",
+      "type": "external",
+      "label": "aws.Provider",
+      "sublabel": "endpoints → :4566 · 假凭证 · 两个 skip",
+      "pos": [
+        390,
+        240
+      ],
+      "size": [
+        215,
+        74
+      ]
+    },
+    {
+      "id": "bucket",
+      "type": "database",
+      "label": "S3 Bucket",
+      "sublabel": "pulumi10-demo",
+      "pos": [
+        760,
+        90
+      ],
+      "size": [
+        180,
+        64
+      ]
+    },
+    {
+      "id": "obj",
+      "type": "backend",
+      "label": "BucketObject",
+      "sublabel": "hello.txt · 内容走 config",
+      "pos": [
+        760,
+        400
+      ],
+      "size": [
+        180,
+        66
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "LocalStack · localhost:4566",
+      "wraps": [
+        "bucket",
+        "obj"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "program-to-provider",
+      "from": "program",
+      "to": "provider",
+      "label": "声明期望态",
+      "variant": "emphasis"
+    },
+    {
+      "id": "provider-to-bucket",
+      "from": "provider",
+      "to": "bucket",
+      "variant": "dashed"
+    },
+    {
+      "id": "provider-to-obj",
+      "from": "provider",
+      "to": "obj",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "provider 四件事",
+      "items": [
+        "endpoints 按服务覆写 s3/sts/iam",
+        "假凭证 + skipCredentialsValidation",
+        "s3UsePathStyle（桶名进路径）"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "交叉验证（实测）",
+      "items": [
+        "aws s3 ls 能看到声明的桶",
+        "cp 往返内容逐字节一致",
+        "改 config 再 up = 对象原地更新"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "离线要点",
+      "items": [
+        "sts/iam 不覆写会打到真 AWS（403）",
+        "aws 插件数百 MB，预装一次",
+        "LocalStack 需免费 token（本机已配）"
+      ]
+    }
+  ]
+}

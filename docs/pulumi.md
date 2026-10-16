@@ -17,14 +17,14 @@
 
 ## 📊 总进度
 
-进度：█████████░░░░░░░░░░░ 9/12 (75%)
+进度：██████████░░░░░░░░░░ 10/12 (83%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 4 |
 | 第二阶段：工程化——组件、测试与编程模型 | 4 | 4 |
-| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 1 |
-| **合计** | **12** | **9** |
+| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 2 |
+| **合计** | **12** | **10** |
 
 ---
 
@@ -205,7 +205,7 @@
 
 ---
 
-### [ ] 项目 10：AWS Provider——LocalStack 上管云资源
+### [x] 项目 10：AWS Provider——LocalStack 上管云资源
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -214,12 +214,13 @@
 | **技术栈** | LocalStack 2026.8.0（✅ 已装）+ @pulumi/aws 7.50.0（插件包 darwin-arm64 已实测 200 可下） |
 | **⚠️ 风险** | LocalStack 2026-03 起需免费账号 token（本机 hands-on-aws 已配好，开工 `localstack start -d` 探活）；个别服务有能力边界（参考 hands-on-aws 速查表），S3 为首选最稳服务 |
 | **验收标准** | `pulumi up` 建出 bucket；`awslocal s3 ls` 可见且能 `aws s3 cp` 对象进去；`pulumi destroy` 后 bucket 消失 |
+| **实验目录** | `pulumi/10_aws_localstack/`（✅ `all` 全程 exit=0 连跑两遍；aws cli 对同一桶 cp 往返一致 + 对象原地更新 + destroy 零残留全断言） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「AWS on LocalStack」。请给我完整 TypeScript 代码约 150 行（@pulumi/aws）：provider 配置指向 http://localhost:4566（skipCredentialsValidation、假凭证），建 S3 bucket + 上传对象，附 awslocal 交叉验证命令。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① aws 7.x 的 endpoint 形态是 `endpoints: [{s3:...}]` 按服务数组（单数 endpoint 会 TS2561）；② **只覆写 s3 不够**——provider 初始化会调 STS/IAM，不覆写就打到真 AWS 报 403 `InvalidClientTokenId`，正解 s3/sts/iam 三服务全指向 :4566 + `skipRequestingAccountId: true`；③ LocalStack health 的 s3 状态新版是 `running`（老版 `available`），断言两态都放行；④ 残留 stopped 的 `localstack-main` 容器会让 `start -d` 报 already exists——先 `docker rm -f`；⑤ 假凭证 test/test 只发 localhost（endpoint 钉死），真凭证不进实验
 
 ---
 
@@ -328,7 +329,7 @@ kind get clusters                           # 项目 9/11：pulumi-lab 存在
 | Node 22 运行时 | 全部 TS 项目 | ✅ v22.23.2；tsc --noEmit 编译期拦截实测通过（实验 02） |
 | Python + pip 清华源 | 7 | ✅ 3.13.9（anaconda；原记 3.10 已漂移）；venv + pulumi==3.268/pulumi-docker==5.2.0 全流程真机验证（2026-10-15） |
 | kind | 9、11 | ✅ 0.32.0；专用集群 `pulumi-lab` 已建（kindest/node:v1.36.1，2026-10-15）并经项目 9 全流程验证 |
-| LocalStack | 10、11 | ⚠️ CLI 2026.8.0 已装但当前 stopped；hands-on-aws 30 实验已验证；2026-03 起需免费 token |
+| LocalStack | 10、11 | ✅ 2026.8.0 运行中（freemium token 自动激活，2026-10-15）；s3 服务经项目 10 全流程真机验证（含 aws cli 交叉验证） |
 | MinIO 当 S3 后端 | 4 | ✅ labs/03（TF）与 pulumi/04（Pulumi s3 backend）双真机验证（2026-10-15）；建桶 mc 镜像优先、宿主 aws CLI 兜底 |
 | CrossGuard Policy Pack | 6 | ✅ 6/12 真机验证（绿/红两态 + 退出码 1 断言，2026-10-15）；@pulumi/policy 1.21.0 可用但 d.ts 有打包缺陷（skipLibCheck 绕过） |
 | act 本地 CI | 12 | ✅ cicd/01 真机验证（act 0.2.89 离线回路） |

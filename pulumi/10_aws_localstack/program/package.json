@@ -1,0 +1,12 @@
+{
+    "name": "pulumi10-aws-localstack",
+    "main": "index.ts",
+    "dependencies": {
+        "@pulumi/aws": "7.50.0",
+        "@pulumi/pulumi": "3.268.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.5.0"
+    }
+}

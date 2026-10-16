@@ -1,0 +1,3 @@
+encryptionsalt: v1:QVFcyegZ4Bc=:v1:J92S3P+ZbN0Alk9/:euUaFo3I6Au/ez9qNFVMmCVcE0IO9A==
+config:
+  pulumi10-aws-localstack:content: hello from pulumi v2

@@ -105,7 +105,7 @@ devops.md 的互补线：IaC 的「通用编程语言」视角，与 labs/ 01-05
 | 07 | Python 对照——同题重写 | Python SDK | ✅ 真机验证 |
 | 08 | Output 编程模型深水区——apply 陷阱与依赖图 | Docker | ✅ 真机验证 |
 | 09 | Kubernetes Provider——kind 部署应用 | kind | ✅ 真机验证 |
-| 10 | AWS Provider——LocalStack 上管云资源 | LocalStack | ⬜ |
+| 10 | AWS Provider——LocalStack 上管云资源 | LocalStack | ✅ 真机验证 |
 | 11 | ⛓️ 多 Provider 混合编排——一次跨三栈 | 三栈 | ⬜ |
 | 12 | 🏁 交付闭环——preview 门禁进 CI | 全部 | ⬜ |
 

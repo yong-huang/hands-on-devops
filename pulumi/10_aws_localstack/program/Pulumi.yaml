@@ -1,0 +1,6 @@
+name: pulumi10-aws-localstack
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 10 · AWS Provider——LocalStack 上管云资源（hands-on-devops 配套实验）
