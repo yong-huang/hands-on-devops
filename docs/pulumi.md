@@ -140,8 +140,8 @@
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「IaC 测试」。请给我完整 TypeScript 代码约 130 行：pulumi.runtime.setMocks 的 mocha 单测（断言资源属性）+ CrossGuard policy pack（拦截 latest 镜像与缺标签），附 npm test 与 policy 拦截演示命令。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① `@pulumi/docker` 5.2.0 的 labels 是 `{label, value}` 数组（Terraform SDK 桥接形态），不是字符串 map——类型即文档；② PolicyPack 要求策略目录 package.json 带 `version`（缺了报 `Version must be defined`）；③ `@pulumi/policy` 1.21.0 的 index.d.ts 有打包缺陷（proxy.d.ts 空 export），tsc 直查报 TS2305，策略目录 tsconfig 加 `skipLibCheck` 绕过；④ `validateResource` 不是导出成员，未类型化检查用内联回调；⑤ mocks 单测解 Output 用 apply 包 Promise（`pulumi.unwrap` 不在公共 API），setMocks 的 mocks 对象必须同时给 newResource 与 call；⑥ 绿灯 preview 只打印 `Policies: ✅ 包名@版本` 不逐条列策略，红灯才逐条列 [mandatory] 违规——两态断言别写错
 
 ---
 
@@ -163,7 +163,7 @@
 
 ---
 
-### [ ] 项目 8：Output 编程模型深水区——apply 陷阱与依赖图
+### [x] 项目 8：Output 编程模型深水区——apply 陷阱与依赖图
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -172,12 +172,13 @@
 | **前置** | 项目 1、2 |
 | **⚠️ 风险** | TS 主线最大坑区（Output 不能当普通值用），建议放慢做、把每个陷阱写成可复现的最小例子 |
 | **验收标准** | 依赖图导出与代码注解一一对应（贴进 README）；`--parallel 1` 与默认并行两次 `up` 结果一致（幂等验证） |
+| **实验目录** | `pulumi/08_output_deep/`（✅ `all` 全程 exit=0 连跑两遍；陷阱对照/依赖边断言/双并行度账本签名一致全过；里程碑「组件工程师」达成） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「Output 深水区」。请给我完整 TypeScript 代码约 120 行：演示 Output<T> 的 apply 组合、错误的嵌套 apply 最小复现、pulumi.all 聚合、显式 dependsOn 与隐式依赖，附 pulumi stack graph 导出与 --parallel 对照实验。只输出代码。`
 
 **完成日期**：2026-10-15
-**踩坑记录**：① `@pulumi/docker` 5.2.0 的 labels 是 `{label, value}` 数组（Terraform SDK 桥接形态），不是字符串 map——类型即文档；② PolicyPack 要求策略目录 package.json 带 `version`（缺了报 `Version must be defined`）；③ `@pulumi/policy` 1.21.0 的 index.d.ts 有打包缺陷（proxy.d.ts 空 export），tsc 直查报 TS2305，策略目录 tsconfig 加 `skipLibCheck` 绕过；④ `validateResource` 不是导出成员，未类型化检查用内联回调；⑤ mocks 单测解 Output 用 apply 包 Promise（`pulumi.unwrap` 不在公共 API），setMocks 的 mocks 对象必须同时给 newResource 与 call；⑥ 绿灯 preview 只打印 `Policies: ✅ 包名@版本` 不逐条列策略，红灯才逐条列 [mandatory] 违规——两态断言别写错
+**踩坑记录**：① docker 5.2.0 的 Container 没有 `status` 属性，Output 演示用继承自 CustomResource 的 `id`；② 顶层字符串模板取 Output 只警告不中断（`Calling [toString] on an [Output<T>] is not supported` + 两条修法，官方注明 may throw），eslint-plugin-pulumi 可提前拦截；③ 账本依赖两本记录：`dependencies`（URN 级，显式与属性引用都进）+ `propertyDependencies`（精确到属性），export 里都有；④ `--parallel 1` 与默认并行账本签名一致——3 资源规模两种跑法都是 5s，差距要在更大的图上才显现（诚实预期别写「串行明显更慢」）；⑤ `pulumi stack graph` 老版本可能没有，从 `stack export` 解析依赖边等价且可断言
 
 ---
 

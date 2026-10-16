@@ -1,0 +1,3 @@
+encryptionsalt: v1:Y2VoJYIcT8A=:v1:6wLn9iheyWuOTHN2:MOln/s3ml9/tvkxz1g2fyOgNtR3hqw==
+config:
+  pulumi08-output-deep:port: "28601"

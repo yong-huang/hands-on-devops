@@ -1,0 +1,6 @@
+name: pulumi08-output-deep
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 08 · Output 深水区——apply 陷阱与依赖图（hands-on-devops 配套实验）

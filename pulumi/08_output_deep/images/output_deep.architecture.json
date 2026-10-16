@@ -1,0 +1,156 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 08 · Output 深水区：依赖图与取值边界",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1100,
+      560
+    ],
+    "views": [
+      {
+        "id": "graph",
+        "label": "依赖图",
+        "focus": [
+          "net",
+          "first",
+          "second"
+        ],
+        "note": "隐式属性依赖与显式 dependsOn 都写在账本里。"
+      },
+      {
+        "id": "trap",
+        "label": "取值边界",
+        "focus": [
+          "program"
+        ],
+        "note": "顶层只有 Output 壳，apply 回调里才是普通值。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "sublabel": "apply 里才有值 · 顶层只有壳",
+      "pos": [
+        60,
+        240
+      ],
+      "size": [
+        180,
+        74
+      ]
+    },
+    {
+      "id": "net",
+      "type": "database",
+      "label": "net · 网络",
+      "sublabel": "pulumi08-net",
+      "pos": [
+        430,
+        85
+      ],
+      "size": [
+        175,
+        66
+      ]
+    },
+    {
+      "id": "first",
+      "type": "backend",
+      "label": "first · nginx :28601",
+      "sublabel": "挂网 + 占端口",
+      "pos": [
+        720,
+        85
+      ],
+      "size": [
+        190,
+        66
+      ]
+    },
+    {
+      "id": "second",
+      "type": "backend",
+      "label": "second · nginx",
+      "sublabel": "无数据引用 · 只靠 dependsOn",
+      "pos": [
+        720,
+        390
+      ],
+      "size": [
+        190,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "program-to-net",
+      "from": "program",
+      "to": "net",
+      "label": "声明资源",
+      "variant": "emphasis"
+    },
+    {
+      "id": "net-to-first",
+      "from": "net",
+      "to": "first",
+      "label": "networksAdvanced（隐式）",
+      "variant": "emphasis",
+      "labelAt": [
+        663,
+        165
+      ]
+    },
+    {
+      "id": "first-to-second",
+      "from": "first",
+      "to": "second",
+      "label": "dependsOn（显式）",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        815,
+        165
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "两类依赖",
+      "items": [
+        "net.name 被引用 = 隐式属性依赖",
+        "dependsOn = 显式业务顺序",
+        "账本 dependencies / propertyDependencies 各记一笔"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "取值边界（实测）",
+      "items": [
+        "顶层 console.log：引擎拒绝并给修法",
+        "apply 回调里才是普通值",
+        "聚合多个 Output 用 pulumi.all"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "并行度（实测）",
+      "items": [
+        "--parallel 1 与默认并行",
+        "两次 up 后账本逐项一致",
+        "期望态与调度顺序无关"
+      ]
+    }
+  ]
+}
