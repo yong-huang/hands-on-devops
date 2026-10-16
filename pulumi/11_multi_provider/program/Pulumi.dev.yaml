@@ -1,0 +1,3 @@
+encryptionsalt: v1:U+XV6fXN5sA=:v1:sERuiFFmc5TAuZ2c:8f6PLFpLhlIN+uqW2cankNKzjG9uKQ==
+config:
+  pulumi11-multi-provider:port: "28701"

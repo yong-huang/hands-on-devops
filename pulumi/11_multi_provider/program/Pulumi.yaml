@@ -1,0 +1,6 @@
+name: pulumi11-multi-provider
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 11 · 多 Provider 混合编排——一次跨三栈（hands-on-devops 配套实验）

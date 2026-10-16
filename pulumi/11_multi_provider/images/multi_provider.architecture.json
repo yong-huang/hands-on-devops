@@ -1,0 +1,192 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 11 · 多 Provider 混合编排：一张账本，三个世界",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1050,
+      480
+    ],
+    "views": [
+      {
+        "id": "flow",
+        "label": "数据流",
+        "focus": [
+          "payload",
+          "cm",
+          "deploy"
+        ],
+        "note": "S3 的消息经 Output 流进 ConfigMap，再注入 Pod 环境。"
+      },
+      {
+        "id": "order",
+        "label": "顺序",
+        "focus": [
+          "deploy",
+          "edge"
+        ],
+        "note": "dependsOn 把 edge 垫到最后——顺序写进账本。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "bucket",
+      "type": "database",
+      "label": "S3 Bucket",
+      "sublabel": "pulumi11-payload",
+      "pos": [
+        70,
+        95
+      ],
+      "size": [
+        175,
+        60
+      ]
+    },
+    {
+      "id": "payload",
+      "type": "backend",
+      "label": "BucketObject",
+      "sublabel": "message.txt · 远端配置",
+      "pos": [
+        70,
+        215
+      ],
+      "size": [
+        175,
+        64
+      ]
+    },
+    {
+      "id": "cm",
+      "type": "database",
+      "label": "ConfigMap",
+      "sublabel": "data.message ← S3",
+      "pos": [
+        440,
+        95
+      ],
+      "size": [
+        185,
+        60
+      ]
+    },
+    {
+      "id": "deploy",
+      "type": "backend",
+      "label": "Deployment app",
+      "sublabel": "MESSAGE 注入 Pod",
+      "pos": [
+        440,
+        215
+      ],
+      "size": [
+        185,
+        66
+      ]
+    },
+    {
+      "id": "edge",
+      "type": "backend",
+      "label": "edge 容器",
+      "sublabel": "宿主 nginx · :28701",
+      "pos": [
+        810,
+        215
+      ],
+      "size": [
+        175,
+        62
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "AWS · LocalStack :4566",
+      "wraps": [
+        "bucket",
+        "payload"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "K8s · kind:pulumi-lab",
+      "wraps": [
+        "cm",
+        "deploy"
+      ]
+    },
+    {
+      "kind": "region",
+      "label": "Docker · 宿主",
+      "wraps": [
+        "edge"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "payload-to-cm",
+      "from": "payload",
+      "to": "cm",
+      "label": "data ← Output 流动",
+      "variant": "emphasis"
+    },
+    {
+      "id": "cm-to-deploy",
+      "from": "cm",
+      "to": "deploy",
+      "label": "env 注入",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        533,
+        175
+      ]
+    },
+    {
+      "id": "deploy-to-edge",
+      "from": "deploy",
+      "to": "edge",
+      "label": "dependsOn",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "一次 up",
+      "items": [
+        "跨 provider 的 Output 流动",
+        "依赖图自动排序（S3 → ConfigMap）",
+        "dependsOn 把 edge 垫底"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "账本实证（实测）",
+      "items": [
+        "同栈 6 条资源记三世界",
+        "--data--> 跨 provider 属性边",
+        "--dependsOn--> k8s → docker"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "复用底座",
+      "items": [
+        "kind 集群与 LocalStack 常驻",
+        "脚本探活复用，不重复建设",
+        "clean 只清三世界资源"
+      ]
+    }
+  ]
+}

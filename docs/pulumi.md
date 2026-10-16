@@ -17,14 +17,14 @@
 
 ## 📊 总进度
 
-进度：██████████░░░░░░░░░░ 10/12 (83%)
+进度：███████████░░░░░░░░░ 11/12 (92%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 4 |
 | 第二阶段：工程化——组件、测试与编程模型 | 4 | 4 |
-| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 2 |
-| **合计** | **12** | **10** |
+| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 3 |
+| **合计** | **12** | **11** |
 
 ---
 
@@ -224,7 +224,7 @@
 
 ---
 
-### [ ] 项目 11：⛓️ 多 Provider 混合编排——一次跨三栈
+### [x] 项目 11：⛓️ 多 Provider 混合编排——一次跨三栈
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -232,12 +232,13 @@
 | **核心知识点** | 同程序混用 docker + kubernetes + aws 三 provider、跨 provider 的 Output 流动（LocalStack S3 上的内容流向 K8s ConfigMap）、dependsOn 显式编排执行顺序、单栈管理三世界资源 |
 | **前置** | 项目 9、10 |
 | **验收标准** | 一次 `pulumi up` 跨三 provider 建成且顺序正确（S3 先于 ConfigMap）；`pulumi destroy` 后三 provider 资源全清；`pulumi stack` 同栈可见三类资源 |
+| **实验目录** | `pulumi/11_multi_provider/`（✅ `all` 全程 exit=0 连跑两遍；up 日志行序断言 S3→ConfigMap、跨 provider 依赖边三条入账、三世界零残留全过） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「多 Provider 混合编排」。请给我完整 TypeScript 代码约 200 行：同程序混用 docker + kubernetes + aws（LocalStack），LocalStack S3 的内容流向 K8s ConfigMap，用 dependsOn 保证顺序，一次 up 全建成。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① `BucketObject.content` 是可选属性 → `Output<string | undefined>`，喂给 `Input<string>` 属性要 `.apply(c => c ?? "")` 兜底；② 账本 grep 用 up 日志的**显示名**（`aws:s3:BucketObject`），解析 export 用完整 URN（`aws:s3/bucketObject:BucketObject`）——两套名字别混；③ `set -o pipefail` 下命令替换里的 grep 无匹配会让脚本直接退出，断言型 grep 要接 `|| true`；④ 跨 provider 依赖边在 export 里一目了然：`--data-->`（S3→ConfigMap 属性流）与 `--dependsOn-->`（k8s→docker 顺序）同账共存；⑤ 底座复用模式：kind 集群与 LocalStack 常驻，脚本探活、缺了才建（09/10 的环境直接续用）
 
 ---
 
