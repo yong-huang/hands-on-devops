@@ -1,0 +1,6 @@
+name: pulumi09-k8s-kind
+runtime:
+  name: nodejs
+  options:
+    packagemanager: npm
+description: 09 · Kubernetes Provider——kind 部署应用（hands-on-devops 配套实验）

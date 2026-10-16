@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 09 · Kubernetes Provider：同一模型，换一个 API",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1100,
+      560
+    ],
+    "views": [
+      {
+        "id": "resources",
+        "label": "三件资源",
+        "focus": [
+          "provider",
+          "ns",
+          "deploy"
+        ],
+        "note": "Namespace + Deployment + Service 全部经专用 provider 声明。"
+      },
+      {
+        "id": "rollout",
+        "label": "滚动升级",
+        "focus": [
+          "deploy"
+        ],
+        "note": "只改 config 里的镜像 tag，up 即触发 rollout。"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "program",
+      "type": "external",
+      "label": "index.ts 程序",
+      "sublabel": "期望态声明 · 与 Docker 同款",
+      "pos": [
+        60,
+        240
+      ],
+      "size": [
+        180,
+        74
+      ]
+    },
+    {
+      "id": "provider",
+      "type": "external",
+      "label": "k8s.Provider",
+      "sublabel": "context: kind-pulumi-lab",
+      "pos": [
+        390,
+        240
+      ],
+      "size": [
+        200,
+        70
+      ]
+    },
+    {
+      "id": "ns",
+      "type": "database",
+      "label": "Namespace",
+      "sublabel": "pulumi09-lab",
+      "pos": [
+        740,
+        70
+      ],
+      "size": [
+        175,
+        62
+      ]
+    },
+    {
+      "id": "deploy",
+      "type": "backend",
+      "label": "Deployment web",
+      "sublabel": "2 副本 · nginx",
+      "pos": [
+        740,
+        245
+      ],
+      "size": [
+        175,
+        66
+      ]
+    },
+    {
+      "id": "svc",
+      "type": "backend",
+      "label": "Service web",
+      "sublabel": "ClusterIP · :80",
+      "pos": [
+        740,
+        420
+      ],
+      "size": [
+        175,
+        62
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "kind 集群 · pulumi-lab",
+      "wraps": [
+        "ns",
+        "deploy",
+        "svc"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "program-to-provider",
+      "from": "program",
+      "to": "provider",
+      "label": "声明期望态",
+      "variant": "emphasis"
+    },
+    {
+      "id": "provider-to-ns",
+      "from": "provider",
+      "to": "ns",
+      "variant": "dashed"
+    },
+    {
+      "id": "provider-to-deploy",
+      "from": "provider",
+      "to": "deploy",
+      "variant": "dashed"
+    },
+    {
+      "id": "provider-to-svc",
+      "from": "provider",
+      "to": "svc",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Provider 指向",
+      "items": [
+        "context: kind-pulumi-lab 专用集群",
+        "不碰 ~/.kube 里的其他集群",
+        "三资源全部挂 { provider }"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "rollout（实测）",
+      "items": [
+        "只改 config 的 imageTag",
+        "up 即滚动升级",
+        "kubectl rollout status 通过"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "离线要点（实测）",
+      "items": [
+        "kind 节点不共享宿主镜像",
+        "kind load 多架构 tar 报 digest 错",
+        "docker save | ctr import 直进节点"
+      ]
+    }
+  ]
+}

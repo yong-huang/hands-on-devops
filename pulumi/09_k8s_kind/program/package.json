@@ -1,0 +1,12 @@
+{
+    "name": "pulumi09-k8s-kind",
+    "main": "index.ts",
+    "dependencies": {
+        "@pulumi/kubernetes": "4.34.2",
+        "@pulumi/pulumi": "3.268.0"
+    },
+    "devDependencies": {
+        "@types/node": "^22.0.0",
+        "typescript": "^5.5.0"
+    }
+}

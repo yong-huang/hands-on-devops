@@ -17,14 +17,14 @@
 
 ## 📊 总进度
 
-进度：███████░░░░░░░░░░░░░ 7/12 (58%)
+进度：█████████░░░░░░░░░░░ 9/12 (75%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
-| 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 3 |
-| 第二阶段：工程化——组件、测试与编程模型 | 4 | 3 |
-| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 0 |
-| **合计** | **12** | **3** |
+| 第一阶段：核心工作流——CLI 回路与编程模型对照 | 4 | 4 |
+| 第二阶段：工程化——组件、测试与编程模型 | 4 | 4 |
+| 第三阶段：多 Provider——K8s/AWS 与交付闭环 | 4 | 1 |
+| **合计** | **12** | **9** |
 
 ---
 
@@ -186,7 +186,7 @@
 
 > **目标**：跨出 Docker——用同一套程序模型编排 K8s 与 AWS 资源，最后把 preview/up 接进 CI 形成交付闭环
 
-### [ ] 项目 9：Kubernetes Provider——kind 部署应用
+### [x] 项目 9：Kubernetes Provider——kind 部署应用
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -195,12 +195,13 @@
 | **技术栈** | kind 0.32.0（✅ 已装，集群在跑）+ @pulumi/kubernetes 4.34.2 |
 | **⚠️ 风险** | 开工前 `kind create cluster --name pulumi-lab` 建专用集群（避免污染现有 kind 集群），provider 插件首装已实测可从 get.pulumi.com 直连下载 |
 | **验收标准** | `pulumi up` 后 `kubectl get deploy,svc` 可见资源；改镜像 tag 再 up 触发 rollout（`kubectl rollout status` 通过）；`pulumi destroy` 后 `kubectl get all` 零残留 |
+| **实验目录** | `pulumi/09_k8s_kind/`（✅ `all` 全程 exit=0 连跑两遍；deploy 2/2 + rollout status 通过 + destroy 后 ns 零残留全断言） |
 
 **🤖 开始提示词**：
 > `我要开始 Pulumi 项目「Kubernetes Provider」。请给我完整 TypeScript 代码约 150 行（@pulumi/kubernetes）：连接 kind 集群（专用 context），声明 Deployment+Service（nginx），演示改镜像 tag 触发 rollout 与 destroy 清空。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-15
+**踩坑记录**：① kind 节点的 containerd 不共享宿主镜像，而 docker.io 拉不动 → Pod ImagePullBackOff 等 `ProgressDeadlineExceeded`（默认 10 分钟）才失败——先装镜像再 up；② `kind load docker-image`/`image-archive` 在 OrbStack 导出的多架构 tar 上报 `ctr: content digest … not found`，正解 `docker save | docker exec -i 节点 ctr --namespace=k8s.io images import -`（ctr 保留原名，正好对上 Pod 引用；非 latest tag 默认 IfNotPresent）；③ 建集群 `--image` 钉本地 kindest/node:v1.36.1（默认拉 latest 网络差时集群都建不起）；④ k8s 资源全部显式挂 `{ provider }`（context: kind-pulumi-lab），省略会落到"当前 context"，本机有 6 个集群极易写错；⑤ 改 config 的 imageTag 再 up = Deployment spec.template 变化 = 原生滚动升级
 
 ---
 
@@ -267,8 +268,8 @@
 
 ## 🏆 里程碑
 
-- [ ] **完成项目 1-4** → 「Pulumi 操作手」：CLI 回路、stack/state 全掌握，与 Terraform 逐条对照无障碍
-- [ ] **完成项目 5-8** → 「组件工程师」：组件化 / 测试 / 跨语言 / Output 模型无盲区
+- [x] **完成项目 1-4** → 「Pulumi 操作手」：CLI 回路、stack/state 全掌握，与 Terraform 逐条对照无障碍
+- [x] **完成项目 5-8** → 「组件工程师」：组件化 / 测试 / 跨语言 / Output 模型无盲区
 - [ ] **完成项目 9-12** → 「多云编排者」：三 provider 混合交付 + preview 门禁 CI 闭环
 
 ## 📝 每日日志
@@ -326,7 +327,7 @@ kind get clusters                           # 项目 9/11：pulumi-lab 存在
 | npmmirror @pulumi/* SDK | 1-6、8-12 | ✅ pulumi 3.268.0 / docker 5.2.0 / kubernetes 4.34.2 / aws 7.50.0 均可查 |
 | Node 22 运行时 | 全部 TS 项目 | ✅ v22.23.2；tsc --noEmit 编译期拦截实测通过（实验 02） |
 | Python + pip 清华源 | 7 | ✅ 3.13.9（anaconda；原记 3.10 已漂移）；venv + pulumi==3.268/pulumi-docker==5.2.0 全流程真机验证（2026-10-15） |
-| kind | 9、11 | ✅ 0.32.0，集群在跑；开工建专用集群 `pulumi-lab` 探活 |
+| kind | 9、11 | ✅ 0.32.0；专用集群 `pulumi-lab` 已建（kindest/node:v1.36.1，2026-10-15）并经项目 9 全流程验证 |
 | LocalStack | 10、11 | ⚠️ CLI 2026.8.0 已装但当前 stopped；hands-on-aws 30 实验已验证；2026-03 起需免费 token |
 | MinIO 当 S3 后端 | 4 | ✅ labs/03（TF）与 pulumi/04（Pulumi s3 backend）双真机验证（2026-10-15）；建桶 mc 镜像优先、宿主 aws CLI 兜底 |
 | CrossGuard Policy Pack | 6 | ✅ 6/12 真机验证（绿/红两态 + 退出码 1 断言，2026-10-15）；@pulumi/policy 1.21.0 可用但 d.ts 有打包缺陷（skipLibCheck 绕过） |
