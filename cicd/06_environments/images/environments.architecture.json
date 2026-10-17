@@ -1,0 +1,144 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 06 · Environments 部署保护与审批流",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1150,
+      420
+    ]
+  },
+  "components": [
+    {
+      "id": "push",
+      "type": "external",
+      "label": "git push",
+      "sublabel": "触发 deploy workflow",
+      "pos": [
+        60,
+        190
+      ],
+      "size": [
+        165,
+        66
+      ]
+    },
+    {
+      "id": "job",
+      "type": "backend",
+      "label": "deploy job",
+      "sublabel": "environment: production",
+      "pos": [
+        310,
+        190
+      ],
+      "size": [
+        180,
+        66
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "database",
+      "label": "environment 门",
+      "sublabel": "required reviewers · bypass: false",
+      "pos": [
+        580,
+        190
+      ],
+      "size": [
+        190,
+        70
+      ]
+    },
+    {
+      "id": "waiting",
+      "type": "database",
+      "label": "waiting（实测）",
+      "sublabel": "run 卡 pending",
+      "pos": [
+        870,
+        125
+      ],
+      "size": [
+        185,
+        60
+      ]
+    },
+    {
+      "id": "success",
+      "type": "backend",
+      "label": "success（审批后）",
+      "sublabel": "Web UI approve → 放行",
+      "pos": [
+        870,
+        295
+      ],
+      "size": [
+        185,
+        60
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "push-to-job",
+      "from": "push",
+      "to": "job",
+      "label": "触发",
+      "variant": "emphasis"
+    },
+    {
+      "id": "job-to-gate",
+      "from": "job",
+      "to": "gate",
+      "variant": "dashed"
+    },
+    {
+      "id": "gate-to-waiting",
+      "from": "gate",
+      "to": "waiting",
+      "label": "未审批"
+    },
+    {
+      "id": "gate-to-success",
+      "from": "gate",
+      "to": "success",
+      "label": "审批放行"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "environment 门",
+      "items": [
+        "required reviewers 设定审批人",
+        "can_admins_bypass: false",
+        "管理员也不能跳过审批"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "实测",
+      "items": [
+        "push → run 卡 waiting",
+        "REST API approve 返回 404",
+        "Web UI approve 是唯一通道"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "状态历史",
+      "items": [
+        "deployments API 记录每次部署",
+        "状态链: pending → success",
+        "gh api 可列出完整留痕"
+      ]
+    }
+  ]
+}

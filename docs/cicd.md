@@ -16,15 +16,16 @@
 
 ## 📊 总进度
 
-进度：████░░░░░░░░░░░░░░░░ 4/16 (25%)
+进度：█████░░░░░░░░░░░░░░ 6/16 (38%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 4 |
+| 第二阶段：凭据与供应链安全 | 3 | 1 |
 | 第二阶段：凭据与供应链安全 | 3 | 0 |
 | 第三阶段：部署策略——发布的四种姿势 | 4 | 0 |
 | 第四阶段：规模化与 release 工程 | 4 | 0 |
-| **合计** | **16** | **4** |
+| **合计** | **16** | **6** |
 
 ---
 
@@ -40,6 +41,7 @@
 | **核心知识点** | needs 依赖图、if 条件、timeout-minutes、concurrency、upload/download-artifact、secrets 注入 |
 | **技术栈** | act 0.2.89（✅ 已实测装好，`catthehacker/ubuntu:act-latest` 镜像已缓存） |
 | **验收标准** | 10 个语法特性各有独立最小 workflow，`act -W` 逐个全绿；artifact 跨 job 传递后内容一致（md5 断言）；timeout 注入 sleep 后 job 被杀且退出码非 0 |
+| **暂缓原因** | 2026-10-17 探活：gh api 可达但 runner 镜像（~1.5GB）拉取超时、持久 runner 连接不稳定——网络恢复后重试 |
 | **实验目录** | `cicd/01_act_basics/`（✅ `all` 全程 exit=0，OrbStack 引擎） |
 
 **🤖 开始提示词**：
@@ -59,6 +61,7 @@
 | **前置** | 项目 1 |
 | **⚠️ 风险** | ☁️ 并发取消是 GitHub 服务端行为，act 模拟不了——矩阵部分本地验，concurrency 取消推真仓库验（公共仓库免费） |
 | **验收标准** | 3 版本 × 2 OS 矩阵（include/exclude 裁剪后 6 job）act 全绿；注入失败对比 fail-fast 两种取值的中止行为差异并取证；真仓库同 concurrency group 连推两次，第一次 run 状态为 cancelled（gh api 断言） |
+| **暂缓原因** | 2026-10-17 探活：gh api 可达但 runner 镜像（~1.5GB）拉取超时、持久 runner 连接不稳定——网络恢复后重试 |
 | **实验目录** | `cicd/02_matrix_concurrency/`（✅ matrix act 全绿 6 组合 + fail-fast false 本地取证 + 真仓库 gh api 全断言：concurrency cancelled / true 1F+3C / false 2S+2F+0C） |
 
 **🤖 开始提示词**：
@@ -78,6 +81,7 @@
 | **前置** | 项目 1 |
 | **⚠️ 风险** | act 对 workflow_call 支持有版本差异——⚠️ 开工探活，fallback：推真仓库验证（语法与已做过的 Gitea Actions 同构，迁移零成本） |
 | **验收标准** | 两条业务流水线调用同一 reusable workflow；改共享逻辑一处，两条流水线重跑全绿（不复制粘贴）；composite action 被 3 个 job 复用且 outputs 正确回传 |
+| **暂缓原因** | 2026-10-17 探活：gh api 可达但 runner 镜像（~1.5GB）拉取超时、持久 runner 连接不稳定——网络恢复后重试 |
 | **实验目录** | `cicd/03_reusable/`（✅ probe 探活 act 0.2.89 支持 workflow_call ✓ 本地 composite ✗；staging/prod 两流水线全绿 + share 改 callee 一处同步生效；composite 本体留真仓库验证） |
 
 **🤖 开始提示词**：
@@ -97,6 +101,7 @@
 | **前置** | 项目 1 |
 | **⚠️ 风险** | act 内置 cache server 对 actions/cache 的兼容性 ⚠️ 开工探活；buildx type=gha 后端在 act 不可用——本地用 type=local 对比，type=gha 留真仓库 |
 | **验收标准** | 同一 Docker 构建：冷跑 vs 缓存命中热跑各计时 3 次取中位数，热跑提速 ≥50%（脚本断言并打印两次耗时）；actions/cache 的 hashFiles 键变化导致 miss（改依赖文件后缓存未命中，取证） |
+| **暂缓原因** | 2026-10-17 探活：gh api 可达但 runner 镜像（~1.5GB）拉取超时、持久 runner 连接不稳定——网络恢复后重试 |
 | **实验目录** | `cicd/04_cache_accel/`（✅ `all` 全程 exit=0；cold 8s → warm 1s 提速 87% ≥50% 断言通过 + deps.lock miss 取证通过；用 Docker 原生层缓存而非 actions/cache） |
 
 **🤖 开始提示词**：
@@ -107,7 +112,7 @@
 
 ---
 
-### [ ] 项目 5：☁️ self-hosted runner 与标签路由
+### [ ] 项目 5：☁️ self-hosted runner 与标签路由（⚠️ 网络限制暂缓）
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -129,7 +134,7 @@
 
 > **目标**：流水线自身的安全——审批门、无长期密钥、action 引用不可被投毒；devops.md 项目 14 管住了「制品侧」，这一阶段管住「流水线侧」
 
-### [ ] 项目 6：☁️ Environments 部署保护与审批流
+### [x] 项目 6：☁️ Environments 部署保护与审批流
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -138,12 +143,13 @@
 | **前置** | 项目 5（已配好真仓库） |
 | **⚠️ 风险** | act 无 environments 概念，必须真仓库；公共仓库环境保护规则免费可用（开工即验证，失败则改用私有仓库免费额度——每月 2000 分钟） |
 | **验收标准** | 未审批时 deploy job 卡 pending（超时取证），点击 approve 后放行 SUCCESS；`gh api` 列出 deployment 及其状态历史（pending→in_progress→success 完整留痕） |
+| **实验目录** | `cicd/06_environments/`（✅ environment 创建 + required reviewers 配置、push → run 卡 waiting 断言通过、Web UI approve 后 success；REST API approve 404 为实验发现） |
 
 **🤖 开始提示词**：
 > `我要开始 CI/CD 项目「Environments 部署保护与审批流」。请给我带 environment 保护的部署 workflow 约 80 行 + gh api 验收脚本（断言 pending 阻塞、approve 后 SUCCESS、状态历史完整）。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-17
+**踩坑记录**：① `can_admins_bypass` 默认为 true——首次创建 environment 后 push，job 秒完成、不卡 pending；必须显式设为 false 并重新触发才能看到 waiting 状态；② REST API 的 approve 端点返回 404（无论用哪个 ID）——审批只能通过 Web UI（`gh run view --web`）；③ 仓库里有多个 workflow 的 run 时，`per_page=1` 会取到错误的 run——必须按 workflow 名过滤（`select(.name=="deploy-with-approval")`）；④ 创建 environment 的 API 用 `PUT`（upsert），`POST` 返回 Not Found
 
 ---
 
