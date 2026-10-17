@@ -16,15 +16,15 @@
 
 ## 📊 总进度
 
-进度：██░░░░░░░░░░░░░░░░░░ 2/16 (13%)
+进度：███░░░░░░░░░░░░░░░░░ 3/16 (19%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
-| 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 2 |
+| 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 3 |
 | 第二阶段：凭据与供应链安全 | 3 | 0 |
 | 第三阶段：部署策略——发布的四种姿势 | 4 | 0 |
 | 第四阶段：规模化与 release 工程 | 4 | 0 |
-| **合计** | **16** | **2** |
+| **合计** | **16** | **3** |
 
 ---
 
@@ -69,7 +69,7 @@
 
 ---
 
-### [ ] 项目 3：可复用工作流与复合动作
+### [x] 项目 3：可复用工作流与复合动作
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -78,12 +78,13 @@
 | **前置** | 项目 1 |
 | **⚠️ 风险** | act 对 workflow_call 支持有版本差异——⚠️ 开工探活，fallback：推真仓库验证（语法与已做过的 Gitea Actions 同构，迁移零成本） |
 | **验收标准** | 两条业务流水线调用同一 reusable workflow；改共享逻辑一处，两条流水线重跑全绿（不复制粘贴）；composite action 被 3 个 job 复用且 outputs 正确回传 |
+| **实验目录** | `cicd/03_reusable/`（✅ probe 探活 act 0.2.89 支持 workflow_call ✓ 本地 composite ✗；staging/prod 两流水线全绿 + share 改 callee 一处同步生效；composite 本体留真仓库验证） |
 
 **🤖 开始提示词**：
 > `我要开始 CI/CD 项目「可复用工作流与复合动作」。请给我 1 个 workflow_call（带 inputs/secrets/outputs）、1 个 composite action、2 条调用方流水线，约 180 行，含 act 探活脚本与 fallback 方案。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-17
+**踩坑记录**：① act 0.2.89 支持 workflow_call（`uses: ./.github/workflows/xx.yml` 调用 callee 的 inputs/secrets/outputs 全链路可跑通）但**不支持本地 composite action**（`uses: ./actions/xx` 报 `file does not exist`）——本地版将 composite 逻辑内联到普通 step 验证同等链路，composite 本体留真仓库；② act 的 workspace 是 git 仓库根，不是 cwd——实验目录内的 `.github/workflows/` 与 `actions/` 必须放进临时 git 仓库再从其中跑 act，`uses:` 的相对路径才能解析；③ step 内写 `GITHUB_OUTPUT` 后，同 step 内读 `steps.xx.outputs` 是空串——输出要到下一个 step 才可读，同 step 内用 shell 变量即可；④ `set -o pipefail` 下断言型 `grep` 无匹配会让脚本直接退出（接 `\|\| true`），tee 管道中的 grep 还会 SIGPIPE（先落档再对文件断言）
 
 ---
 

@@ -1,0 +1,38 @@
+# 业务流水线 1：staging 环境部署
+#
+# 调用 reusable-build-test（传入 staging 参数），再用 composite action 做部署后探活。
+# 与 deploy-prod 的差异仅在 inputs——共享逻辑零复制粘贴。
+name: deploy-staging
+on: push
+
+jobs:
+  build-test:
+    uses: ./.github/workflows/reusable-build-test.yml
+    with:
+      environment: staging
+      node_version: "22"
+      run_lint: true
+    secrets:
+      deploy_token: "fake-staging-token"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+      # act 0.2.89 不支持本地 composite action（uses: ./path）——
+      # 本地版内联同等逻辑验证 workflow_call 链路；真仓库版用真正的 composite action
+      - name: Deploy staging (act 适配)
+        id: hello
+        run: |
+          greeting="hello staging"
+          status="ok"
+          echo "greeting=${greeting}" >> "$GITHUB_OUTPUT"
+          echo "status=${status}" >> "$GITHUB_OUTPUT"
+          echo "greeting: ${greeting}"
+          echo "status: ${status}"
+          echo "build_id: ${{ needs.build-test.outputs.build_id }}"
+          echo "test: ${{ needs.build-test.outputs.test_result }}"
+          case "${greeting}" in
+            *"staging"*) echo "[ok] greeting 指向 staging" ;;
+            *) echo "[fail] greeting 未指向 staging" >&2; exit 1 ;;
+          esac

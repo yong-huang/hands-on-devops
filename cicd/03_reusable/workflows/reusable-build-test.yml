@@ -1,0 +1,62 @@
+# 可复用 workflow（workflow_call）：封装"构建 + 测试 + 上报"的共享逻辑
+#
+# 两条业务流水线（deploy-staging / deploy-prod）通过 needs 调用它，
+# 传入不同的环境参数——改共享逻辑只改这一个文件，两条流水线同步生效。
+name: reusable-build-test
+on:
+  workflow_call:
+    inputs:
+      environment:
+        description: "部署目标环境标识"
+        required: true
+        type: string
+      node_version:
+        description: "Node.js 版本"
+        required: false
+        type: string
+        default: "20"
+      run_lint:
+        description: "是否跑 lint"
+        required: false
+        type: boolean
+        default: true
+    secrets:
+      deploy_token:
+        description: "部署凭证（仅传递，不打印）"
+        required: true
+    outputs:
+      build_id:
+        description: "构建标识（environment + 短随机数）"
+        value: ${{ jobs.build.outputs.build_id }}
+      test_result:
+        description: "测试结论"
+        value: ${{ jobs.test.outputs.conclusion_text }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      build_id: ${{ steps.gen.outputs.build_id }}
+    steps:
+      - name: Generate build ID
+        id: gen
+        run: echo "build_id=${{ inputs.environment }}-$(date +%s | tail -c 6)" >> "$GITHUB_OUTPUT"
+      - name: Build（模拟）
+        run: |
+          echo "building for ${{ inputs.environment }} with node ${{ inputs.node_version }}"
+          echo "token received: ${{ secrets.deploy_token != '' && 'yes' || 'no' }}"
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    outputs:
+      conclusion_text: ${{ steps.report.outputs.text }}
+    steps:
+      - name: Lint（可选）
+        if: ${{ inputs.run_lint }}
+        run: echo "linting..."
+      - name: Test（模拟）
+        run: echo "testing..."
+      - name: Report
+        id: report
+        run: echo "text=build:${{ needs.build.outputs.build_id }} test:pass" >> "$GITHUB_OUTPUT"

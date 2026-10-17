@@ -1,0 +1,149 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 03 · 可复用工作流与复合动作",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1100,
+      380
+    ]
+  },
+  "components": [
+    {
+      "id": "callee",
+      "type": "external",
+      "label": "reusable-build-test",
+      "sublabel": "workflow_call · inputs/secrets/outputs",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        210,
+        70
+      ]
+    },
+    {
+      "id": "staging",
+      "type": "backend",
+      "label": "deploy-staging",
+      "sublabel": "env:staging · node:22 · lint:yes",
+      "pos": [
+        400,
+        45
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "prod",
+      "type": "backend",
+      "label": "deploy-prod",
+      "sublabel": "env:production · node:20 · lint:no",
+      "pos": [
+        400,
+        175
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "composite",
+      "type": "external",
+      "label": "hello-composite",
+      "sublabel": "composite action · 原地展开",
+      "pos": [
+        760,
+        45
+      ],
+      "size": [
+        190,
+        62
+      ]
+    },
+    {
+      "id": "outputs",
+      "type": "database",
+      "label": "outputs 回传",
+      "sublabel": "greeting + status + build_id",
+      "pos": [
+        760,
+        175
+      ],
+      "size": [
+        190,
+        62
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "callee-to-staging",
+      "from": "callee",
+      "to": "staging",
+      "label": "uses · env:staging",
+      "variant": "emphasis"
+    },
+    {
+      "id": "callee-to-prod",
+      "from": "callee",
+      "to": "prod",
+      "label": "uses · env:production",
+      "variant": "emphasis"
+    },
+    {
+      "id": "staging-to-composite",
+      "from": "staging",
+      "to": "composite",
+      "label": "uses 宏"
+    },
+    {
+      "id": "composite-to-outputs",
+      "from": "composite",
+      "to": "outputs",
+      "label": "回传",
+      "labelAt": [
+        855,
+        130
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "workflow_call",
+      "items": [
+        "inputs 类型化参数",
+        "secrets 显式凭证通道",
+        "outputs 回传给 caller"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "composite action",
+      "items": [
+        "多 step 打包为宏",
+        "caller 容器内原地展开",
+        "不支持 secrets 上下文"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "改一处处处生效",
+      "items": [
+        "callee 追加 SHARED_V2 标记",
+        "两条流水线重跑同步生效",
+        "不复制粘贴"
+      ]
+    }
+  ]
+}

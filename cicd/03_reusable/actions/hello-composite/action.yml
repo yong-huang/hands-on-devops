@@ -1,0 +1,37 @@
+# 复合动作（composite action）：把多步操作封装为可复用的"宏"
+#
+# 与 reusable workflow 的区别：composite action 在调用方的 job 内"原地展开"
+# （共享运行环境与文件系统），workflow_call 则启动独立 job。
+# 本动作被 deploy-staging 与 deploy-prod 两个 job 各调用一次，outputs 正确回传。
+name: hello-composite
+description: "打标签 + 探活 + 回传结果的复合动作"
+inputs:
+  target:
+    description: "目标环境名"
+    required: true
+  token:
+    description: "凭证（模拟）"
+    required: false
+    default: "none"
+outputs:
+  greeting:
+    description: "拼好的问候语"
+    value: ${{ steps.echo.outputs.greeting }}
+  status:
+    description: "探活结论"
+    value: ${{ steps.check.outputs.status }}
+runs:
+  using: "composite"
+  steps:
+    - name: Echo greeting
+      id: echo
+      shell: bash
+      run: |
+        echo "greeting=hello ${{ inputs.target }} (token:${{ inputs.token }})" >> "$GITHUB_OUTPUT"
+    - name: Check status
+      id: check
+      shell: bash
+      run: echo "status=ok" >> "$GITHUB_OUTPUT"
+    - name: Print
+      shell: bash
+      run: echo "composite action ran for ${{ inputs.target }}"
