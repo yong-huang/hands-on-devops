@@ -1,0 +1,39 @@
+# cache key 用 hashFiles 绑定 deps.lock 的内容——
+# deps.lock 变了 → key 变了 → 缓存 miss → 重新装依赖
+name: cache-demo
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Prepare workspace
+        run: |
+          mkdir -p docker/src
+          echo "dep-a==1.0" > docker/deps.lock
+          echo "console.log('hello')" > docker/src/app.js
+          echo "<html></html>" > docker/src/index.html
+
+      - name: Cache deps（key 绑定 hashFiles）
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: /tmp/docker-cache
+          key: docker-deps-${{ hashFiles('docker/deps.lock') }}
+
+      - name: Report cache hit
+        run: echo "cache-hit=${{ steps.cache.outputs.cache-hit }}"
+
+      - name: Docker build（冷跑装依赖 6s，热跑命中缓存跳过）
+        run: |
+          CACHE_FLAG=""
+          if [ "${{ steps.cache.outputs.cache-hit }}" != "true" ]; then
+            echo "[cold] cache miss，全量构建"
+          else
+            echo "[warm] cache hit，跳过依赖安装"
+          fi
+          start=$(date +%s)
+          docker build -t cache-demo --build-arg SKIP_DEPS="${{ steps.cache.outputs.cache-hit }}" ./docker 2>&1 || true
+          end=$(date +%s)
+          echo "duration=$((end - start))" >> "$GITHUB_OUTPUT"
+        id: build

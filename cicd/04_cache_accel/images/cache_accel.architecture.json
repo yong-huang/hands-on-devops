@@ -1,0 +1,165 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 04 · 缓存与构建加速",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1100,
+      520
+    ]
+  },
+  "components": [
+    {
+      "id": "cold",
+      "type": "backend",
+      "label": "冷跑 --no-cache",
+      "sublabel": "全量构建 · 依赖层 sleep 6s",
+      "pos": [
+        60,
+        100
+      ],
+      "size": [
+        190,
+        70
+      ]
+    },
+    {
+      "id": "warm",
+      "type": "backend",
+      "label": "热跑（命中缓存）",
+      "sublabel": "跳过依赖层 · 只跑源码层",
+      "pos": [
+        60,
+        340
+      ],
+      "size": [
+        190,
+        70
+      ]
+    },
+    {
+      "id": "deps",
+      "type": "database",
+      "label": "依赖层（cacheable）",
+      "sublabel": "COPY deps.lock + RUN sleep 6",
+      "pos": [
+        430,
+        100
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "src",
+      "type": "backend",
+      "label": "源码层（常变）",
+      "sublabel": "COPY src/ · 始终重跑",
+      "pos": [
+        430,
+        340
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "hash",
+      "type": "external",
+      "label": "hashFiles / checksum",
+      "sublabel": "deps.lock 变 → 缓存 miss",
+      "pos": [
+        790,
+        100
+      ],
+      "size": [
+        195,
+        66
+      ]
+    },
+    {
+      "id": "timing",
+      "type": "database",
+      "label": "计时取证",
+      "sublabel": "cold 8s → warm 1s · 提速 87%",
+      "pos": [
+        790,
+        340
+      ],
+      "size": [
+        195,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "cold-to-deps",
+      "from": "cold",
+      "to": "deps",
+      "label": "每次都执行",
+      "variant": "emphasis"
+    },
+    {
+      "id": "warm-to-deps",
+      "from": "warm",
+      "to": "deps",
+      "label": "命中 · 跳过",
+      "variant": "dashed"
+    },
+    {
+      "id": "deps-to-src",
+      "from": "deps",
+      "to": "src"
+    },
+    {
+      "id": "hash-to-deps",
+      "from": "hash",
+      "to": "deps",
+      "label": "变化 → miss",
+      "variant": "dashed"
+    },
+    {
+      "id": "src-to-timing",
+      "from": "src",
+      "to": "timing",
+      "label": "计时取证"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Docker 分层缓存",
+      "items": [
+        "依赖层在前（慢、cacheable）",
+        "源码层在后（快、常变）",
+        "COPY checksum 变 → 下层全 miss"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "实测（3 次取中位数）",
+      "items": [
+        "cold: 8s（--no-cache 全量）",
+        "warm: 1s（命中依赖层）",
+        "提速 87%（≥50% 断言通过）"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "hashFiles miss",
+      "items": [
+        "deps.lock 变 → checksum 变",
+        "RUN sleep 层缓存 miss",
+        "依赖重装（取证通过）"
+      ]
+    }
+  ]
+}
