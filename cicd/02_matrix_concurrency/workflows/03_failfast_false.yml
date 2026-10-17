@@ -1,0 +1,34 @@
+# 02-B2 · fail-fast: false——失败不传染，全部组合跑完再汇总红
+#
+# 与 02-B1 唯一的差异是 fail-fast 取值。false 时所有组合都跑完，
+# 失败的组合照常失败——跑全量收集所有失败点，最后一起修。
+name: failfast-false
+on: push
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [18, 20]
+        include:
+          - os: ubuntu-latest
+            node: 20
+            broken: true
+          - os: macos-latest
+            node: 20
+            broken: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Conditional work
+        run: |
+          echo "running os=${{ matrix.os }} node=${{ matrix.node }}"
+          if [ "${{ matrix.broken }}" = "true" ]; then
+            echo "simulating slow flaky test..."
+            sleep 20
+            echo "FAILED" >&2
+            exit 1
+          fi
+          sleep 25
+          echo "done cleanly"

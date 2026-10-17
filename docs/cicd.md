@@ -16,15 +16,15 @@
 
 ## 📊 总进度
 
-进度：█░░░░░░░░░░░░░░░░░░░ 1/16 (6%)
+进度：██░░░░░░░░░░░░░░░░░░ 2/16 (13%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
-| 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 1 |
+| 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 2 |
 | 第二阶段：凭据与供应链安全 | 3 | 0 |
 | 第三阶段：部署策略——发布的四种姿势 | 4 | 0 |
 | 第四阶段：规模化与 release 工程 | 4 | 0 |
-| **合计** | **16** | **1** |
+| **合计** | **16** | **2** |
 
 ---
 
@@ -50,7 +50,7 @@
 
 ---
 
-### [ ] 项目 2：矩阵构建与并发治理
+### [x] 项目 2：矩阵构建与并发治理
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -59,12 +59,13 @@
 | **前置** | 项目 1 |
 | **⚠️ 风险** | ☁️ 并发取消是 GitHub 服务端行为，act 模拟不了——矩阵部分本地验，concurrency 取消推真仓库验（公共仓库免费） |
 | **验收标准** | 3 版本 × 2 OS 矩阵（include/exclude 裁剪后 6 job）act 全绿；注入失败对比 fail-fast 两种取值的中止行为差异并取证；真仓库同 concurrency group 连推两次，第一次 run 状态为 cancelled（gh api 断言） |
+| **实验目录** | `cicd/02_matrix_concurrency/`（✅ matrix act 全绿 6 组合 + fail-fast false 本地取证 + 真仓库 gh api 全断言：concurrency cancelled / true 1F+3C / false 2S+2F+0C） |
 
 **🤖 开始提示词**：
 > `我要开始 CI/CD 项目「矩阵构建与并发治理」。请给我矩阵 workflow（include/exclude 裁剪、fail-fast 对比、concurrency group）约 120 行，矩阵部分 act 可跑、并发取消部分给真仓库验证脚本（gh api 断言 cancelled）。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-16
+**踩坑记录**：① act 0.2.89 的 fail-fast: true 有怪癖——一个失败后所有 job（含成功的）结论都标 failed（step 级输出不受影响），断言应用 step 级证据（grep done cleanly / FAILED）而非 job 结论；② act 里 macos-latest 也映射为 Linux 容器（-P 把标签映射到镜像），矩阵 OS 值只是变量，真实 OS 差异要真仓库才有；③ git push 与 gh api 走不同通道（git 到 github.com:443 可能超时而 gh api 正常）——真仓库段按「已有 run 则跳过推送」实现幂等；④ 真仓库 concurrency 取消实测延迟约 2 分钟（run B sleep 90s + API 落定），轮询窗口要留够；⑤ gh api 的 `--jq` 结果如需在 bash 内做数值比较，注意空串/undefined 与 0 的类型差异
 
 ---
 

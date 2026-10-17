@@ -1,0 +1,21 @@
+# 02-C · concurrency group：同组连推，旧 run 自动取消（真仓库专用）
+#
+# GitHub 服务端行为：同一 concurrency group 里新 run 开始时，
+# in-progress / pending 的旧 run 被 cancelled。act 模拟不了服务端调度，
+# 此 workflow 推到真仓库由 verify-cloud.sh 用 gh api 断言。
+name: concurrency-demo
+on: push
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  long-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Long build（足够长，让第二次推送有机会取消第一次 run）
+        run: |
+          echo "build started at $(date -u +%FT%TZ)"
+          sleep 90
+          echo "build finished at $(date -u +%FT%TZ)"

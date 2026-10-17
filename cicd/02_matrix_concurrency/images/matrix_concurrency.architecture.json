@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 02 · 矩阵展开与并发取消",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1100,
+      580
+    ]
+  },
+  "components": [
+    {
+      "id": "table",
+      "type": "external",
+      "label": "strategy.matrix",
+      "sublabel": "2 OS × 3 node",
+      "pos": [
+        60,
+        180
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "jobs",
+      "type": "backend",
+      "label": "6 个矩阵 job",
+      "sublabel": "exclude 裁剪 + include 补回",
+      "pos": [
+        400,
+        100
+      ],
+      "size": [
+        210,
+        70
+      ]
+    },
+    {
+      "id": "act",
+      "type": "external",
+      "label": "act 本地验证",
+      "sublabel": "6 组合逐一在册 · 全绿",
+      "pos": [
+        760,
+        100
+      ],
+      "size": [
+        190,
+        70
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "external",
+      "label": "concurrency group",
+      "sublabel": "build-branch · cancel-in-progress",
+      "pos": [
+        60,
+        380
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "runa",
+      "type": "backend",
+      "label": "run A（旧）",
+      "sublabel": "push #1 · sleep 90",
+      "pos": [
+        380,
+        370
+      ],
+      "size": [
+        160,
+        58
+      ]
+    },
+    {
+      "id": "runb",
+      "type": "backend",
+      "label": "run B（新）",
+      "sublabel": "push #2",
+      "pos": [
+        380,
+        450
+      ],
+      "size": [
+        160,
+        58
+      ]
+    },
+    {
+      "id": "result",
+      "type": "database",
+      "label": "gh api 断言",
+      "sublabel": "A: cancelled · B: success",
+      "pos": [
+        640,
+        370
+      ],
+      "size": [
+        175,
+        58
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "table-to-jobs",
+      "from": "table",
+      "to": "jobs",
+      "label": "展开",
+      "variant": "emphasis"
+    },
+    {
+      "id": "jobs-to-act",
+      "from": "jobs",
+      "to": "act",
+      "label": "act 验证",
+      "variant": "emphasis"
+    },
+    {
+      "id": "gate-to-runa",
+      "from": "gate",
+      "to": "runa",
+      "label": "push #1"
+    },
+    {
+      "id": "gate-to-runb",
+      "from": "gate",
+      "to": "runb",
+      "label": "push #2"
+    },
+    {
+      "id": "runb-to-result",
+      "from": "runb",
+      "to": "result",
+      "label": "gh api"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "矩阵",
+      "items": [
+        "2 OS × 3 node = 6 排列",
+        "exclude 裁掉 macos+18",
+        "include 补回 + experimental 标记"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "fail-fast（真仓库）",
+      "items": [
+        "true: 1 failure + 3 cancelled",
+        "false: 2 failure + 2 success",
+        "act 0.2.89 模拟不了取消"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "concurrency（真仓库）",
+      "items": [
+        "同 group 连推两次",
+        "第一次 run 被 cancelled",
+        "gh api 断言结论"
+      ]
+    }
+  ]
+}

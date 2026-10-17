@@ -1,0 +1,34 @@
+# 02-B1 · fail-fast: true（默认）——一个 matrix job 失败，取消/跳过其余
+#
+# 教学点：4 个组合里 node=20 的组合必失败。fail-fast: true 时，
+# 失败发生后其余 in-progress 的 job 会被取消、未开始的被跳过。
+name: failfast-true
+on: push
+
+jobs:
+  test:
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [18, 20]
+        include:
+          - os: ubuntu-latest
+            node: 20
+            broken: true
+          - os: macos-latest
+            node: 20
+            broken: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Conditional work
+        run: |
+          echo "running os=${{ matrix.os }} node=${{ matrix.node }}"
+          if [ "${{ matrix.broken }}" = "true" ]; then
+            echo "simulating slow flaky test..."
+            sleep 20
+            echo "FAILED" >&2
+            exit 1
+          fi
+          sleep 25
+          echo "done cleanly"

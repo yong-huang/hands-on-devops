@@ -1,0 +1,34 @@
+# 02-A · 矩阵展开与 include/exclude 裁剪
+#
+# 原始排列 6 个（2 OS × 3 node），exclude 裁掉 1 个、include 补回 1 个带标记的：
+# 最终仍是 6 个 job，但组合的取舍逻辑写在了声明里，不是靠人肉数格子。
+#
+# act 差异提示：本机 act 里 macos-latest 也映射到 Linux 容器——本地验证的是
+# 矩阵展开与脚本行为；真实 OS 差异留给真仓库（见 02-C 的真仓库实验）。
+name: matrix-basic
+on: push
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [18, 20, 22]
+        exclude:
+          # 裁掉：macos 上 node 18 无维护价值
+          - os: macos-latest
+            node: 18
+        include:
+          # 补回并加标记：macos 只测 18 的 experimental 通道
+          - os: macos-latest
+            node: 18
+            experimental: true
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Report combo
+        run: |
+          echo "os=${{ matrix.os }} node=${{ matrix.node }} experimental=${{ matrix.experimental }}"
+          echo "combo=${{ matrix.os }}-node${{ matrix.node }}" >> "$GITHUB_OUTPUT"
+      - name: Node version probe
+        run: |
+          if command -v node >/dev/null; then node --version; else echo "node not in image (act 容器无此版本，仅验矩阵展开)"; fi
