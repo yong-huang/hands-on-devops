@@ -1,0 +1,46 @@
+# 取 OIDC token 并 artifact 化
+#
+# permissions: id-token: write 是唯一开关——没有它，OIDC 端点返回 403。
+# token 通过 ACTIONS_ID_TOKEN_REQUEST_URL 获取（GitHub 服务端签发的 JWT），
+# artifact 化后本地脚本可下载并验签。
+name: oidc-token-demo
+on: push
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  get-token:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch OIDC token
+        id: oidc
+        env:
+          REQUEST_URL: ${{ ACTIONS_ID_TOKEN_REQUEST_URL }}
+          REQUEST_TOKEN: ${{ ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+        run: |
+          # audience 参数决定 token 的 aud claim（验签时会检查）
+          RESP=$(curl -s -H "Authorization: Bearer $REQUEST_TOKEN" \
+            "${REQUEST_URL}&audience=api://AzureADTokenExchange")
+          TOKEN=$(echo "$RESP" | python3 -c "import json,sys; print(json.load(sys.stdin)['value'])")
+          echo "$TOKEN" > oidc-token.txt
+          echo "token length: $(wc -c < oidc-token.txt | tr -d ' ')"
+
+      - name: Decode claims (for CI log)
+        run: |
+          TOKEN=$(cat oidc-token.txt)
+          PAYLOAD=$(echo "$TOKEN" | cut -d. -f2)
+          # base64url → base64（补 =）
+          PAD=$(((4 - ${#PAYLOAD} % 4) % 4))
+          PAYLOAD="${PAYLOAD}$(printf '=%.0s' $(seq 1 $PAD 2>/dev/null || echo))"
+          echo "$PAYLOAD" | base64 -d 2>/dev/null | python3 -m json.tool || true
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: oidc-token
+          path: oidc-token.txt
+
+
+# retrigger

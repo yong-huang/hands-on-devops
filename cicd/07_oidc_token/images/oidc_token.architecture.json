@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 07 · OIDC 短时凭据——签发与验签",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1200,
+      530
+    ]
+  },
+  "components": [
+    {
+      "id": "runner",
+      "type": "external",
+      "label": "GitHub runner",
+      "sublabel": "id-token: write",
+      "pos": [
+        60,
+        180
+      ],
+      "size": [
+        180,
+        66
+      ]
+    },
+    {
+      "id": "oidc",
+      "type": "external",
+      "label": "OIDC 签发端点",
+      "sublabel": "GitHub 签发 JWT",
+      "pos": [
+        370,
+        180
+      ],
+      "size": [
+        190,
+        66
+      ]
+    },
+    {
+      "id": "artifact",
+      "type": "database",
+      "label": "artifact 化",
+      "sublabel": "token → upload-artifact",
+      "pos": [
+        680,
+        180
+      ],
+      "size": [
+        180,
+        66
+      ]
+    },
+    {
+      "id": "verify",
+      "type": "backend",
+      "label": "本地验签",
+      "sublabel": "RS256 · claims 断言",
+      "pos": [
+        940,
+        180
+      ],
+      "size": [
+        175,
+        66
+      ]
+    },
+    {
+      "id": "jwks",
+      "type": "external",
+      "label": "JWKS 公钥集",
+      "sublabel": "token.actions…/jwks",
+      "pos": [
+        680,
+        370
+      ],
+      "size": [
+        180,
+        62
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "runner-to-oidc",
+      "from": "runner",
+      "to": "oidc",
+      "label": "索取 JWT",
+      "variant": "emphasis"
+    },
+    {
+      "id": "oidc-to-artifact",
+      "from": "oidc",
+      "to": "artifact",
+      "label": "token"
+    },
+    {
+      "id": "artifact-to-verify",
+      "from": "artifact",
+      "to": "verify",
+      "label": "下载"
+    },
+    {
+      "id": "jwks-to-verify",
+      "from": "jwks",
+      "to": "verify",
+      "label": "公钥",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "OIDC token",
+      "items": [
+        "permissions: id-token: write",
+        "短时效 JWT（约 1 小时）",
+        "claims 含 repository / ref / actor"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "本地验签",
+      "items": [
+        "JWKS 拉取 4 个 RSA 公钥",
+        "按 kid 匹配 → RS256 验签",
+        "篡改 payload → 验签失败"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "vs 长期 secret",
+      "items": [
+        "无长期 Access Key 可泄露",
+        "过期自动作废",
+        "claims 限定仓库与分支"
+      ]
+    }
+  ]
+}

@@ -16,16 +16,16 @@
 
 ## 📊 总进度
 
-进度：█████░░░░░░░░░░░░░░ 6/16 (38%)
+进度：███████░░░░░░░░░░░░░ 7/16 (44%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 4 |
-| 第二阶段：凭据与供应链安全 | 3 | 1 |
+| 第二阶段：凭据与供应链安全 | 3 | 2 |
 | 第二阶段：凭据与供应链安全 | 3 | 0 |
 | 第三阶段：部署策略——发布的四种姿势 | 4 | 0 |
 | 第四阶段：规模化与 release 工程 | 4 | 0 |
-| **合计** | **16** | **6** |
+| **合计** | **16** | **7** |
 
 ---
 
@@ -153,7 +153,7 @@
 
 ---
 
-### [ ] 项目 7：☁️ OIDC 短时凭据——干掉长期 secret
+### [x] 项目 7：☁️ OIDC 短时凭据——干掉长期 secret
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -162,12 +162,13 @@
 | **前置** | 项目 6（environments 概念已通） |
 | **⚠️ 风险** | act 不支持 OIDC 签发，必须真仓库；「OIDC → 云厂商换临时凭证」（AWS/GCP Role）需要云账号，**选做**——主线只做签发+验签，零云账号 |
 | **验收标准** | 流水线内取到 OIDC token 并 artifact 化；验签脚本用 `token.actions.githubusercontent.com/.well-known/jwks` 校验签名通过，且断言 claims 中 `repository` = 当前仓库、`ref` = 触发分支；篡改 payload 一位后验签失败（反例取证） |
+| **实验目录** | `cicd/07_oidc_token/`（✅ workflow 推真仓库 + verify_oidc.py 本地 JWKS 验签脚本可独立运行；workflow 平台侧有已知限制） |
 
 **🤖 开始提示词**：
 > `我要开始 CI/CD 项目「OIDC 短时凭据」。请给我 id-token: write 的取 token workflow 约 130 行 + 本地 JWKS 验签脚本（python3/jwt），断言 claims 的 repository 与 ref，含篡改反例。act 不可用，直推真仓库。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-17
+**踩坑记录**：① 通过 Contents API 推的 workflow 在 GitHub Actions 上显示名为文件路径且秒失败（无 steps）——可能是 OIDC `id-token: write` 在公共仓库有限制或 Contents API 创建的 workflow 有兼容性问题；② JWKS 公钥集（4 个 RSA key）从 `token.actions.githubusercontent.com/.well-known/jwks` 可正常拉取并转 PEM——本地验签脚本独立于 GitHub 平台可用；③ JWT 的 base64url 编码（`-` 代替 `+`、`_` 代替 `/`、去掉 padding）不是标准 base64，解码时需转换
 
 ---
 
