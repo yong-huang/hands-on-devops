@@ -4,8 +4,10 @@
 > 你的仓库复制一份到自己账号后，向原仓库发起的合并请求）的代码能以 base
 > 分支（PR 想合入的目标分支）的权限执行，恶意 fork 可窃取 secrets。
 >
-> 本实验用 act 本地模拟取证"危险 workflow 的执行环境"，再用加固版对照验证
-> 隔离效果。三道防线：pull_request 替代 target、权限收敛、SHA pin。
+> 本实验用 act（在本机 Docker 容器里跑 GitHub Actions 的开源模拟器）本地
+> 取证"危险 workflow 的执行环境"，再用加固版对照验证隔离效果。三道防线：
+> pull_request 替代 target、权限收敛、SHA pin（把 action 引用钉死在 40 位
+> 十六进制提交哈希上——tag 可被篡改，SHA 不可变）。
 
 ## Background
 
@@ -28,8 +30,8 @@ fork 分支的代码。
 | 部件 | 危险版（pull_request_target） | 加固版（pull_request） |
 |:---|:---|:---|
 | secrets | 可访问（base 的） | 空（fork PR 天然隔离） |
-| GITHUB_TOKEN | 宽权限（默认） | 显式收敛到最小集合 |
-| 第三方 action | tag/branch（可篡改） | 40 位 SHA pin（不可变） |
+| GITHUB_TOKEN | `pull-requests: write`——能评论/关闭 PR，是攻击面 | 相同的显式收敛块——写权限已最小化，配合 PR 事件双保险 |
+| 第三方 action | tag 引用 `actions/checkout@v4`（可篡改） | 不引用任何第三方 action（真仓库若引用，必须 40 位 SHA pin，扫描器兜底） |
 
 可以把 `pull_request_target` 想象成"你把家门钥匙给快递员让他自己进门放
 包裹"——快递员（fork）应该只把包裹放在门口，但你给了他进门的钥匙。
@@ -67,12 +69,17 @@ cd cicd/08_supply_chain
 ./supply_chain.sh clean        # 清临时文件
 ```
 
+预期现象：`dangerous` 段会打出红色 `❌` 与 `Job failed`——act 伪造的本地
+仓库 fetch 不到 fork 代码，checkout 必然失败；脚本已兜住并降级为声明取证，
+**报错不是实验失败**。`hardened` 段零外部依赖，应全绿。
+
 `hardened` 段的隔离取证（act 真实输出）：
 
 ```
 [hardened-pr/safe-check]   | ✅ 加固验证：
 [hardened-pr/safe-check]   |   event: pull_request
-[hardened-pr/safe-check]   | [ok] secrets 不可访问（fork PR 隔离生效）
+[hardened-pr/safe-check]   |   GITHUB_TOKEN 权限范围（已收敛）
+[hardened-pr/safe-check]   |   [ok] secrets 不可访问（fork PR 隔离生效）
 ```
 
 `pin` 段的扫描取证（真实输出）：
@@ -83,24 +90,31 @@ cd cicd/08_supply_chain
 …（.tmp/.github/workflows/ 第二次扫描结果相同，略）
 ```
 
-诚实预期：act 0.2.89 对 `pull_request_target` 的模拟有限——能跑 workflow
-但不能完全模拟 GitHub 服务端的 secrets 注入行为；真正的 fork PR 攻击
-验证需推真仓库并从另一个账号发 PR。
+诚实预期：危险版 checkout fork 代码这步在 act 本地必然失败（伪造仓库
+fetch 不到 PR head 的 refspec），危险段只取证到声明层；加固版零外部依赖
+可全绿。fork 代码真正被执行的行为，需推真仓库并从另一账号发 PR 验证。
 
 ## How It Works
 
 ### 危险面：pull_request_target 为什么危险
 
+危险版 workflow 节选（与 `01_dangerous.yml` 一致）：
+
 ```yaml
 on: pull_request_target      # ← 在 base 分支上下文运行
+permissions:
+  contents: read
+  pull-requests: write       # ← 显式声明，但"写 PR"仍是攻击面
 jobs:
   dangerous:
     steps:
-      - uses: actions/checkout@v4
+      # 危险点：checkout PR head（fork 的代码）而非 base
+      - uses: actions/checkout@v4          # ← tag 引用，可篡改
         with:
           ref: ${{ github.event.pull_request.head.sha }}
       - run: |
-          echo "${{ secrets.DEPLOY_TOKEN }}"   # ← secrets 可访问
+          echo "⚠️ DANGEROUS: running fork code with base permissions"
+          echo "GITHUB_TOKEN scope: ${{ toJson(github.token) }}"
 ```
 
 `pull_request_target` 与 `pull_request` 的区别不在"谁来跑"而在"在哪跑"：
@@ -112,8 +126,10 @@ target 在 **base 上下文**（有 secrets 与 GITHUB_TOKEN），PR 在 **PR �
 ### 加固三件套
 
 ① **事件替换**：`pull_request_target` → `pull_request`——secrets 天然为空；
-② **权限收敛**：两个版本均显式写 `permissions` 块演示最小集合写法；
-③ **SHA pin**：第三方 action 用 40 位十六进制 SHA（不可变）替代 tag。
+② **权限收敛**：两版均显式写 `permissions` 块演示最小集合写法；
+
+③ **SHA pin**：第三方 action 用 40 位 SHA（不可变）替代 tag——加固版
+干脆不引第三方 action，真仓库需要时才按此规则 pin。
 
 `check_sha_pin.py` 扫描所有 workflow YAML——非 SHA 引用的第三方 action
 全部报出（GitHub 官方 `actions/` 前缀豁免）。
@@ -126,9 +142,10 @@ target 在 **base 上下文**（有 secrets 与 GITHUB_TOKEN），PR 在 **PR �
 
 ## Pitfalls & Q&A
 
-- **① act 对 pull_request_target 支持有限**：act 能跑 workflow 文件本身，
-  但不能完全模拟 GitHub 服务端的 secrets 注入行为——本地验证覆盖声明
-  层面，真仓库才能验证运行时行为。
+- **① act 对 pull_request_target 支持有限**：危险版 checkout fork 代码这步
+  在本地必然失败（act 伪造的仓库 fetch 不到 PR head 的 refspec）——本地
+  验证覆盖声明层 + 加固版运行时，fork 代码被以 base 权限执行的行为只能
+  推真仓库验证。
 - **② pin 检查的 `gh` 前缀豁免过宽**：`TRUSTED_PREFIXES` 中的 `"gh"` 会把
   owner 名以 gh 开头的第三方 action 全部放行（如 `ghactions-xxx/...`）——
   生产门禁应收紧为精确匹配。

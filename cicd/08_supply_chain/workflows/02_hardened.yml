@@ -1,9 +1,11 @@
-# ✅ 加固版：pull_request（非 target）+ 最小权限 + SHA pin
+# ✅ 加固版：pull_request（非 target）+ 显式 permissions + 零第三方 action
 #
-# 加固点 1：pull_request（非 target）—— fork PR 的 workflow 使用 PR 分支的
-#           代码与 secrets（GITHUB_TOKEN 只读、secrets 为空）
-# 加固点 2：permissions 显式收敛到最小集合
-# 加固点 3：第三方 action 用 40 位 SHA pin（而非 tag/branch）
+# 加固点 1：pull_request（非 target）—— fork PR 的代码在 PR 上下文运行：
+#           secrets 为空、GITHUB_TOKEN 只读（平台强制，不靠 workflow 自觉）
+# 加固点 2：permissions 显式声明最小集合（危险版也写了同一块——写在明处、
+#           不依赖平台默认值是两版共同的基本功；真正的分野是事件类型）
+# 加固点 3：不引用任何第三方 action——真仓库若要引用，必须 40 位 SHA pin
+#           （而非 tag/branch），并用 check_sha_pin.py 扫描兜底
 name: hardened-pr
 on: pull_request
 

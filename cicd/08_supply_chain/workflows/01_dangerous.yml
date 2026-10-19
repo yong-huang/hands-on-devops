@@ -16,7 +16,8 @@ on: pull_request_target
 permissions:
   contents: read
   pull-requests: write
-  # ↑ 默认权限过宽：写 PR 评论的权限被提升到几乎全部
+  # ↑ 显式声明但留了 pull-requests: write——能评论/关闭 PR，是攻击面；
+  #   危险的根源不在这一块，而在下面 checkout fork 代码的事件本身
 
 jobs:
   dangerous:
