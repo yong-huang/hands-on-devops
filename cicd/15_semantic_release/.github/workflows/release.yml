@@ -1,0 +1,23 @@
+# push 到 main 触发 semantic-release：分析提交 → 打 tag → 发 GitHub Release
+name: semantic-release
+on:
+  push:
+    branches: [main]
+
+# semantic-release 要创建 tag 与 Release——GITHUB_TOKEN 需要 contents 写权限
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # 全量历史 + tag，semantic-release 的分析基础
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npx --yes semantic-release@24
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,171 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 15 · semantic-release 版本工程",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1150,
+      460
+    ]
+  },
+  "components": [
+    {
+      "id": "commits",
+      "type": "external",
+      "label": "conventional commits",
+      "sublabel": "fix: / feat: / BREAKING CHANGE footer",
+      "pos": [
+        50,
+        40
+      ],
+      "size": [
+        220,
+        66
+      ]
+    },
+    {
+      "id": "analyzer",
+      "type": "backend",
+      "label": "commit-analyzer 定版本",
+      "sublabel": "fix→patch · feat→minor · 破坏→major",
+      "pos": [
+        330,
+        36
+      ],
+      "size": [
+        230,
+        66
+      ]
+    },
+    {
+      "id": "notes",
+      "type": "backend",
+      "label": "release-notes 生成",
+      "sublabel": "changelog = 提交列表 + BREAKING 段",
+      "pos": [
+        610,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "rel",
+      "type": "cloud",
+      "label": "GitHub Release",
+      "sublabel": "tag vX.Y.Z · body 非空可断言",
+      "pos": [
+        920,
+        30
+      ],
+      "size": [
+        190,
+        62
+      ]
+    },
+    {
+      "id": "wf",
+      "type": "backend",
+      "label": "push→main 触发 workflow",
+      "sublabel": "GITHUB_TOKEN · contents:write",
+      "pos": [
+        330,
+        318
+      ],
+      "size": [
+        230,
+        66
+      ]
+    },
+    {
+      "id": "dry",
+      "type": "external",
+      "label": "本地 dry-run 演练",
+      "sublabel": "同一 analyzer/notes，只断言不发版",
+      "pos": [
+        610,
+        190
+      ],
+      "size": [
+        230,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "commits-to-analyzer",
+      "from": "commits",
+      "to": "analyzer",
+      "label": "逐条解析",
+      "variant": "emphasis"
+    },
+    {
+      "id": "analyzer-to-notes",
+      "from": "analyzer",
+      "to": "notes",
+      "label": "递升类型"
+    },
+    {
+      "id": "notes-to-rel",
+      "from": "notes",
+      "to": "rel",
+      "label": "tag + Release",
+      "variant": "emphasis"
+    },
+    {
+      "id": "wf-to-rel",
+      "from": "wf",
+      "to": "rel",
+      "label": "GITHUB_TOKEN 授权发布",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "bottom"
+    },
+    {
+      "id": "notes-to-dry",
+      "from": "notes",
+      "to": "dry",
+      "label": "复用同一生成链",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "semver 递升规则",
+      "items": [
+        "fix: → patch（1.0.1）；feat: → minor（1.1.0）；破坏性变更 → major（2.0.0）",
+        "首个发布固定 1.0.0，与提交类型无关",
+        "chore/docs 不发版——no relevant changes"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "发布链路",
+      "items": [
+        "push→main 触发 workflow，GITHUB_TOKEN 要 contents:write",
+        "analyzer 定版本 → notes 生成 changelog → tag 与 Release 一起发",
+        "本地 dry-run 复用同一套 analyzer/notes，只断言不发版"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "工具链真坑",
+      "items": [
+        "semantic-release@24 的 analyzer 不认 feat!: 简写——整个头解析失败",
+        "major 必须用 BREAKING CHANGE footer（semver 语义等价）",
+        "repositoryUrl 即便 dry-run 也要合法 URL：file:// 离线可验"
+      ]
+    }
+  ]
+}

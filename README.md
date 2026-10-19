@@ -84,7 +84,7 @@ devops.md 的互补进阶线：**GitHub Actions 为轴**，本机 act 离线迭�
 | 12 | 版本账本与一键回滚 | Docker/nginx | ✅ 真机验证 |
 | 13 | monorepo 增量构建 | Actions | ✅ 真机验证 |
 | 14 | flaky test 治理 | pytest | ✅ 真机验证 |
-| 15 | semantic-release 版本工程 | Actions ☁️ | ⬜ |
+| 15 | semantic-release 版本工程 | Actions ☁️ | ✅ 真机验证 |
 | 16 | 🏁 终极串联：生产级发布系统 | 全部 ☁️ | ⬜ |
 
 > ☁️ = 需推送 GitHub 真仓库（公共仓库免费）；其余纯本机可跑。

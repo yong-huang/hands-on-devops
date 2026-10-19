@@ -16,15 +16,15 @@
 
 ## 📊 总进度
 
-进度：████████████████░░░░░░ 13/16 (81%)
+进度：█████████████████░░░░░░ 14/16 (88%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 4 |
 | 第二阶段：凭据与供应链安全 | 3 | 3 |
 | 第三阶段：部署策略——发布的四种姿势 | 4 | 4 |
-| 第四阶段：规模化与 release 工程 | 4 | 2 |
-| **合计** | **16** | **13** |
+| 第四阶段：规模化与 release 工程 | 4 | 3 |
+| **合计** | **16** | **14** |
 
 ---
 
@@ -309,7 +309,7 @@
 
 ---
 
-### [ ] 项目 15：☁️ semantic-release 版本工程
+### [x] 项目 15：☁️ semantic-release 版本工程
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -322,8 +322,13 @@
 **🤖 开始提示词**：
 > `我要开始 CI/CD 项目「semantic-release 版本工程」。请给我 release 配置 + workflow 约 120 行 + 验收脚本：三组提交（fix/feat/feat!）分别断言版本递升与 Release 内容（gh api 断言 changelog 非空），act 用 PAT 的本地跑法也给出。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+| **实验目录** | `cicd/15_semantic_release/`（✅ 本地 dry-run 四场景 + 真仓库 cicd-lab 四连发 exit=0：v1.0.0→v1.0.1→v1.1.0→v2.0.0，gh api 断言 4 个 Release body 非空且含去前缀提交主题） |
+
+**🤖 开始提示词**：
+> `我要开始 CI/CD 项目「semantic-release 版本工程」。请给我 release 配置 + workflow 约 120 行 + 验收脚本：三组提交（fix/feat/feat!）分别断言版本递升与 Release 内容（gh api 断言 changelog 非空），act 用 PAT 的本地跑法也给出。只输出代码。`
+
+**完成日期**：2026-10-19
+**踩坑记录**：① semantic-release@24 的 commit-analyzer 不认 `feat!:` 简写——整个头解析失败、判「不触发发布」，major 必须用 BREAKING CHANGE footer（提交体另起一行，semver 语义等价）；② dry-run 也强制 repositoryUrl 是合法 URL（notes 生成器 new URL() + git ls-remote 校验）——本地仓库用 file:// + 绝对路径离线通过；③ 插件按 cwd 解析：玩具仓库必须 ln -s 安装目录的 node_modules，否则 MODULE_NOT_FOUND；④ changelog 按类型分组并剥掉 feat: 前缀——gh api 断言要匹配去前缀的提交主题；⑤ 首个发布固定 1.0.0 与提交类型无关（feat: 首发也得 v1.0.0）；⑥ dry-run 不打 tag——chore 场景要手动补基线 tag 才能观察「无相关变更」
 
 ---
 
