@@ -1,0 +1,174 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 13 · monorepo 增量构建：affected 检测与 job 级 skip",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1150,
+      460
+    ]
+  },
+  "components": [
+    {
+      "id": "dev",
+      "type": "external",
+      "label": "开发者 push",
+      "sublabel": "本例：只改 apps/a/src.txt",
+      "pos": [
+        50,
+        40
+      ],
+      "size": [
+        180,
+        62
+      ]
+    },
+    {
+      "id": "detect",
+      "type": "backend",
+      "label": "affected 检测",
+      "sublabel": "git diff base..HEAD + 反向闭包",
+      "pos": [
+        300,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "jobs",
+      "type": "security",
+      "label": "job 级 if 门",
+      "sublabel": "contains(affected, 模块名)？",
+      "pos": [
+        620,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "builda",
+      "type": "frontend",
+      "label": "build-a 执行",
+      "sublabel": "构建产物 · build ok",
+      "pos": [
+        900,
+        30
+      ],
+      "size": [
+        195,
+        62
+      ]
+    },
+    {
+      "id": "skip",
+      "type": "external",
+      "label": "build-b / build-c",
+      "sublabel": "skipped：零日志 · 产物未动",
+      "pos": [
+        620,
+        190
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "last",
+      "type": "database",
+      "label": ".last-built 基准指针",
+      "sublabel": "上次成功构建的 commit · 成功后回写",
+      "pos": [
+        300,
+        318
+      ],
+      "size": [
+        215,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "dev-to-detect",
+      "from": "dev",
+      "to": "detect",
+      "label": "变更 diff",
+      "variant": "emphasis"
+    },
+    {
+      "id": "last-to-detect",
+      "from": "last",
+      "to": "detect",
+      "label": "比对基准",
+      "variant": "dashed",
+      "fromSide": "top",
+      "toSide": "bottom"
+    },
+    {
+      "id": "detect-to-jobs",
+      "from": "detect",
+      "to": "jobs",
+      "label": "affected 清单",
+      "variant": "emphasis"
+    },
+    {
+      "id": "jobs-to-builda",
+      "from": "jobs",
+      "to": "builda",
+      "label": "命中 → 构建",
+      "variant": "emphasis"
+    },
+    {
+      "id": "jobs-to-skip",
+      "from": "jobs",
+      "to": "skip",
+      "label": "未命中 → skip",
+      "variant": "dashed",
+      "labelAt": [
+        720,
+        116
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "affected 闭包",
+      "items": [
+        "git diff 上次成功构建的 commit → 变更文件",
+        "文件映射模块，再沿依赖图反向闭包（common 变 → 全体）",
+        "流水线自身变更保守起见触发全量"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "skip 在 job 级",
+      "items": [
+        "if 条件为假的 job 由 runner 标记 skipped",
+        "本地 act 0.2.89 对 skip 完全静默——零日志 + 产物未动作证据",
+        "skip 省的是整个 job 的排队与执行成本"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "幂等性",
+      "items": [
+        "无变更重推：affected=[] → 全 skip",
+        "产物字节级未动（哈希对照断言）",
+        ".last-built 只在构建成功后回写——失败不污染基准"
+      ]
+    }
+  ]
+}

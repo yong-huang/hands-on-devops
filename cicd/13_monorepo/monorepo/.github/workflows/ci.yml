@@ -1,0 +1,45 @@
+# monorepo 增量构建：affected job 算出受影响模块，各构建 job 按需 skip
+#
+# skip 语义在 job 级 `if`：条件为假的 job 由 runner 标记为 skipped，
+# 而不是跑完再判断——省的是整个 job 的费用与时间。
+name: monorepo-ci
+on: push
+
+jobs:
+  affected:
+    runs-on: ubuntu-latest
+    outputs:
+      modules: ${{ steps.detect.outputs.modules }}
+    steps:
+      - name: Detect affected modules
+        id: detect
+        run: |
+          # 上一次成功构建的 commit 是比对基准；没有就退到空树（全量）
+          BASE="$(cat .last-built 2>/dev/null || echo 4b825dc642cb6eb9a060e54bf8d69288fbee4904)"
+          MODS="$(bash detect.sh "$BASE" HEAD)"
+          echo "modules=${MODS}" >> "$GITHUB_OUTPUT"
+          echo "affected=${MODS}"
+
+  build-a:
+    needs: affected
+    if: contains(fromJSON(needs.affected.outputs.modules), 'a')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build A
+        run: bash apps/a/build.sh
+
+  build-b:
+    needs: affected
+    if: contains(fromJSON(needs.affected.outputs.modules), 'b')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build B
+        run: bash apps/b/build.sh
+
+  build-c:
+    needs: affected
+    if: contains(fromJSON(needs.affected.outputs.modules), 'c')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build C
+        run: bash apps/c/build.sh
