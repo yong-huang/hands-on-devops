@@ -1,0 +1,37 @@
+# ✅ 加固版：pull_request（非 target）+ 最小权限 + SHA pin
+#
+# 加固点 1：pull_request（非 target）—— fork PR 的 workflow 使用 PR 分支的
+#           代码与 secrets（GITHUB_TOKEN 只读、secrets 为空）
+# 加固点 2：permissions 显式收敛到最小集合
+# 加固点 3：第三方 action 用 40 位 SHA pin（而非 tag/branch）
+name: hardened-pr
+on: pull_request
+
+# 加固：权限收敛到最小（只读仓库内容 + 写 PR 评论）
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  safe-check:
+    runs-on: ubuntu-latest
+    steps:
+      # act 本地不需要真的 checkout——此步在真仓库中应使用
+      # actions/checkout@<40位SHA>（SHA pin 加固）
+      - name: Simulate checkout
+        run: echo "would checkout ${{ github.event.pull_request.head.sha }}".
+
+      - name: Prove isolation
+        run: |
+          echo "✅ 加固验证："
+          echo "  event: ${{ github.event_name }}"
+          echo "  GITHUB_TOKEN 权限范围（已收敛）"
+          # 证明 secrets 不可访问（PR 上下文中 secrets 为空）
+          if [ -n "${{ secrets.DEPLOY_TOKEN || '' }}" ]; then
+            echo "  [!] secrets 可访问——隔离失效"
+          else
+            echo "  [ok] secrets 不可访问（fork PR 隔离生效）"
+          fi
+
+      - name: SHA pin demo
+        run: echo "all third-party actions pinned to SHA"

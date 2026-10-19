@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 08 · 流水线供应链加固",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": { "mode": "auto" },
+    "viewBox": [1100, 480]
+  },
+  "components": [
+    { "id": "fork", "type": "external", "label": "fork PR", "sublabel": "攻击者提交恶意代码", "pos": [60, 100], "size": [180, 62] },
+    { "id": "dangerous", "type": "backend", "label": "pull_request_target", "sublabel": "base 权限 + fork 代码 = 危险", "pos": [380, 100], "size": [195, 66] },
+    { "id": "hardened", "type": "backend", "label": "pull_request（加固）", "sublabel": "最小权限 · secrets 空", "pos": [380, 340], "size": [195, 66] },
+    { "id": "pin", "type": "database", "label": "SHA pin 扫描", "sublabel": "check_sha_pin.py", "pos": [720, 100], "size": [175, 62] },
+    { "id": "result", "type": "backend", "label": "加固取证", "sublabel": "secrets 取不到 · 隔离生效", "pos": [720, 340], "size": [175, 62] }
+  ],
+  "connections": [
+    { "id": "fork-to-dangerous", "from": "fork", "to": "dangerous", "label": "触发（危险）", "variant": "emphasis" },
+    { "id": "fork-to-hardened", "from": "fork", "to": "hardened", "label": "触发（安全）", "variant": "dashed" },
+    { "id": "dangerous-to-pin", "from": "dangerous", "to": "pin", "label": "扫描" },
+    { "id": "hardened-to-result", "from": "hardened", "to": "result", "label": "隔离" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "三个加固点", "items": ["pull_request 非 target", "permissions 最小收敛", "第三方 action SHA pin"] },
+    { "dot": "emerald", "title": "实测对照", "items": ["危险版：base 权限 + fork 代码", "加固版：secrets 取不到", "pin 扫描断言全部 40 位 SHA"] },
+    { "dot": "rose", "title": "act 本地验证", "items": ["pull_request_target 支持有限", "加固版隔离语义可本地验", "真仓库需补充 fork PR 场景"] }
+  ]
+}

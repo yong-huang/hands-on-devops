@@ -1,0 +1,39 @@
+# ⚠️ 危险示例：pull_request_target + 未收敛的 GITHUB_TOKEN
+#
+# 漏洞链条：fork PR 的代码在本 workflow 的上下文中执行
+#   → secrets 上下文可访问（GITHUB_TOKEN 未收敛权限）
+#   → 恶意 fork 可以打印 secrets 或篡改构建产物
+#
+# 真实场景中，attacker fork 仓库后修改 workflow 文件（PR 会使用 base 分支的
+# workflow），但由于 pull_request_target 在 base 上下文运行，attacker 可以
+# 在 step 里 checkout 自己的 fork 分支来执行恶意代码。
+#
+# 本实验用 act 本地模拟（不推真仓库），取证"危险 workflow 的执行环境里
+# secrets 与宽权限 token 都可访问"。
+name: dangerous-pr-target
+on: pull_request_target
+
+permissions:
+  contents: read
+  pull-requests: write
+  # ↑ 默认权限过宽：写 PR 评论的权限被提升到几乎全部
+
+jobs:
+  dangerous:
+    runs-on: ubuntu-latest
+    steps:
+      # 危险点 1：checkout PR head（fork 的代码）而不是 base
+      - name: Checkout PR code（fork 代码！）
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      # 危险点 2：在 fork 代码的上下文中执行（attacker 可注入恶意脚本）
+      - name: Run PR code
+        run: |
+          echo "⚠️ DANGEROUS: running fork code with base branch permissions"
+          echo "GITHUB_TOKEN scope: ${{ toJson(github.token) }}"
+          # 模拟：如果这里有什么敏感操作，fork 的恶意代码可以窃取
+          env | grep -i token || echo "no token env (simulated: would be here)"
+          echo "workflow file contents:"
+          cat "$GITHUB_WORKFLOW" 2>/dev/null || echo "(workflow ref)"

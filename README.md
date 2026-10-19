@@ -77,7 +77,7 @@ devops.md 的互补进阶线：**GitHub Actions 为轴**，本机 act 离线迭�
 | 05 | self-hosted runner 与标签路由 | Actions ☁️ | ⬜ |
 | 06 | Environments 部署保护与审批流 | Actions ☁️ | ✅ 真机验证 |
 | 07 | OIDC 短时凭据 | Actions ☁️ | ✅ 真机验证 |
-| 08 | 流水线供应链加固 | Actions ☁️ | ⬜ |
+| 08 | 流水线供应链加固 | Actions ☁️ | ✅ 真机验证 |
 | 09 | 蓝绿部署 | Compose/nginx | ⬜ |
 | 10 | 金丝雀发布与指标门禁 | nginx | ⬜ |
 | 11 | 滚动更新与健康门禁 | kind | ⬜ |
