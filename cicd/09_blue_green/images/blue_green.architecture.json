@@ -1,0 +1,215 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 09 · 蓝绿部署：压测中切槽与秒级回滚",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1150,
+      460
+    ]
+  },
+  "components": [
+    {
+      "id": "ab",
+      "type": "external",
+      "label": "ab 持续压测",
+      "sublabel": "80297 请求 · Failed 0",
+      "pos": [
+        50,
+        40
+      ],
+      "size": [
+        180,
+        62
+      ]
+    },
+    {
+      "id": "edge",
+      "type": "backend",
+      "label": "edge nginx :29080",
+      "sublabel": "唯一入口 · upstream app",
+      "pos": [
+        280,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "blue",
+      "type": "frontend",
+      "label": "blue 槽 · v1",
+      "sublabel": "nginx:1.27 现役→保活",
+      "pos": [
+        620,
+        30
+      ],
+      "size": [
+        195,
+        62
+      ]
+    },
+    {
+      "id": "keep",
+      "type": "frontend",
+      "label": "旧槽保活 = 回滚位",
+      "sublabel": "双向对等：下轮角色互换",
+      "pos": [
+        900,
+        30
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "green",
+      "type": "frontend",
+      "label": "green 槽 · v2",
+      "sublabel": "nginx:1.25 待命→现役",
+      "pos": [
+        620,
+        190
+      ],
+      "size": [
+        195,
+        62
+      ]
+    },
+    {
+      "id": "rollback",
+      "type": "messagebus",
+      "label": "秒回 v1",
+      "sublabel": "改回 upstream < 5s · 实测 0.2s",
+      "pos": [
+        900,
+        185
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "健康门禁",
+      "sublabel": "green /version=v2 才放行",
+      "pos": [
+        280,
+        318
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "flipact",
+      "type": "security",
+      "label": "切槽：改 upstream + reload",
+      "sublabel": "优雅换配置 · 实测 0.2s",
+      "pos": [
+        620,
+        318
+      ],
+      "size": [
+        215,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ab-to-edge",
+      "from": "ab",
+      "to": "edge",
+      "label": "持续打流",
+      "variant": "emphasis"
+    },
+    {
+      "id": "edge-to-blue",
+      "from": "edge",
+      "to": "blue",
+      "label": "切前全量 v1"
+    },
+    {
+      "id": "edge-to-green",
+      "from": "edge",
+      "to": "green",
+      "label": "切后全量 v2",
+      "variant": "emphasis"
+    },
+    {
+      "id": "green-to-gate",
+      "from": "green",
+      "to": "gate",
+      "label": "探活 /version",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "gate-to-flip",
+      "from": "gate",
+      "to": "flipact",
+      "label": "通过才切",
+      "variant": "emphasis"
+    },
+    {
+      "id": "flip-to-keep",
+      "from": "flipact",
+      "to": "keep",
+      "label": "旧槽不销毁",
+      "variant": "dashed"
+    },
+    {
+      "id": "keep-to-rollback",
+      "from": "keep",
+      "to": "rollback",
+      "label": "异常时",
+      "variant": "dashed",
+      "labelAt": [
+        1000,
+        130
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "零停机的来源",
+      "items": [
+        "nginx -s reload 优雅换配置，旧连接不中断",
+        "切换 = 改 upstream 文件 + reload，实测 0.2s",
+        "ab 压测 80297 请求，Failed requests: 0"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "先体检后切",
+      "items": [
+        "green /version 探活通过才允许切流量",
+        "不健康就拒绝切换，流量留在 blue",
+        "切后 blue 不销毁——它就是回滚位"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "回滚与假阳性",
+      "items": [
+        "改回 upstream + reload，实测 0.2s 秒回 v1（断言 < 5s）",
+        "下轮发版 green 变旧槽——蓝绿双向对等",
+        "ab 的 Length 失败是响应体变长的假阳性，不是掉线"
+      ]
+    }
+  ]
+}
