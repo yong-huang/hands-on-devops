@@ -80,7 +80,7 @@ devops.md 的互补进阶线：**GitHub Actions 为轴**，本机 act 离线迭�
 | 08 | 流水线供应链加固 | Actions ☁️ | ✅ 真机验证 |
 | 09 | 蓝绿部署 | Compose/nginx | ✅ 真机验证 |
 | 10 | 金丝雀发布与指标门禁 | nginx | ✅ 真机验证 |
-| 11 | 滚动更新与健康门禁 | kind | ⬜ |
+| 11 | 滚动更新与健康门禁 | kind | ✅ 真机验证 |
 | 12 | 版本账本与一键回滚 | Compose | ⬜ |
 | 13 | monorepo 增量构建 | Actions | ⬜ |
 | 14 | flaky test 治理 | pytest | ⬜ |

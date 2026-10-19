@@ -1,0 +1,188 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 11 · 滚动更新与健康门禁（kind）",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1150,
+      460
+    ]
+  },
+  "components": [
+    {
+      "id": "ab",
+      "type": "external",
+      "label": "ab 持续压测",
+      "sublabel": "19.7 万请求 · 0 失败",
+      "pos": [
+        30,
+        40
+      ],
+      "size": [
+        180,
+        62
+      ]
+    },
+    {
+      "id": "svc",
+      "type": "backend",
+      "label": "Service :29090",
+      "sublabel": "NodePort · 只挂 Ready 副本",
+      "pos": [
+        300,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "old",
+      "type": "frontend",
+      "label": "旧副本 × 3",
+      "sublabel": "preStop 排水 3s · 服务到最后一刻",
+      "pos": [
+        600,
+        30
+      ],
+      "size": [
+        215,
+        62
+      ]
+    },
+    {
+      "id": "new",
+      "type": "frontend",
+      "label": "新副本",
+      "sublabel": "Ready 才接流量",
+      "pos": [
+        620,
+        190
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "deploy",
+      "type": "backend",
+      "label": "Deployment 控制器",
+      "sublabel": "surge 1 · unavail 0 · deadline 30s",
+      "pos": [
+        620,
+        318
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "probe",
+      "type": "security",
+      "label": "readinessProbe",
+      "sublabel": "/version 500 → 0/1 不就绪",
+      "pos": [
+        900,
+        190
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "undo",
+      "type": "messagebus",
+      "label": "rollout undo",
+      "sublabel": "回退到上一个 revision",
+      "pos": [
+        300,
+        318
+      ],
+      "size": [
+        200,
+        62
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ab-to-svc",
+      "from": "ab",
+      "to": "svc",
+      "label": "滚动全程不打断",
+      "variant": "emphasis"
+    },
+    {
+      "id": "svc-to-old",
+      "from": "svc",
+      "to": "old",
+      "label": "正常服务",
+      "variant": "emphasis"
+    },
+    {
+      "id": "svc-to-new",
+      "from": "svc",
+      "to": "new",
+      "label": "Ready 才进 endpoints"
+    },
+    {
+      "id": "new-to-probe",
+      "from": "new",
+      "to": "probe",
+      "label": "探活 /version",
+      "variant": "dashed"
+    },
+    {
+      "id": "probe-to-deploy",
+      "from": "probe",
+      "to": "deploy",
+      "label": "500 → 卡在 0/1",
+      "variant": "security"
+    },
+    {
+      "id": "undo-to-deploy",
+      "from": "undo",
+      "to": "deploy",
+      "label": "一键回退模板",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "零停机三件套",
+      "items": [
+        "maxUnavailable 0：容量永不下降，197,674 请求 0 失败",
+        "preStop 排水 3s：没有它，终止副本直接 RST 连接（首跑实证）",
+        "readiness 不过 → 不进 endpoints → 不接流量"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "坏版本被拦",
+      "items": [
+        "坏镜像 /version 500 → 新副本 0/1 卡在 Ready 门外",
+        "endpoints 保持 3 个 IP，流量 100% 旧版本",
+        "30s 判 ProgressDeadlineExceeded，rollout status 快速失败"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "回滚语义",
+      "items": [
+        "rollout undo 回到上一个 revision（v2），不是回到 v1",
+        "一条命令回退模板，副本逐个滚回",
+        "集群用完即删，kubectl context 已还原"
+      ]
+    }
+  ]
+}

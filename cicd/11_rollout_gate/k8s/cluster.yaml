@@ -1,0 +1,10 @@
+# kind 集群：把节点的 30080（NodePort）映射到宿主机 29090，
+# 宿主机压测/采样有一个稳定入口，等价于 09/10 实验的 edge 端口
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 29090
+        protocol: TCP

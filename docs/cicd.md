@@ -16,15 +16,15 @@
 
 ## 📊 总进度
 
-进度：███████████░░░░░░░░░░ 9/16 (56%)
+进度：████████████░░░░░░░░░░ 10/16 (63%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 4 |
 | 第二阶段：凭据与供应链安全 | 3 | 3 |
-| 第三阶段：部署策略——发布的四种姿势 | 4 | 2 |
+| 第三阶段：部署策略——发布的四种姿势 | 4 | 3 |
 | 第四阶段：规模化与 release 工程 | 4 | 0 |
-| **合计** | **16** | **9** |
+| **合计** | **16** | **10** |
 
 ---
 
@@ -230,7 +230,7 @@
 
 ---
 
-### [ ] 项目 11：滚动更新与健康门禁（kind 上）
+### [x] 项目 11：滚动更新与健康门禁（kind 上）
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -239,12 +239,13 @@
 | **技术栈** | kind 0.32.0（✅ 已实测装好；起集群开工探活） |
 | **前置** | 项目 1（集群也可由 workflow 部署，选做） |
 | **验收标准** | 好版本滚动更新期间压测 0 失败（Service 摘除旧副本语义断言）；注入坏镜像（启动即 500），readiness 拦截——rollout 卡住、旧副本继续服务、坏副本不接流量（副本数与探针状态断言），`rollout undo` 恢复全绿 |
+| **实验目录** | `cicd/11_rollout_gate/`（✅ `all` 全程 exit=0；滚动全程 197,674 请求 Failed requests: 0；坏版本 0/1 被拦、endpoints 保持 3 IP、ProgressDeadlineExceeded 30s 判死；undo 回上一 revision 全量恢复） |
 
 **🤖 开始提示词**：
 > `我要开始 CI/CD 项目「滚动更新与健康门禁」。请给我 kind 集群 + 三副本 Deployment（maxSurge/maxUnavailable + readinessProbe）约 120 行 + 验收脚本：更新期间压测 0 失败、坏镜像被探针拦住不接流量、rollout undo 恢复。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+**完成日期**：2026-10-19
+**踩坑记录**：① 无 preStop 的滚动更新会被副本终止 RST 打断——首跑 ab 报 `Connection reset by peer (54)`、51,407 请求后整场中止；endpoints 摘除→iptables 传播有窗口期，`preStop: sleep 3` 排水是零停机最后一块拼图；② `terminationGracePeriodSeconds` 是 Pod 级字段，写进 container 报 strict decoding error；③ apply 后首个突发可能撞端口映射/conntrack 冷启动出现空响应——断言前先预热；④ `rollout status` 成功时 terminating 副本仍在列表（0/1 收尾最长约 15s），不是异常；⑤ kind 节点不共享宿主机镜像：`docker save | ctr --namespace=k8s.io images import` 离线注入 + `imagePullPolicy: Never` 防拉远端；⑥ `rollout undo` 只退一个 revision——紧跟 good 的实验回到 v2 而非 v1，且 k8s 对卡住的 rollout 绝不自动回滚（ProgressDeadlineExceeded 只是标记）
 
 ---
 

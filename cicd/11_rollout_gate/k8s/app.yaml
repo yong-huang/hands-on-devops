@@ -1,0 +1,61 @@
+# 三副本 Deployment + NodePort Service
+#
+# 零停机的两个关键：
+#   maxUnavailable: 0 —— 滚动期间旧副本一个不销毁，容量永不下降
+#   readinessProbe    —— 新副本探针不过就不进 endpoints，不接流量
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: roll-demo
+spec:
+  replicas: 3
+  # 坏版本永远到不了 Ready——30s 就判"进展停滞"，rollout status 快速失败，
+  # 不用干等默认 600s
+  progressDeadlineSeconds: 30
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1          # 允许多起 1 个新副本（先加后减）
+      maxUnavailable: 0    # 不允许任何时刻可用副本 < 3
+  selector:
+    matchLabels:
+      app: roll-demo
+  template:
+    metadata:
+      labels:
+        app: roll-demo
+    spec:
+      # 排水总预算要盖过 preStop 的 sleep + nginx 收尾
+      terminationGracePeriodSeconds: 15
+      containers:
+        - name: web
+          image: roll:v1           # 由 set image 切换 roll:v2 / roll:bad
+          imagePullPolicy: Never   # 镜像已 ctr 导入节点，禁止去远端拉取
+          ports:
+            - containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /version
+              port: 80
+            initialDelaySeconds: 1
+            periodSeconds: 1
+            failureThreshold: 2
+          # 排水窗口：Terminating 时 endpoints 先摘除，preStop 再睡 3s，
+          # 让"摘除信息传播到 iptables 之前到达"的连接仍被 nginx 正常
+          # 服务——没有这一步，终止中的副本会 RST 连接，压测直接掉线
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 3"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: roll-svc
+spec:
+  type: NodePort
+  selector:
+    app: roll-demo
+  ports:
+    - port: 80
+      nodePort: 30080
