@@ -1,0 +1,217 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 10 · 金丝雀发布：三档晋级与错误率门禁",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1150,
+      460
+    ]
+  },
+  "components": [
+    {
+      "id": "probe",
+      "type": "external",
+      "label": "curl 千次取样",
+      "sublabel": "每档统计 v1/v2 占比",
+      "pos": [
+        30,
+        40
+      ],
+      "size": [
+        170,
+        62
+      ]
+    },
+    {
+      "id": "edge",
+      "type": "backend",
+      "label": "edge nginx :29080",
+      "sublabel": "加权 upstream · 真实错误率",
+      "pos": [
+        310,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "blue",
+      "type": "frontend",
+      "label": "blue · v1 稳定版",
+      "sublabel": "权重随晋级递减",
+      "pos": [
+        620,
+        30
+      ],
+      "size": [
+        195,
+        62
+      ]
+    },
+    {
+      "id": "green",
+      "type": "frontend",
+      "label": "green · v2 金丝雀",
+      "sublabel": "10% → 50% → 100%",
+      "pos": [
+        620,
+        190
+      ],
+      "size": [
+        195,
+        62
+      ]
+    },
+    {
+      "id": "fault",
+      "type": "security",
+      "label": "注入 5xx",
+      "sublabel": "/api 挂 · /version 仍 200",
+      "pos": [
+        900,
+        185
+      ],
+      "size": [
+        200,
+        62
+      ]
+    },
+    {
+      "id": "gate",
+      "type": "security",
+      "label": "指标门禁",
+      "sublabel": "错误率 > 10% 即中止",
+      "pos": [
+        310,
+        318
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "promote",
+      "type": "backend",
+      "label": "晋级控制",
+      "sublabel": "改 upstream 权重 + reload",
+      "pos": [
+        620,
+        318
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "abort",
+      "type": "messagebus",
+      "label": "自动中止 → 100% v1",
+      "sublabel": "实测 50% > 10% 触发",
+      "pos": [
+        900,
+        318
+      ],
+      "size": [
+        200,
+        62
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "probe-to-edge",
+      "from": "probe",
+      "to": "edge",
+      "label": "每档 1000 请求",
+      "variant": "emphasis"
+    },
+    {
+      "id": "edge-to-blue",
+      "from": "edge",
+      "to": "blue",
+      "label": "权重份额"
+    },
+    {
+      "id": "edge-to-green",
+      "from": "edge",
+      "to": "green",
+      "label": "10%→50%→100%",
+      "variant": "emphasis"
+    },
+    {
+      "id": "edge-to-gate",
+      "from": "edge",
+      "to": "gate",
+      "label": "真实错误率",
+      "variant": "dashed",
+      "labelAt": [
+        410,
+        116
+      ]
+    },
+    {
+      "id": "fault-to-green",
+      "from": "fault",
+      "to": "green",
+      "label": "业务路径打挂",
+      "variant": "dashed"
+    },
+    {
+      "id": "gate-to-promote",
+      "from": "gate",
+      "to": "promote",
+      "label": "超阈值 → 中止晋级",
+      "variant": "emphasis"
+    },
+    {
+      "id": "promote-to-abort",
+      "from": "promote",
+      "to": "abort",
+      "label": "摘除 green · 流量回 v1",
+      "variant": "dashed",
+      "labelAt": [
+        868,
+        398
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "权重切分实测",
+      "items": [
+        "smooth weighted round-robin 按周期精确发牌",
+        "90/10 档 1000 请求实测 900/100——10.0% 偏差 0.0pp",
+        "晋级 = 改 upstream 权重 + reload，全程无停机"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "门禁看什么",
+      "items": [
+        "度量 edge 的真实错误率，不是槽的健康检查",
+        "注入的故障 /version 仍 200——健康检查看不见",
+        "300 采样错误率 50.0% > 10% 阈值 → 自动中止"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "中止 ≠ 修复",
+      "items": [
+        "止血 = upstream 摘除 green，1000 请求全量 v1",
+        "green 直连仍 503——回滚切走流量，修槽是另一件事",
+        "proxy_next_upstream off：不许重试吞掉 503"
+      ]
+    }
+  ]
+}

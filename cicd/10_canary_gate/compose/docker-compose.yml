@@ -1,0 +1,41 @@
+# 金丝雀拓扑：与 09 同构的双槽 + edge，差异全在 upstream 的权重上
+#
+# 对外只开 edge 的 29080；blue/green 的 29081/29082 供宿主机直连取证。
+# green 的站点文件挂的是 green_active.conf——注入 5xx = 用坏配置覆写它。
+name: cicd10-canary
+
+services:
+  blue:
+    image: nginx:1.27-alpine        # v1 · 稳定版
+    ports:
+      - "29081:80"
+    volumes:
+      - ./conf/slot_v1.conf:/etc/nginx/conf.d/default.conf:ro
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/version"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  green:
+    image: nginx:1.25-alpine        # v2 · 金丝雀
+    ports:
+      - "29082:80"
+    volumes:
+      # 不加 :ro——注入故障要覆写内容（cat > 保 inode，bind mount 才可见）
+      - ./conf/green_active.conf:/etc/nginx/conf.d/default.conf
+    healthcheck:
+      # 专测 /version：故障只注入在 /api 上——健康检查发现不了业务路径 5xx，
+      # 这正是指标门禁存在的理由
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1/version"]
+      interval: 2s
+      timeout: 2s
+      retries: 15
+
+  edge:
+    image: nginx:1.27-alpine
+    ports:
+      - "29080:80"
+    volumes:
+      - ./conf/edge/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./conf/edge/upstream:/etc/nginx/upstream:ro
