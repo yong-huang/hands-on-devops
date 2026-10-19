@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 12 · 版本账本与一键回滚",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1050,
+      460
+    ]
+  },
+  "components": [
+    {
+      "id": "ops",
+      "type": "external",
+      "label": "rollbook.sh",
+      "sublabel": "deploy / rollback 一键操作",
+      "pos": [
+        50,
+        110
+      ],
+      "size": [
+        180,
+        62
+      ]
+    },
+    {
+      "id": "ledger",
+      "type": "database",
+      "label": "ledger.json 账本",
+      "sublabel": "只追加：版本/时间/槽位/原因",
+      "pos": [
+        310,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "slot",
+      "type": "frontend",
+      "label": "槽（blue/green 交替）",
+      "sublabel": "镜像 + site_vN.conf · 体检后才接流",
+      "pos": [
+        700,
+        36
+      ],
+      "size": [
+        230,
+        62
+      ]
+    },
+    {
+      "id": "edge",
+      "type": "backend",
+      "label": "edge nginx :29080",
+      "sublabel": "active.conf 流量指针 · 回滚 = 回拨",
+      "pos": [
+        700,
+        190
+      ],
+      "size": [
+        230,
+        66
+      ]
+    },
+    {
+      "id": "recon",
+      "type": "security",
+      "label": "recon 三方对账",
+      "sublabel": "账本 = 容器标签/镜像 = 线上 /version",
+      "pos": [
+        310,
+        318
+      ],
+      "size": [
+        200,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "ops-to-ledger",
+      "from": "ops",
+      "to": "ledger",
+      "label": "只追加一笔",
+      "variant": "emphasis"
+    },
+    {
+      "id": "ops-to-slot",
+      "from": "ops",
+      "to": "slot",
+      "label": "空闲槽部署 + 体检",
+      "labelAt": [
+        676,
+        112
+      ]
+    },
+    {
+      "id": "ops-to-edge",
+      "from": "ops",
+      "to": "edge",
+      "label": "指针回拨 = 回滚",
+      "variant": "dashed"
+    },
+    {
+      "id": "edge-to-slot",
+      "from": "edge",
+      "to": "slot",
+      "label": "现役接流量",
+      "variant": "emphasis"
+    },
+    {
+      "id": "recon-to-ledger",
+      "from": "recon",
+      "to": "ledger",
+      "label": "读最新指针",
+      "variant": "dashed",
+      "fromSide": "left",
+      "toSide": "left",
+      "via": [
+        [
+          20,
+          351
+        ],
+        [
+          20,
+          69
+        ]
+      ],
+      "labelAt": [
+        66,
+        210
+      ]
+    },
+    {
+      "id": "recon-to-edge",
+      "from": "recon",
+      "to": "edge",
+      "label": "测线上 /version",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "账本三原则",
+      "items": [
+        "只追加不改写：每次 deploy / rollback 各一笔",
+        "字段完整：seq/ts/action/version/slot/image/operator/reason",
+        "回滚也是一笔记录（from=v3），不是删历史"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "部署即对账",
+      "items": [
+        "空闲槽先部署先体检，体检过了才拨指针",
+        "指针回拨 = 覆写 active.conf + reload，秒级",
+        "v1→v2→v3→回滚 v1 全程实测 2.7s（断言 < 60s）"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "三方对账",
+      "items": [
+        "账本最新指针 = 容器 version 标签 + 镜像 tag",
+        "= 线上 /version 实测响应",
+        "防『账本说一套、线上跑一套』的漂移"
+      ]
+    }
+  ]
+}
