@@ -1,0 +1,175 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 14 · flaky test 治理：重试、识别与隔离",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1150,
+      460
+    ]
+  },
+  "components": [
+    {
+      "id": "tests",
+      "type": "external",
+      "label": "pytest 测试集",
+      "sublabel": "稳定 3 · flaky 1（random<0.5）· 恒错 1",
+      "pos": [
+        50,
+        40
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "rerun",
+      "type": "backend",
+      "label": "重试引擎 rerunfailures",
+      "sublabel": "失败后最多重试 3 次",
+      "pos": [
+        330,
+        36
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "report",
+      "type": "security",
+      "label": "flaky 报告与名单",
+      "sublabel": "解析 RERUN 重试证据",
+      "pos": [
+        630,
+        36
+      ],
+      "size": [
+        195,
+        66
+      ]
+    },
+    {
+      "id": "ci",
+      "type": "frontend",
+      "label": "流水线（隔离后）",
+      "sublabel": "10/10 轮全绿",
+      "pos": [
+        900,
+        30
+      ],
+      "size": [
+        195,
+        62
+      ]
+    },
+    {
+      "id": "quarantine",
+      "type": "database",
+      "label": "quarantine.txt",
+      "sublabel": "--deselect 隔离名单",
+      "pos": [
+        630,
+        190
+      ],
+      "size": [
+        195,
+        62
+      ]
+    },
+    {
+      "id": "broken",
+      "type": "security",
+      "label": "真失败不误放行",
+      "sublabel": "恒错用例：重试 3 次仍红 · exit 1",
+      "pos": [
+        330,
+        318
+      ],
+      "size": [
+        215,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "tests-to-rerun",
+      "from": "tests",
+      "to": "rerun",
+      "label": "每轮全量执行",
+      "variant": "emphasis"
+    },
+    {
+      "id": "rerun-to-report",
+      "from": "rerun",
+      "to": "report",
+      "label": "RERUN 证据",
+      "variant": "emphasis"
+    },
+    {
+      "id": "report-to-quarantine",
+      "from": "report",
+      "to": "quarantine",
+      "label": "按 nodeid 生成名单",
+      "labelAt": [
+        728,
+        116
+      ]
+    },
+    {
+      "id": "quarantine-to-ci",
+      "from": "quarantine",
+      "to": "ci",
+      "label": "隔离后全绿",
+      "variant": "emphasis"
+    },
+    {
+      "id": "rerun-to-broken",
+      "from": "rerun",
+      "to": "broken",
+      "label": "恒错：重试救不了",
+      "variant": "dashed",
+      "labelAt": [
+        438,
+        116
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "重试的两副面孔",
+      "items": [
+        "重试能掩盖 flaky：3/10 轮失败被 rerun 消化、照样发绿",
+        "重试救不了耗尽：1/10 轮三次重试后仍红",
+        "结论：重试是止痛药，隔离才是治疗"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "识别与隔离",
+      "items": [
+        "-rR 摘要里的 RERUN 行就是重试证据",
+        "按 nodeid 汇总 → quarantine.txt（1 条，全指向 flaky）",
+        "--deselect 隔离后 10/10 轮全绿，稳定用例零误伤"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "真失败不误放行",
+      "items": [
+        "恒错用例重试 3 次仍红——RERUN ×3 + exit 1",
+        "退出码 1 = 流水线 FAIL，不会被重试洗白",
+        "隔离名单只收 flaky：混入真失败等于永久掩盖"
+      ]
+    }
+  ]
+}

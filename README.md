@@ -83,7 +83,7 @@ devops.md 的互补进阶线：**GitHub Actions 为轴**，本机 act 离线迭�
 | 11 | 滚动更新与健康门禁 | kind | ✅ 真机验证 |
 | 12 | 版本账本与一键回滚 | Docker/nginx | ✅ 真机验证 |
 | 13 | monorepo 增量构建 | Actions | ✅ 真机验证 |
-| 14 | flaky test 治理 | pytest | ⬜ |
+| 14 | flaky test 治理 | pytest | ✅ 真机验证 |
 | 15 | semantic-release 版本工程 | Actions ☁️ | ⬜ |
 | 16 | 🏁 终极串联：生产级发布系统 | 全部 ☁️ | ⬜ |
 
