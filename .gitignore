@@ -57,3 +57,4 @@ node_modules/
 # ---- 图管线校验产物（临时文件）----
 *.visual-check.*
 .tmp-repo/
+.act-cache/
