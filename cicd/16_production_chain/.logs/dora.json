@@ -1,0 +1,70 @@
+{
+  "repo": "yong-huang/cicd-lab",
+  "environment": "production",
+  "deployment_frequency": {
+    "prod_deployments_total": 5,
+    "success": 4,
+    "failed": 1
+  },
+  "lead_time_for_changes": {
+    "pr": 2,
+    "sha": "f5ec95d",
+    "merged_at": "2026-10-20T02:21:03Z",
+    "deployed_at": "2026-10-20T02:42:53Z",
+    "seconds": 1310
+  },
+  "change_failure_rate": {
+    "deployments": 5,
+    "failed": 1,
+    "rate": 0.2
+  },
+  "mttr_seconds": 23,
+  "mttr": {
+    "failure_at": "2026-10-20T02:45:01+00:00",
+    "restored_at": "2026-10-20T02:45:24+00:00",
+    "seconds": 23,
+    "note": "墙钟差，含人工介入等待窗口"
+  },
+  "deployments": [
+    {
+      "id": 7190174903,
+      "sha": "f5ec95d",
+      "created_at": "2026-10-20T02:44:27Z",
+      "state": "success",
+      "status_at": "2026-10-20T02:45:24Z",
+      "description": "prod recovered after drill"
+    },
+    {
+      "id": 7190154503,
+      "sha": "f5ec95d",
+      "created_at": "2026-10-20T02:42:52Z",
+      "state": "success",
+      "status_at": "2026-10-20T02:42:53Z",
+      "description": "prod v2 deployed"
+    },
+    {
+      "id": 7189164574,
+      "sha": "49382ef",
+      "created_at": "2026-10-20T01:28:33Z",
+      "state": "success",
+      "status_at": "2026-10-20T01:28:34Z",
+      "description": "prod recovered after drill"
+    },
+    {
+      "id": 7180614317,
+      "sha": "49382ef",
+      "created_at": "2026-10-19T17:41:13Z",
+      "state": "failure",
+      "status_at": "2026-10-19T17:42:29Z",
+      "description": "prod deploy failed (drill)"
+    },
+    {
+      "id": 7180588439,
+      "sha": "49382ef",
+      "created_at": "2026-10-19T17:40:02Z",
+      "state": "success",
+      "status_at": "2026-10-19T17:40:03Z",
+      "description": "prod v2 deployed"
+    }
+  ]
+}

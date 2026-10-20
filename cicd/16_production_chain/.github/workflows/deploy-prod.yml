@@ -1,0 +1,28 @@
+# prod 金丝雀晋级：workflow_dispatch + environment 审批门（required reviewer）
+# inputs.broken=true 用于失败演练（供 DORA 变更失败率 / MTTR 取数）
+name: deploy-prod
+on:
+  workflow_dispatch:
+    inputs:
+      broken:
+        description: '注入失败（MTTR 演练）'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production     # 审批门：required reviewer 放行才执行
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate prod candidate
+        env:
+          BROKEN: ${{ inputs.broken }}
+        run: |
+          bash app/test.sh
+          VER=$(cat app/VERSION)
+          if [ "$BROKEN" = "true" ]; then
+            echo "prod deploy FAILED (drill)"; exit 1
+          fi
+          echo "prod validated: $VER @$(git rev-parse --short HEAD)"

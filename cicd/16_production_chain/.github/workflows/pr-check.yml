@@ -1,0 +1,9 @@
+# PR 必需检查（生产里把它设进 branch protection 的 required checks）
+name: pr-check
+on: [pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash app/test.sh

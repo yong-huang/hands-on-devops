@@ -1,0 +1,20 @@
+time="2026-10-20T10:20:46+08:00" level=info msg="Using docker host 'unix:///var/run/docker.sock', and daemon socket 'unix:///var/run/docker.sock'"
+level=warning msg= ⚠ You are using Apple M-series chip and you have not specified container architecture, you might encounter issues while running act. If so, try running it with '--container-architecture linux/amd64'. ⚠ 
+
+[pr-check/test] ⭐ Run Set up job
+[pr-check/test] 🚀  Start image=catthehacker/ubuntu:act-latest
+[pr-check/test]   🐳  docker pull image=catthehacker/ubuntu:act-latest platform= username= forcePull=false
+[pr-check/test]   🐳  docker create image=catthehacker/ubuntu:act-latest platform= entrypoint=["tail" "-f" "/dev/null"] cmd=[] network="host"
+[pr-check/test]   🐳  docker run image=catthehacker/ubuntu:act-latest platform= entrypoint=["tail" "-f" "/dev/null"] cmd=[] network="host"
+[pr-check/test]   🐳  docker exec cmd=[node --no-warnings -e console.log(process.execPath)] user= workdir=
+[pr-check/test]   ✅  Success - Set up job
+[pr-check/test] ⭐ Run Main actions/checkout@v4
+[pr-check/test]   ✅  Success - Main actions/checkout@v4 [284.916µs]
+[pr-check/test] ⭐ Run Main bash app/test.sh
+[pr-check/test]   🐳  docker exec cmd=[bash -e /var/run/act/workflow/1] user= workdir=
+[pr-check/test]   | [pr] tests ok for v2
+[pr-check/test]   ✅  Success - Main bash app/test.sh [37.449584ms]
+[pr-check/test] ⭐ Run Complete job
+[pr-check/test] Cleaning up container for job test
+[pr-check/test]   ✅  Success - Complete job
+[pr-check/test] 🏁  Job succeeded

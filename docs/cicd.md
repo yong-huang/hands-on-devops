@@ -16,15 +16,15 @@
 
 ## 📊 总进度
 
-进度：█████████████████░░░░░░ 14/16 (88%)
+进度：██████████████████░░░░░░ 15/16 (94%)
 
 | 阶段 | 项目数 | 已完成 |
 |:---|:---:|:---:|
 | 第一阶段：平台深水区——把 workflow 当代码写 | 5 | 4 |
 | 第二阶段：凭据与供应链安全 | 3 | 3 |
 | 第三阶段：部署策略——发布的四种姿势 | 4 | 4 |
-| 第四阶段：规模化与 release 工程 | 4 | 3 |
-| **合计** | **16** | **14** |
+| 第四阶段：规模化与 release 工程 | 4 | 4 |
+| **合计** | **16** | **15** |
 
 ---
 
@@ -332,7 +332,7 @@
 
 ---
 
-### [ ] 项目 16：🏁 终极串联——生产级发布系统
+### [x] 项目 16：🏁 终极串联——生产级发布系统
 
 | 项目信息 | 详情 |
 |:---|:---|
@@ -345,8 +345,13 @@
 **🤖 开始提示词**：
 > `我要开始 CI/DC 项目「生产级发布系统」终极串联。请给我完整 workflow 编排约 300 行：PR 必需检查→staging 自动部署→prod 金丝雀（environment 审批）→版本断言，外加从 gh api 提取 DORA 四指标的脚本（输出 JSON），每道门可独立断言。只输出代码。`
 
-**完成日期**：________
-**踩坑记录**：________
+| **实验目录** | `cicd/16_production_chain/`（✅ 四道门全断言：act+远端 PR 检查绿→合入→staging v2 账本记录→prod 卡审批→放行后金丝雀 10%→100% /version=v2；失败演练 deployment failure 真实计入；DORA 四指标 JSON gh api 提取并对账：部署 3、CFR 33.33%、lead 3826s、MTTR 27965s 含人工窗口） |
+
+**🤖 开始提示词**：
+> `我要开始 CI/DC 项目「生产级发布系统」终极串联。请给我完整 workflow 编排约 300 行：PR 必需检查→staging 自动部署→prod 金丝雀（environment 审批）→版本断言，外加从 gh api 提取 DORA 四指标的脚本（输出 JSON），每道门可独立断言。只输出代码。`
+
+**完成日期**：2026-10-20
+**踩坑记录**：① workflow 内自建 deployment 被自身 pending check-run 409 自阻塞（auto_merge=false 不豁免）——部署记录由 run 外编排器在 combined=success 后创建；② environment 审批无 REST 通道（approvals 与 pending_deployments/{id}/approve 双 404，pending 对象新结构无 id 字段）——06 同款发现并升级；自动化放行 = update-environments 清空 reviewers + 取消重发，clean 复位审批门；③ waiting 中的 run 不重评保护规则——删/改规则不解锁，规则变更还会直接取消它（failure 且无日志），唯一出路取消重发；④ api.github.com 与 github.com 独立抖动（api 200 而 git push 断）——连通性探测必须分域名；⑤ DORA 去噪：environment job 为每次 run 自动生成无描述 deployment 行——按「有描述 = 主动记录」过滤；⑥ set -u 下 jq 空列表取 [0].id 得字面量 null → gh api runs/null 404 崩溃——jq 末尾 // "" 兜底
 
 ---
 

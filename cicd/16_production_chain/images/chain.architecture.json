@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 16 · 🏁 生产级发布系统：一条 commit 走完全链路",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "legend": {
+      "mode": "auto"
+    },
+    "viewBox": [
+      1160,
+      340
+    ]
+  },
+  "components": [
+    {
+      "id": "dev",
+      "type": "external",
+      "label": "trunk 分支 PR",
+      "sublabel": "rc-v2：只改 app/VERSION",
+      "pos": [
+        50,
+        40
+      ],
+      "size": [
+        180,
+        62
+      ]
+    },
+    {
+      "id": "prcheck",
+      "type": "security",
+      "label": "pr-check 门",
+      "sublabel": "act 本地 + 远端 check-run 双验证",
+      "pos": [
+        300,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "merge",
+      "type": "backend",
+      "label": "合入 main",
+      "sublabel": "trunk-based · merge commit",
+      "pos": [
+        610,
+        36
+      ],
+      "size": [
+        200,
+        66
+      ]
+    },
+    {
+      "id": "staging",
+      "type": "frontend",
+      "label": "staging 自动部署",
+      "sublabel": "deploy-staging + 槽升版 · 账本记录",
+      "pos": [
+        900,
+        30
+      ],
+      "size": [
+        210,
+        62
+      ]
+    },
+    {
+      "id": "prod",
+      "type": "security",
+      "label": "prod 审批门",
+      "sublabel": "environment: production · gh api 放行",
+      "pos": [
+        300,
+        190
+      ],
+      "size": [
+        230,
+        66
+      ]
+    },
+    {
+      "id": "canary",
+      "type": "frontend",
+      "label": "金丝雀 10%→100%",
+      "sublabel": "加权 upstream · /version=v2",
+      "pos": [
+        610,
+        190
+      ],
+      "size": [
+        215,
+        66
+      ]
+    },
+    {
+      "id": "ledger",
+      "type": "database",
+      "label": "账本 + deployments",
+      "sublabel": "两边留痕 · DORA 从 gh api 提取",
+      "pos": [
+        900,
+        190
+      ],
+      "size": [
+        210,
+        66
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "dev-to-prcheck",
+      "from": "dev",
+      "to": "prcheck",
+      "label": "push branch",
+      "variant": "emphasis"
+    },
+    {
+      "id": "prcheck-to-merge",
+      "from": "prcheck",
+      "to": "merge",
+      "label": "检查绿才合入"
+    },
+    {
+      "id": "merge-to-staging",
+      "from": "merge",
+      "to": "staging",
+      "label": "合入即部署",
+      "variant": "emphasis"
+    },
+    {
+      "id": "merge-to-prod",
+      "from": "merge",
+      "to": "prod",
+      "label": "dispatch 触发晋级",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          710,
+          160
+        ],
+        [
+          415,
+          160
+        ]
+      ]
+    },
+    {
+      "id": "prod-to-canary",
+      "from": "prod",
+      "to": "canary",
+      "label": "审批放行",
+      "variant": "emphasis",
+      "labelAt": [
+        577,
+        214
+      ]
+    },
+    {
+      "id": "canary-to-ledger",
+      "from": "canary",
+      "to": "ledger",
+      "label": "部署留痕"
+    },
+    {
+      "id": "staging-to-ledger",
+      "from": "staging",
+      "to": "ledger",
+      "label": "deployment 记录",
+      "variant": "dashed",
+      "labelAt": [
+        1005,
+        130
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "四道门",
+      "items": [
+        "PR 门：act 本地 [pr] tests ok + 远端 check-run success",
+        "staging 门：deploy-staging success → 槽升 v2 + 账本",
+        "prod 门：environment 卡审批 → gh api 放行",
+        "金丝雀门：10% 灰度 60 采样混合 → 全量 30/30 v2"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "DORA 四指标",
+      "items": [
+        "部署频率：production deployments 总数",
+        "变更前置时长：PR merged_at → 部署 success 秒数",
+        "变更失败率：failure 次数 / 总部署（演练注入 1 次）",
+        "MTTR：failure → 恢复 success 的时间窗"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "前置能力的汇合",
+      "items": [
+        "06 审批门 · 10 金丝雀 · 12 账本 · 15 语义化提交",
+        "失败演练真实计入指标——不粉饰的度量才有意义",
+        "trunk-based：短分支 + 合入即部署 + 审批晋级"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+# trunk-based：合入 main 即自动验证（staging 的 deployment 记录由编排器
+# 在 run 成功后经 gh api 创建——workflow 内自建会被自身 pending 状态 409）
+name: deploy-staging
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate release candidate on main
+        run: |
+          VER=$(cat app/VERSION)
+          bash app/test.sh
+          echo "staging candidate validated: $VER @$(git rev-parse --short HEAD)"
