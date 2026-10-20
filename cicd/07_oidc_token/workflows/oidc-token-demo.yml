@@ -1,3 +1,4 @@
+name: oidc-token-demo
 # 取 OIDC token 并 artifact 化
 #
 # permissions: id-token: write 是唯一开关——没有它，OIDC 端点返回 403。

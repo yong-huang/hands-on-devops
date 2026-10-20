@@ -1,3 +1,4 @@
+name: deploy-with-approval
 # 带环境审批门的部署 workflow
 #
 # 引用 environment: production 后，job 会在该环境的 protection rule

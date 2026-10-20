@@ -100,9 +100,12 @@ do_cloud() {
         note "已创建公共仓库 $REPO"
     fi
     local ws="" total done_count
-    total=$(gh api "repos/$REPO/actions/runs?per_page=10" --jq '.total_count // 0' 2>/dev/null || echo 0)
-    if [ "${total:-0}" -ge 6 ]; then
-        note "已有 6 个 run（上次推送的产物），跳过推送直接取证"
+    # 跳过判定按目标 workflow 自己的 run 数——全仓库 run 总数会被其他
+    # 实验撑大，导致推送被跳过、concurrency run 根本不存在
+    total=$(gh api "repos/$REPO/actions/runs?per_page=40" \
+        --jq '[.workflow_runs[] | select(.name=="concurrency-demo")] | length' 2>/dev/null || echo 0)
+    if [ "${total:-0}" -ge 3 ]; then
+        note "concurrency-demo 已有 ${total} 个 run（上次推送的产物），跳过推送直接取证"
     else
         ws=$(mktemp -d)
         git clone --quiet "https://github.com/$REPO.git" "$ws" \
@@ -113,42 +116,63 @@ do_cloud() {
           cp "$OLDPWD"/workflows/02_failfast_true.yml    .github/workflows/failfast-true.yml
           cp "$OLDPWD"/workflows/03_failfast_false.yml   .github/workflows/failfast-false.yml
           cp "$OLDPWD"/workflows/04_concurrency_cloud.yml .github/workflows/concurrency-demo.yml
-          git add -A && git commit -qm "feat: fail-fast 对比与 concurrency 演示"
-          git push -q origin main 2>/dev/null || git push -q origin HEAD:main
+          git add -A && git commit -qm "feat: fail-fast 对比与 concurrency 演示" --allow-empty
+          # 多实验共写 main：push 前先 rebase，失败重试（非 fast-forward 静默丢推送的教训）
+          robust_push() {
+              local a
+              for a in 1 2 3; do
+                  git pull --rebase -q origin main 2>/dev/null || true
+                  git push -q origin HEAD:main 2>/dev/null && return 0
+                  sleep 5
+              done
+              echo "    [!] push 重试耗尽" >&2; return 1
+          }
+          robust_push
           note "三个 workflow 已推送"
           sleep 8
           git commit -q --allow-empty -m "chore: trigger second run（同 group 应取消前一个）"
-          git push -q origin main 2>/dev/null || git push -q origin HEAD:main
+          robust_push
           note "第二次推送完成（concurrency group 应取消旧 run）"
         )
     fi
     note "轮询 GitHub API 等全部 run 落定（最多 6 分钟；fail-fast 2 分钟 + concurrency sleep 90s）"
     local i=0 done_count=0
     while [ "$i" -lt 180 ]; do
-        done_count=$(gh api "repos/$REPO/actions/runs?per_page=10" \
+        done_count=$(gh api "repos/$REPO/actions/runs?per_page=40" \
             --jq '[.workflow_runs[] | select(.status=="completed")] | length' 2>/dev/null || echo 0)
-        total=$(gh api "repos/$REPO/actions/runs?per_page=10" --jq '.total_count // 0' 2>/dev/null || echo 0)
+        total=$(gh api "repos/$REPO/actions/runs?per_page=40" --jq '.total_count // 0' 2>/dev/null || echo 0)
         [ "${total:-0}" -ge 6 ] && [ "${done_count:-0}" -ge 6 ] && break
         i=$((i+1)); sleep 2
     done
-    gh api "repos/$REPO/actions/runs?per_page=10" \
+    gh api "repos/$REPO/actions/runs?per_page=40" \
         --jq '.workflow_runs[] | "\(.name)  \(.status)/\(.conclusion)"' | sort | sed 's/^/        /' \
         | tee "$LOGS/cloud-runs.txt"
 
-    note "断言 1：concurrency-demo 第一次 run 被 cancelled"
-    local conc_cancel
-    conc_cancel=$(gh api "repos/$REPO/actions/runs?per_page=10" \
-        --jq '[.workflow_runs[] | select(.name=="concurrency-demo" and .conclusion=="cancelled")] | length')
+    note "断言 1：concurrency-demo 第一次 run 被 cancelled（轮询 180s 等传播）"
+    local conc_cancel=0 w
+    for w in $(seq 1 36); do
+        conc_cancel=$(gh api "repos/$REPO/actions/runs?per_page=40" \
+            --jq '[.workflow_runs[] | select(.name=="concurrency-demo" and .conclusion=="cancelled")] | length')
+        [ "${conc_cancel}" -ge 1 ] && break
+        sleep 5
+    done
     [ "${conc_cancel}" -ge 1 ] \
         || { echo "    [!] concurrency 取消未生效（cancelled 数=${conc_cancel}）" >&2; exit 1; }
     note "[ok] concurrency group 生效：同组连推，旧 run 被 cancelled"
 
     note "断言 2：fail-fast true 有被取消的 job；false 无取消（全部跑完各自定论）"
     local true_run false_run t_cancel t_fail f_cancel f_ok
-    true_run=$(gh api "repos/$REPO/actions/runs?per_page=10" \
+    true_run=$(gh api "repos/$REPO/actions/runs?per_page=40" \
         --jq '[.workflow_runs[] | select(.name=="failfast-true")][0].id')
-    false_run=$(gh api "repos/$REPO/actions/runs?per_page=10" \
+    false_run=$(gh api "repos/$REPO/actions/runs?per_page=40" \
         --jq '[.workflow_runs[] | select(.name=="failfast-false")][0].id')
+    # 等 run 跑完再取样——在途 run 的取消 job 尚未产生
+    local i=0 st=""
+    for i in $(seq 1 36); do
+        st=$(gh api "repos/$REPO/actions/runs/$true_run" --jq '.status' 2>/dev/null || echo "")
+        [ "${st}" = "completed" ] && break
+        sleep 5
+    done
     t_cancel=$(gh api "repos/$REPO/actions/runs/$true_run/jobs" \
         --jq '[.jobs[] | select(.conclusion=="cancelled")] | length')
     t_fail=$(gh api "repos/$REPO/actions/runs/$true_run/jobs" \

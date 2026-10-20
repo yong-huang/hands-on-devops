@@ -48,7 +48,7 @@ do_wait() {
     step "wait" "等待 run 完成"
     local i=0 status="" run_id=""
     while [ "$i" -lt 90 ]; do
-        run_id=$(gh api "repos/$REPO/actions/runs?per_page=10" \
+        run_id=$(gh api "repos/$REPO/actions/runs?per_page=40" \
             --jq "[.workflow_runs[] | select(.name==\"$WF_NAME\")][0].id" 2>/dev/null || echo "")
         if [ -n "$run_id" ]; then
             status=$(gh api "repos/$REPO/actions/runs/$run_id" --jq '.status' 2>/dev/null || echo "")
@@ -67,7 +67,7 @@ do_wait() {
 do_download() {
     step "download" "下载 artifact 到本地"
     local run_id
-    run_id=$(gh api "repos/$REPO/actions/runs?per_page=10" \
+    run_id=$(gh api "repos/$REPO/actions/runs?per_page=40" \
         --jq "[.workflow_runs[] | select(.name==\"$WF_NAME\")][0].id")
     local art_id
     art_id=$(gh api "repos/$REPO/actions/runs/$run_id/artifacts" \

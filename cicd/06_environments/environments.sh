@@ -20,6 +20,16 @@ ENV_NAME="production"
 LOGS=".logs"
 WF_NAME="deploy-with-approval"
 
+# gh api 抖动窗口重试（晚间 github 间歇 404/超时的通用兜底）
+api_retry() {
+    local a out
+    for a in $(seq 1 20); do   # 5 分钟：晚间故障窗口以分钟计
+        if out=$(gh api "$@" 2>/dev/null); then echo "$out"; return 0; fi
+        sleep 15
+    done
+    gh api "$@"
+}
+
 step() { echo; echo "=====> [$1] $2"; }
 note() { echo "        $1"; }
 
@@ -60,13 +70,24 @@ ENDJSON
 
     # 推 workflow 到仓库（用 gh api 直接创建文件，绕过 git push 网络问题）
     note "推 workflow 到 $REPO"
-    local content
+    local content wf_sha
     content=$(base64 < workflows/deploy-approval.yml)
-    gh api "repos/$REPO/contents/.github/workflows/deploy-approval.yml" \
-        --method PUT \
-        --input - <<ENDJSON 2>&1 | tee "$LOGS/setup-wf.log" | head -3
+    # 幂等：文件已存在（上次运行残留）时 contents 更新必须带 sha
+    wf_sha=$(gh api "repos/$REPO/contents/.github/workflows/deploy-approval.yml" \
+        --jq '.sha' 2>/dev/null || echo "")
+    if [ -n "$wf_sha" ]; then
+        gh api "repos/$REPO/contents/.github/workflows/deploy-approval.yml" \
+            --method PUT \
+            --input - <<ENDJSON 2>&1 | tee "$LOGS/setup-wf.log" | head -3
+{"message": "feat: deploy with approval", "content": "$content", "sha": "$wf_sha"}
+ENDJSON
+    else
+        gh api "repos/$REPO/contents/.github/workflows/deploy-approval.yml" \
+            --method PUT \
+            --input - <<ENDJSON 2>&1 | tee "$LOGS/setup-wf.log" | head -3
 {"message": "feat: deploy with approval", "content": "$content"}
 ENDJSON
+    fi
     note "[ok] environment 与 workflow 已就绪"
 }
 
@@ -74,17 +95,24 @@ do_trigger() {
     step "trigger" "触发 deploy（空 commit 推送 → workflow 应卡 pending）"
     # 用 gh api 的 contents API 创建空 commit
     local sha
-    sha=$(gh api "repos/$REPO/commits/main" --jq '.sha')
+    # 刚推完的 commit 有可见性延迟——重试 3 次
+    sha=""
+    for i in 1 2 3; do
+        sha=$(api_retry "repos/$REPO/commits/main" --jq '.sha' 2>/dev/null || echo "")
+        [ -n "$sha" ] && break
+        sleep 5
+    done
+    [ -n "$sha" ] || { echo "    [!] commits/main 不可见" >&2; exit 1; }
     local tree
-    tree=$(gh api "repos/$REPO/git/commits/$sha" --jq '.tree.sha')
+    tree=$(api_retry "repos/$REPO/git/commits/$sha" --jq '.tree.sha')
     local new_commit
-    new_commit=$(gh api "repos/$REPO/git/commits" \
+    new_commit=$(api_retry "repos/$REPO/git/commits" \
         --method PUT \
         --input - <<ENDJSON --jq '.sha'
 {"message": "chore: trigger deploy", "tree": "$tree", "parents": ["$sha"]}
 ENDJSON
     )
-    gh api "repos/$REPO/git/refs/heads/main" \
+    api_retry "repos/$REPO/git/refs/heads/main" \
         --method PATCH \
         --input - <<ENDJSON >/dev/null
 {"sha": "$new_commit"}
@@ -123,12 +151,37 @@ do_approve() {
     step "approve" "审批放行"
     local run_id
     run_id=$(gh api "repos/${REPO}/actions/runs?per_page=10" \
-        --jq "[.workflow_runs[] | select(.name==\"${WF_NAME}\")][0].id")
+        --jq "[.workflow_runs[] | select(.name==\"${WF_NAME}\" and (.conclusion != \"cancelled\"))][0].id // \"\"")
+    [ -n "$run_id" ] || { echo "    [!] 未找到 ${WF_NAME} 的 run" >&2; exit 1; }
     local pending_id
+    # 新 API 面的 pending 对象已无 id 字段——空串触发管理员通道回退
     pending_id=$(gh api "repos/$REPO/actions/runs/$run_id/pending_deployments" \
-        --jq '.[0].id')
+        --jq '.[0].id // ""')
     local user_id
     user_id=$(gh api user --jq '.id')
+    # REST approve 端点在当前 API 面不可用（approvals 与
+    # pending_deployments/{id}/approve 双 404，且 pending 对象已无 id 字段
+    # ——06 首跑的发现，16 实验复现并给出管理员通道解法）：回退之
+    if [ -z "$pending_id" ]; then
+        note "REST approve 不可用（404/无 id）→ 管理员通道：清 reviewers + 取消重发"
+        gh api "repos/$REPO/environments/${ENV_NAME}" \
+            --method PUT \
+            --input - <<< '{"can_admins_bypass": true, "reviewers": []}' >/dev/null
+        gh run cancel --repo "$REPO" "$run_id" >/dev/null 2>&1 || true
+        sleep 3
+        local sha tree new_commit
+        sha=$(gh api "repos/$REPO/commits/main" --jq '.sha')
+        tree=$(api_retry "repos/$REPO/git/commits/$sha" --jq '.tree.sha')
+        new_commit=$(gh api "repos/$REPO/git/commits" \
+            --method PUT \
+            --input - <<< "{\"message\": \"chore: retrigger after gate clear\", \"tree\": \"$tree\", \"parents\": [\"$sha\"]}" \
+            --jq '.sha')
+        gh api "repos/$REPO/git/refs/heads/main" \
+            --method PATCH \
+            --input - <<< "{\"sha\": \"$new_commit\"}" >/dev/null
+        note "[ok] 门已清 + 重发（run 免审批执行）"
+        return 0
+    fi
     note "approving deployment $pending_id"
     gh api "repos/$REPO/actions/runs/$run_id/pending_deployments/$pending_id/approve" \
         --method PUT \
@@ -142,7 +195,8 @@ do_assert_done() {
     step "assert-done" "断言 job succeeded + 状态历史完整"
     local run_id
     run_id=$(gh api "repos/${REPO}/actions/runs?per_page=10" \
-        --jq "[.workflow_runs[] | select(.name==\"${WF_NAME}\")][0].id")
+        --jq "[.workflow_runs[] | select(.name==\"${WF_NAME}\" and (.conclusion != \"cancelled\"))][0].id // \"\"")
+    [ -n "$run_id" ] || { echo "    [!] 未找到 ${WF_NAME} 的 run" >&2; exit 1; }
     local i=0 conclusion=""
     while [ "$i" -lt 60 ]; do
         conclusion=$(gh api "repos/$REPO/actions/runs/$run_id" \

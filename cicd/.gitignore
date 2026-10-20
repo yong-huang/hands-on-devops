@@ -1,4 +1,4 @@
 .artifacts/
-.logs/*
-!.logs/ledger.json
-!.logs/dora.json
+**/.logs/*
+!**/.logs/ledger.json
+!**/.logs/dora.json
