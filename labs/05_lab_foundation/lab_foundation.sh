@@ -31,9 +31,9 @@ do_apply() {
     $TF init -input=false
     $TF apply -auto-approve -input=false
 
-    wait_http "http://localhost:28080/" "nginx 应用"
+    wait_http "http://localhost:28095/" "nginx 应用"
     wait_http "http://localhost:5500/v2/" "私有 registry"
-    wait_http "http://localhost:9000/minio/health/live" "MinIO"
+    wait_http "http://localhost:9100/minio/health/live" "MinIO"
     wait_http "http://localhost:3300/api/healthz" "Gitea"
 
     step "apply" "创建 Gitea 管理员（后续实验的代码源入口）"

@@ -29,7 +29,7 @@
       "id": "nginx",
       "type": "backend",
       "label": "lab-nginx",
-      "sublabel": "目标应用 :28080",
+      "sublabel": "目标应用 :28095",
       "pos": [
         480,
         90

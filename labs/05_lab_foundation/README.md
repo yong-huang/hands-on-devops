@@ -10,9 +10,9 @@
 以及最重要的——**没有"同一套基础设施"就讲不出集成故事**。本实验用 Terraform（01-04 的全部
 成果）声明靶场的期望态：
 
-- **nginx**（:28080）：后续部署/漂移/监控的"业务"；
+- **nginx**（:28095，长驻靶场专用段，与实验 01 的 28080/实验 02 的 28081-28082 全错开）：后续部署/漂移/监控的"业务"；
 - **registry**（:5500）：实验 12-15 推镜像、实验 20 部署时拉镜像；
-- **MinIO**（:9000）：S3 兼容存储，实验 29 的备份对象；
+- **MinIO**（:9100，容器内仍 9000；与 hands-on-mlops 的 90xx 错开）：S3 兼容存储，实验 29 的备份对象；
 - **Gitea**（:3300）：实验 18/20 的代码源、实验 21 的 GitOps 仓库（管理员 `devops/devops123`）。
 
 ## 2. 总览：核心机制一图看懂
@@ -48,8 +48,8 @@ Apply complete! Resources: 8 added, 0 changed, 0 destroyed.
 NAMES          STATUS                        PORTS
 lab-gitea      Up About a minute             0.0.0.0:3300->3000/tcp
 lab-registry   Up About a minute (healthy)   0.0.0.0:5500->5000/tcp
-lab-nginx      Up About a minute (healthy)   0.0.0.0:28080->80/tcp
-lab-minio      Up About a minute (healthy)   0.0.0.0:9000-9001->9000-9001/tcp
+lab-nginx      Up About a minute (healthy)   0.0.0.0:28095->80/tcp
+lab-minio      Up About a minute (healthy)   0.0.0.0:9100-9101->9000-9001/tcp
 ```
 
 ## 4. 核心概念
@@ -63,7 +63,7 @@ plan 漂移检测、幂等重建、模块化。教学点正是**"环境本身也
 ### 4.2 容器网络即服务发现
 
 四件套都挂在自定义网络 `devops-lab` 上，**容器名就是 DNS**：Gitea 想连数据库、registry
-想对接 storage，都直接用容器名。宿主机访问走端口映射（28080/5500/9000/3300，
+想对接 storage，都直接用容器名。宿主机访问走端口映射（28095/5500/9100/3300，
 本系列专用段，避开 macOS AirPlay 的 5000 等常见占用）。
 
 ### 4.3 健康检查是"apply 完成"的定义

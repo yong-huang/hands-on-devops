@@ -25,9 +25,8 @@ note() { echo "        $1"; }
 
 # 在 MinIO 里确保 bucket 存在（mc 容器即用即弃，经 host.docker.internal 回连宿主端口）
 ensure_bucket() {
-    docker run --rm --network tf03-net --entrypoint sh minio/mc -c \
-        "mc alias set m http://tf03-minio:9000 minioadmin minioadmin >/dev/null && mc mb -p m/tfstate" \
-        >/dev/null 2>&1 || true
+    # 用标准库 SigV4 直建桶：不依赖 minio/mc 镜像（受限网络拉不到时曾卡死整条流程）
+    python3 scripts/create_bucket_stdlib.py http://127.0.0.1:9200 tfstate
 }
 
 # 把 configs/*.tf 复制成一个"工程师工作目录"（各自 init，共享同一后端）
@@ -42,11 +41,12 @@ do_backend() {
     step "backend" "启动 MinIO（S3 兼容）并初始化远端后端"
     docker network create tf03-net >/dev/null 2>&1 || true
     docker rm -f tf03-minio >/dev/null 2>&1 || true
-    docker run -d --name tf03-minio --network tf03-net -p 9000:9000 -p 9001:9001 \
+    # 宿主端口 92xx：一次性 minio 专用段（91xx 归 lab 05 长驻靶场，90xx 归 mlops；容器内仍是 9000）
+    docker run -d --name tf03-minio --network tf03-net -p 9200:9000 -p 9201:9001 \
         -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
         minio/minio server /data --console-address ":9001" >/dev/null
     local i=0
-    until curl -fsS http://localhost:9000/minio/health/live >/dev/null 2>&1; do
+    until curl -fsS http://localhost:9200/minio/health/live >/dev/null 2>&1; do
         i=$((i+1)); [ $i -gt 30 ] && { echo "    [!] MinIO 30s 未就绪" >&2; exit 1; }
         sleep 1
     done
@@ -55,8 +55,7 @@ do_backend() {
     docker rm -f tf03-keeper >/dev/null 2>&1 || true
     docker volume rm -f tf03-db tf03-orphan >/dev/null 2>&1 || true
     # 清掉上一次运行遗留的远端 state，保证实验可重复（幂等起点）
-    docker run --rm --network tf03-net --entrypoint sh minio/mc -c \
-        "mc alias set m http://tf03-minio:9000 minioadmin minioadmin >/dev/null && mc rm -r --force --dangerous m/tfstate/lab03" >/dev/null 2>&1 || true
+    python3 scripts/s3_client.py rm http://127.0.0.1:9200 tfstate lab03 >/dev/null 2>&1 || true
     # 配置被上一轮演示污染时快速失败（orphan 块应由脚本追加并在结束时撤掉）
     if grep -q 'docker_volume" "orphan"' configs/main.tf; then
         echo "    [!] configs/main.tf 含 orphan 残块，自动清除"; 
@@ -117,9 +116,8 @@ do_sensitive() {
     step "sensitive" "输出打码了，state 里呢？——当场 grep"
     note "终端输出（sensitive 生效，值为 <sensitive>）"
     $TF output token_masked | sed 's/^/        /' || true
-    note "直接从 MinIO 拉原始 state 看（mc cat）"
-    docker run --rm --network tf03-net --entrypoint sh minio/mc -c \
-        "mc alias set m http://tf03-minio:9000 minioadmin minioadmin >/dev/null && mc cat m/tfstate/lab03/terraform.tfstate" \
+    note "直接从 MinIO 拉原始 state 看（stdlib SigV4 GET）"
+    python3 scripts/s3_client.py cat http://127.0.0.1:9200 tfstate lab03/terraform.tfstate \
         | grep -o "super-secret-token-do-not-commit" | head -1 | sed 's/^/        state 明文包含: /' \
         || note "（未找到——检查 state 内容）"
     note "[结论] sensitive 只是 UI 层打码；state 文件永远明文 → 后端访问控制才是安全边界"
@@ -132,11 +130,9 @@ do_lock() {
 
     note "① 确定性演示：手工放置锁对象（.tflock，TF 的锁就是后端里的一个对象）"
     LOCKJSON="{\"ID\":\"$LOCK_ID\",\"Operation\":\"OperationTypeApply\",\"Info\":\"\",\"Who\":\"someone-else@$(hostname)\",\"Version\":\"1.15.8\",\"Created\":\"$(date -u +%FT%TZ)\"}"
-    printf '%s' "$LOCKJSON" | docker run -i --rm --network tf03-net --entrypoint sh minio/mc -c \
-        "mc alias set m http://tf03-minio:9000 minioadmin minioadmin >/dev/null && mc pipe m/tfstate/lab03/terraform.tfstate.tflock" || true
-    docker run --rm --network tf03-net --entrypoint sh minio/mc -c \
-        "mc alias set m http://tf03-minio:9000 minioadmin minioadmin >/dev/null && mc stat m/tfstate/lab03/terraform.tfstate.tflock" \
-        | grep -E "Name|Size" | head -2 | sed 's/^/        锁对象: /'
+    printf '%s' "$LOCKJSON" | python3 scripts/s3_client.py pipe http://127.0.0.1:9200 tfstate lab03/terraform.tfstate.tflock || true
+    python3 scripts/s3_client.py cat http://127.0.0.1:9200 tfstate lab03/terraform.tfstate.tflock \
+        | python3 -c "import json,sys; d=json.load(sys.stdin); print('ID:', d.get('ID'), '| Who:', d.get('Who'))"
     local rc=0
     ( cd "$WORKER_B" && terraform plan -input=false -lock-timeout=3s ) >/tmp/lab03_lock2.log 2>&1 || rc=$?
     if grep -q "Error acquiring the state lock" /tmp/lab03_lock2.log; then
@@ -164,6 +160,9 @@ do_lock() {
 
 do_clean() {
     step "clean" "销毁资源、MinIO、工作目录，全清"
+    # keeper 容器是 docker run 手建的（TF 不管理），却挂着 tf03-db 卷——
+    # 不先删它，destroy 的卷销毁会 in_use 超时 30s（实测踩过）
+    docker rm -f tf03-keeper >/dev/null 2>&1 || true
     $TF destroy -auto-approve -input=false || true
     # state rm 遗忘掉的资源 TF 不会销毁——手工兜底（这正是 state rm 的含义）
     docker rm -f tf03-keeper >/dev/null 2>&1 || true

@@ -22,7 +22,7 @@ terraform {
 
   backend "s3" {
     # TF 1.11+ 新写法：endpoint→endpoints.s3，force_path_style→use_path_style
-    endpoints = { s3 = "http://localhost:9000" }
+    endpoints = { s3 = "http://localhost:9200" }  # 宿主 9200 → 容器 9000（92xx：一次性 minio 专用段）
     bucket    = "tfstate"
     key       = "lab03/terraform.tfstate"
 

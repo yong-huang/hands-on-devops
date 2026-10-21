@@ -2,9 +2,9 @@
 # variables.tf — 靶场可调参数
 # =============================================================================
 variable "app_port" {
-  description = "靶场 nginx 应用端口（本系列专用段 28080+）"
+  description = "靶场 nginx 应用端口（28095：长驻靶场专用段——28080 归实验 01，28081/28082 归实验 02，可全部并行）"
   type        = number
-  default     = 28080
+  default     = 28095
 }
 
 variable "registry_port" {

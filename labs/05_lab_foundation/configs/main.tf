@@ -80,11 +80,11 @@ resource "docker_container" "minio" {
 
   ports {
     internal = 9000
-    external = 9000
+    external = 9100  # 宿主 91xx：与 hands-on-mlops 的 90xx MinIO 错开
   }
   ports {
     internal = 9001
-    external = 9001
+    external = 9101
   }
 
   env = ["MINIO_ROOT_USER=minioadmin", "MINIO_ROOT_PASSWORD=minioadmin"]

@@ -33,7 +33,8 @@ cd labs/03_tf_state
 ./tf_state.sh lock       # 只看锁互斥演示
 ```
 
-MinIO 由脚本拉起（`localhost:9000`，控制台 `:9001`，账号 minioadmin/minioadmin），
+MinIO 由脚本拉起（`localhost:9200`，控制台 `:9201`，账号 minioadmin/minioadmin；
+宿主端口用 92xx 一次性段——91xx 归 lab 05 长驻靶场，90xx 归 mlops），
 bucket 自动创建。真实输出（节选）：
 
 ```
@@ -102,7 +103,7 @@ $ mc cat m/tfstate/lab03/terraform.tfstate | grep super-secret
 
 ```hcl
 backend "s3" {
-  endpoints = { s3 = "http://localhost:9000" }   # TF 1.11+ 新写法（旧名 endpoint 已废弃）
+  endpoints = { s3 = "http://localhost:9200" }   # TF 1.11+ 新写法（旧名 endpoint 已废弃）
   bucket    = "tfstate"
   key       = "lab03/terraform.tfstate"
 
