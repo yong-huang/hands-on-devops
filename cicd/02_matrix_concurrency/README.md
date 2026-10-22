@@ -118,7 +118,7 @@ act 0.2.89 的 fail-fast: true 有怪癖——成功 job 也被标 failed（step
 输出不受影响），真取消语义在真仓库取证。
 
 cloud 段首次运行需网络推送 GitHub，之后利用 gh api 幂等取证（幂等：重复
-执行结果不变——已有 run 则跳过推送直接取证）。
+执行结果不变——按 concurrency-demo 自己的 run 数（≥3）判定是否跳过推送，全仓库 run 总数不影响）。
 
 ## How It Works
 
@@ -173,7 +173,7 @@ concurrency:
   结论都标 failed——step 级输出（`done cleanly` / `FAILED`）不受影响，
   断言应取 step 级证据而非 job 结论。
 - **③ git push 与 gh api 走不同通道**：git 到 github.com:443 可能超时
-  而 gh api 正常（API 走不同端点）——cloud 段按「已有 run 则跳过推送」
+  而 gh api 正常（API 走不同端点）——cloud 段按「本 workflow 已有 run 则跳过推送」
   实现幂等。
 
 Q&A：

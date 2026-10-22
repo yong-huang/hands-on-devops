@@ -8,6 +8,7 @@ Prometheus/Loki/Grafana · SOPS/Vault · cosign/syft 等工具链。
 > 配套清单：`docs/devops.md`（30 项目 · 6 阶段 · 每项目带验收标准与 AI 提示词）
 > 进阶系列：`docs/cicd.md`（CI/CD 进阶 16 项目 · GitHub Actions 为轴 · 实验在 `cicd/` 目录）
 > 互补线：`docs/pulumi.md`（Pulumi 快速上手 12 项目 · TS 主线 + Python 对照 · Docker/kind/LocalStack 三 Provider 零云）
+> 安全线：`docs/devsecops.md`（DevSecOps 安全纵深 30 项目 · 本机零云攻防靶场）
 
 ## 环境要求
 
@@ -27,6 +28,26 @@ make lab-status
 cd labs/01_tf_docker_provider && ./tf_docker_provider.sh
 cd labs/06_ansible_role_vault && ./ansible_role_vault.sh
 ```
+
+
+## 宿主端口分配表
+
+全系列（含与 hands-on-mlops 等相邻系列）错峰分配。**新实验一律从表内
+空闲段取号**，改端口前先对照本表——端口冲突曾造成多次发布实验失败。
+
+| 端口段 | 归属 | 说明 |
+|:---|:---|:---|
+| 28080 | 实验 01 | tf01-nginx（文档标准端口） |
+| 28081 / 28082 | 实验 02 | 蓝 / 绿 |
+| 28085 | 实验 05 长驻靶场 nginx | labs 06+ 依赖，长期在线 |
+| 28090-28095 | 实验 04 | ws-dev / ws-staging×2 / dir-dev / dir-staging×2 |
+| 3350 / 3351 / 3352 | 实验 16 / 17 / 18 | Jenkins / Jenkins / Gitea Actions |
+| 3300 | 靶场 Gitea | labs 06+ 复用 |
+| 5000 / 5500 / 5550 | 靶场与实验 11-15 | registry（实验间按序复用） |
+| 9100 / 9101 | 实验 05 长驻 MinIO | labs 06+ 依赖 |
+| 9200 / 9201 | 实验 03 一次性 MinIO | 即起即删 |
+| 90xx | hands-on-mlops | 相邻系列，永久错峰 |
+| 18090 | hands-on-cicd 项目 09/10 | 相邻系列蓝绿/金丝雀 |
 
 ## 实验列表
 
@@ -85,7 +106,7 @@ devops.md 的互补进阶线：**GitHub Actions 为轴**，本机 act 离线迭�
 | 13 | monorepo 增量构建 | Actions | ✅ 真机验证 |
 | 14 | flaky test 治理 | pytest | ✅ 真机验证 |
 | 15 | semantic-release 版本工程 | Actions ☁️ | ✅ 真机验证 |
-| 16 | 🏁 终极串联：生产级发布系统 | 全部 ☁️ | ⬜ |
+| 16 | 🏁 终极串联：生产级发布系统 | 全部 ☁️ | ✅ 真机验证 |
 
 > ☁️ = 需推送 GitHub 真仓库（公共仓库免费）；其余纯本机可跑。
 

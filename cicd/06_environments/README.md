@@ -6,7 +6,9 @@
 >
 > 本实验推真仓库验证：push → run（workflow 的一次执行实例）卡 waiting →
 > Web UI approve → 放行 success。REST API（通过 HTTP 请求访问的接口）的
-> approve 端点（该接口下的一个 URL 地址）返回 404——Web UI 是唯一审批通道。
+> approve 端点（该接口下的一个 URL 地址）返回 404——人工放行走 Web UI；
+自动化链路（回归脚本）走管理员通道：update-environments 清空 reviewers +
+取消重发（16 终极串联实验同款解法），跑完 clean 复位审批门。
 
 ## Background
 

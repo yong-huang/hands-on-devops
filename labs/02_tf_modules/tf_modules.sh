@@ -41,7 +41,11 @@ do_apply() {
     $TF apply -auto-approve -input=false
     for k in blue green; do
         wait_healthy "tf02-$k-web" || true
-        note "curl $k: $(curl -fsS http://localhost/$([ $k = blue ] && echo 28081 || echo 28082)/)"
+        if [ "$k" = blue ]; then
+            note "curl $k: $(curl -fsS http://localhost:28081/)"
+        else
+            note "curl $k: $(curl -fsS http://localhost:28082/)"
+        fi
     done
 }
 

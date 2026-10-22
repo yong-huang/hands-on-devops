@@ -9,7 +9,9 @@
 - name: 确保目标有 python3（Ansible 模块的运行前提；raw 模块本身不依赖 python）
   # 坑：nginx:alpine 没有 python3，template 等模块会报 /usr/bin/python3: not found。
   # raw 走裸 shell：已有 python 则 test 成功短路跳过 apk，保证幂等
-  ansible.builtin.raw: "test -e /usr/bin/python3 || apk add --no-cache python3"
+  # 坑：apk 下载挂死（无超时）会永久卡住整个 playbook 并持有 apk 锁——
+  # 用 busybox timeout 包一层，120s 装不上就快速失败而不是挂死
+  ansible.builtin.raw: "test -e /usr/bin/python3 || timeout 120 apk add --no-cache python3"
   changed_when: false
 
 - name: 渲染站点配置（vault 变量在此参与渲染）

@@ -31,7 +31,7 @@ do_apply() {
     $TF init -input=false
     $TF apply -auto-approve -input=false
 
-    wait_http "http://localhost:28095/" "nginx 应用"
+    wait_http "http://localhost:28085/" "nginx 应用"
     wait_http "http://localhost:5500/v2/" "私有 registry"
     wait_http "http://localhost:9100/minio/health/live" "MinIO"
     wait_http "http://localhost:3300/api/healthz" "Gitea"

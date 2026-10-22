@@ -72,6 +72,10 @@ cd cicd/07_oidc_token
     ref:        refs/heads/main
 ```
 
+回归加固（2026-10-20）：workflow 文件已补 `name:` 字段（无 name 时
+display name 退化为文件路径，脚本按名字匹配 run 会全部落空）；run 查询
+的 per_page 从 10 提到 40——仓库 run 变多后旧 run 会被挤出首页。
+
 诚实预期：GitHub 平台侧的 workflow 运行有已知限制（run 名显示为文件路径且
 秒失败）——本实验的核心学习成果是本地 JWKS 验签脚本，它不依赖 GitHub
 平台（可独立验证任何 GitHub 签发的 OIDC token）。

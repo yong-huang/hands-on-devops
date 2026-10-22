@@ -92,7 +92,7 @@ Ansible 是 push：控制机主动 SSH/exec 到目标执行，目标不需要常
 
 ```yaml
 - name: 确保目标有 python3          # 坑①的修复，详见下文
-  ansible.builtin.raw: "test -e /usr/bin/python3 || apk add --no-cache python3"
+  ansible.builtin.raw: "test -e /usr/bin/python3 || timeout 120 apk add --no-cache python3"
   changed_when: false               # raw 不判断幂等，必须显式收敛
 
 - name: 渲染站点配置（vault 变量在此参与渲染）
