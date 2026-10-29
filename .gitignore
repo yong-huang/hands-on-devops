@@ -58,3 +58,9 @@ node_modules/
 *.visual-check.*
 .tmp-repo/
 .act-cache/
+
+# ---- Cloudify（cloudify/ 实验运行时产生）----
+cloudify/.venv/
+cloudify/**/.logs/
+cloudify/15_blueprint_ci/plugin/
+cloudify/15_blueprint_ci/plugin-broken/
