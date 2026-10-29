@@ -1,0 +1,45 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML. Demonstrates: built-in workflows (install/execute_operation),
+# operation-level max_retries + retry_interval, custom interfaces.
+# NOTE (dsl_1_5): max_retries/retry_interval are SIBLING keys of implementation/
+#   inputs on the operation - NOT operation inputs, and they take a plain number
+#   (no get_input). `scale`/`heal` are Manager-only (local: "Implemented by subclasses").
+imports:
+  - vendor/types.yaml
+
+node_types:
+  handson.nodes.Flaky:
+    derived_from: cloudify.nodes.Root
+    properties:
+      counter_file:
+        type: string
+        default: /tmp/handson04-flaky.count
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/flaky.py
+          max_retries: 3
+          retry_interval: 1
+  handson.nodes.Data:
+    derived_from: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/data_create.py
+      # custom interface: callable via the execute_operation built-in workflow
+      handson.interfaces.maintenance:
+        backup:
+          implementation: scripts/backup.py
+
+node_templates:
+  flaky:
+    type: handson.nodes.Flaky
+  data:
+    type: handson.nodes.Data
+    instances:
+      deploy: 2
+
+outputs:
+  flaky_attempts:
+    value: { get_attribute: [flaky, attempts] }

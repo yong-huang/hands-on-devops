@@ -1,0 +1,23 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML. Demonstrates a custom @workflow with batched subgraphs:
+# batch=1 -> strictly serial restarts; batch=3 -> concurrent restarts.
+imports:
+  - vendor/types.yaml
+  - vendor/plugin.yaml
+
+node_templates:
+  svc:
+    type: handsonflow.nodes.Service
+    instances:
+      deploy: 3
+
+workflows:
+  rolling_restart:
+    mapping: handsonflow.handson_flow.workflows.rolling_restart
+    parameters:
+      batch:
+        type: integer
+        default: 1
+        constraints:
+          - greater_than: 0

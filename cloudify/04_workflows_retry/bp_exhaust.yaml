@@ -1,0 +1,24 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# retry-exhaustion case: the flaky script never succeeds within max_retries: 1,
+# so install fails after 2 task executions; cleanup uses ignore_failure=true.
+imports:
+  - vendor/types.yaml
+
+node_types:
+  handson.nodes.Flaky:
+    derived_from: cloudify.nodes.Root
+    properties:
+      counter_file:
+        type: string
+        default: /tmp/handson04-flaky1.count
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/flaky.py
+          max_retries: 1
+          retry_interval: 1
+
+node_templates:
+  flaky:
+    type: handson.nodes.Flaky

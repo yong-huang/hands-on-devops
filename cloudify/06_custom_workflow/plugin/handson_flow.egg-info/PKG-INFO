@@ -1,0 +1,5 @@
+Metadata-Version: 2.4
+Name: handson-flow
+Version: 0.1.0
+Summary: Hands-on Cloudify plugin: custom workflow with batched restarts
+Dynamic: summary

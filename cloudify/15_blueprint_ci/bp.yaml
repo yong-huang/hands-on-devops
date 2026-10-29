@@ -1,0 +1,29 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# NOTE: the DSL parser accepts ASCII only - keep Chinese prose out of YAML
+#   (put it in the experiment README). Do NOT use the `cloudify/types/types.yaml`
+#   short import here: that shortcut is resolved by a Manager. Local mode must
+#   vendor types.yaml into the blueprint dir and import it relatively.
+imports:
+  - vendor/types.yaml
+
+inputs:
+  greeting:
+    type: string
+    default: hello
+    description: greeting passed to the script (get_input -> op inputs -> env var)
+
+node_templates:
+  hello:
+    type: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/create.sh
+          inputs:
+            who: { get_input: greeting }
+
+outputs:
+  msg:
+    description: runtime property written by the script, read back via get_attribute
+    value: { get_attribute: [hello, said] }

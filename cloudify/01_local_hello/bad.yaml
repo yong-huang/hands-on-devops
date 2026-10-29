@@ -1,0 +1,18 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# negative case: unknown node type. `cfy blueprints validate` must fail and
+#   point at node_templates.hello.type
+imports:
+  - vendor/types.yaml
+
+node_templates:
+  hello:
+    type: cloudify.nodes.Nope
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/create.sh
+
+outputs:
+  msg:
+    value: { get_attribute: [hello, said] }

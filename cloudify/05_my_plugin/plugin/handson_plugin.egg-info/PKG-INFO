@@ -1,0 +1,7 @@
+Metadata-Version: 2.4
+Name: handson-plugin
+Version: 0.1.0
+Summary: Hands-on Cloudify plugin: http check, rendered file (dsl_1_5)
+Requires-Dist: requests
+Dynamic: requires-dist
+Dynamic: summary

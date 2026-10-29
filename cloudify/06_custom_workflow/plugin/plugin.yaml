@@ -1,0 +1,20 @@
+plugins:
+  handsonflow:
+    executor: central_deployment_agent
+    package_name: handson-flow
+    package_version: 0.1.0
+
+node_types:
+  handsonflow.nodes.Service:
+    derived_from: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: handsonflow.handson_flow.tasks.noop
+        delete:
+          implementation: handsonflow.handson_flow.tasks.noop
+      handsonflow.interfaces.lifecycle:
+        restart:
+          implementation: handsonflow.handson_flow.tasks.restart
+          max_retries: 2
+          retry_interval: 1

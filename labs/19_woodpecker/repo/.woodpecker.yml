@@ -20,3 +20,7 @@ steps:
     image: python:3.12-slim
     commands:
       - exit 1
+  bad:
+    image: python:3.12-slim
+    commands:
+      - exit 1

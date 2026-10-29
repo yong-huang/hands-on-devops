@@ -1,0 +1,14 @@
+# staged to /tmp/handson09/site.yaml by the main script before install
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: write motd (copy module - idempotent by content)
+      ansible.builtin.copy:
+        content: "configured by cloudify experiment 09\n"
+        dest: /etc/motd
+
+    - name: ensure marker line (lineinfile - idempotent by line)
+      ansible.builtin.lineinfile:
+        path: /etc/profile.d/cfy09.sh
+        line: "export CFY09=configured"
+        create: true

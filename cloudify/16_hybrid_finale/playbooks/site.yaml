@@ -1,0 +1,24 @@
+- hosts: all
+  gather_facts: false
+  tasks:
+    - name: finale marker via copy (idempotent)
+      ansible.builtin.copy:
+        content: "configured by cloudify hybrid finale\n"
+        dest: /etc/motd
+
+    - name: render web root
+      ansible.builtin.copy:
+        content: "hello from cloudify hybrid finale\n"
+        dest: /srv/index.html
+        mode: "0644"
+
+    - name: check http server running
+      ansible.builtin.shell: pgrep -f "http.server 80" || true
+      register: svc
+      changed_when: false
+
+    - name: start http server on 80 (idempotent via guard)
+      ansible.builtin.shell: nohup python3 -m http.server 80 --directory /srv >/tmp/http.log 2>&1 &
+      args:
+        executable: /bin/bash
+      when: svc.stdout | trim == ""

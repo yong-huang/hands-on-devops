@@ -1,0 +1,51 @@
+name: blueprint-ci
+on: push
+
+env:
+  PIP_ONLY_BINARY: "pyyaml,PyYAML"
+
+jobs:
+  lint-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: install cloudify cli + lint
+        run: |
+          python3 -m pip install -q --break-system-packages --ignore-installed cryptography -i https://pypi.tuna.tsinghua.edu.cn/simple cloudify==7.0.5 cloudify-common==7.0.5 "setuptools<81" cfy-lint
+          cfy --version
+      - name: lint blueprint
+        run: cfy-lint bp.yaml || true   # dsl_1_5 rule coverage measured, not gating
+      - name: validate good blueprint
+        run: cfy blueprints validate bp.yaml
+      - name: validate bad blueprint (must fail)
+        run: |
+          if cfy blueprints validate bad.yaml; then
+            echo "bad.yaml should NOT validate"; exit 1
+          fi
+          echo "bad blueprint rejected as expected"
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: run plugin unit tests (experiment 05 plugin, staged copy)
+        run: |
+          python3 -m pip install -q --break-system-packages --ignore-installed cryptography -i https://pypi.tuna.tsinghua.edu.cn/simple pytest requests "setuptools<81" cloudify==7.0.5 cloudify-common==7.0.5
+          python3 -m pip install -q --break-system-packages -e plugin
+          python3 -m pytest plugin/tests -q
+
+  smoke:
+    runs-on: ubuntu-latest
+    needs: [lint-validate, unit]
+    steps:
+      - name: local-mode install -> outputs -> uninstall
+        run: |
+          python3 -m pip install -q --break-system-packages --ignore-installed cryptography -i https://pypi.tuna.tsinghua.edu.cn/simple cloudify==7.0.5 cloudify-common==7.0.5 "setuptools<81"
+          export CFY_WORKDIR=/tmp/cfy-ci-wd
+          rm -rf "$CFY_WORKDIR"
+          cfy init -b ci bp.yaml
+          cfy executions start install -b ci | tee install.log
+          grep -q "'install' workflow execution succeeded" install.log
+          cfy deployments outputs -b ci | tee outputs.log
+          grep -q "hello-from-cloudify-local" outputs.log
+          cfy executions start uninstall -b ci | tee uninstall.log
+          grep -q "'uninstall' workflow execution succeeded" uninstall.log
+          echo "smoke passed"

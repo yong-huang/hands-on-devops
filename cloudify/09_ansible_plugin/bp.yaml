@@ -1,0 +1,59 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML. INTEGRATION POINT: the docker plugin starts a container,
+# the establish hook of a connected_to relationship runs the local
+# ansible-playbook against it (community.docker connection), and a re-run via
+# execute_operation proves idempotence. The OFFICIAL ansible plugin is kept as
+# a negative case (bp_official.yaml), same family as 08.
+imports:
+  - vendor/types.yaml
+  - vendor/docker-plugin.yaml
+
+inputs:
+  stage_dir:
+    type: string
+    default: /tmp/handson09
+
+node_types:
+  handson.nodes.Configurator:
+    derived_from: cloudify.nodes.Root
+    properties:
+      stage_dir:
+        type: string
+
+node_templates:
+  app:
+    type: cloudify.nodes.docker.container
+    properties:
+      client_config:
+        docker_sock_file: /var/run/docker.sock
+      resource_config:
+        image_tag: python:3.12-slim
+        container_args:
+          name: cfy09-app
+          detach: true
+          command: sleep infinity
+
+  configure:
+    type: handson.nodes.Configurator
+    properties:
+      stage_dir: { get_input: stage_dir }
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: app
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              implementation: scripts/ansible_configure.py
+    # configuration happens ONLY in the establish hook (relationship context
+    # is what provides ctx.target); re-run via maintenance.reconfigure
+    interfaces:
+      handson.interfaces.maintenance:
+        reconfigure:
+          implementation: scripts/ansible_configure.py
+
+outputs:
+  configured_file:
+    value: { get_attribute: [configure, configured_file] }
+  ansible_changed_last:
+    value: { get_attribute: [configure, ansible_changed] }

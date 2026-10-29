@@ -1,0 +1,14 @@
+name: bad-unit
+on: push
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: run unit tests with a deliberately broken assertion
+        run: |
+          python3 -m pip install -q --break-system-packages --ignore-installed cryptography -i https://pypi.tuna.tsinghua.edu.cn/simple pytest requests "setuptools<81" cloudify==7.0.5 cloudify-common==7.0.5
+          python3 -m pip install -q --break-system-packages -e plugin
+          rm -rf plugin-broken && cp -r plugin plugin-broken
+          sed -i 's/assert ctx.instance.runtime_properties\["status_code"\] == 200/assert ctx.instance.runtime_properties["status_code"] == 999/' plugin-broken/tests/test_tasks.py
+          python3 -m pytest plugin-broken/tests -q -k success

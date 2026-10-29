@@ -1,0 +1,84 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML (DSL parser rejects non-ascii). Chinese prose lives in the README.
+# Demonstrates: node_types / data_types / input constraints / get_property vs
+# get_attribute / concat & string_upper & string_replace / two instances of one type.
+imports:
+  - vendor/types.yaml
+
+inputs:
+  port:
+    type: integer
+    default: 28999
+    constraints:
+      - in_range: [1024, 65535]
+  env:
+    type: string
+    default: dev
+    constraints:
+      - valid_values: [dev, staging, prod]
+  team:
+    type: string
+    default: platform
+    constraints:
+      - min_length: 3
+      - pattern: '^[a-z]+$'
+
+data_types:
+  handson.types.WorkerConfig:
+    properties:
+      name:
+        type: string
+        default: default-worker
+      workers:
+        type: integer
+        default: 2
+
+node_types:
+  handson.nodes.Worker:
+    derived_from: cloudify.nodes.Root
+    properties:
+      worker_name:
+        type: string
+        default: worker-default
+      config:
+        type: handson.types.WorkerConfig
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/create.py
+
+node_templates:
+  # alpha overrides the scalar property; config omitted -> pure data-type default
+  alpha:
+    type: handson.nodes.Worker
+    properties:
+      worker_name: alpha-worker
+  # beta overrides nothing -> every value comes from type defaults
+  beta:
+    type: handson.nodes.Worker
+
+outputs:
+  alpha_static_name:
+    description: parse-time value from node properties (get_property)
+    value: { get_property: [alpha, worker_name] }
+  alpha_runtime_name:
+    description: the SAME key after the script overwrote it (get_attribute)
+    value: { get_attribute: [alpha, worker_name] }
+  beta_static_name:
+    value: { get_property: [beta, worker_name] }
+  beta_workers:
+    description: nested data-type default (evolution target)
+    value: { get_property: [beta, config, workers] }
+  alpha_workers_runtime:
+    description: workers as seen by the script at runtime
+    value: { get_attribute: [alpha, reported_workers] }
+  endpoint:
+    value:
+      concat: ['http://', { get_property: [alpha, worker_name] }, '/', { get_input: env }]
+  env_upper:
+    value: { string_upper: { get_input: env } }
+  team_tag:
+    description: string_replace is positional [haystack, needle, replacement] (str.replace)
+    value:
+      string_replace: [{ get_input: team }, 'p', 'P']

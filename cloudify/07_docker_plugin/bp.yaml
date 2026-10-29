@@ -1,0 +1,55 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML. Demonstrates the official docker plugin (local mode):
+# two named nginx containers on 28110/28111, cross-container data flow via a
+# connected_to establish source operation (api's runtime props -> web's).
+imports:
+  - vendor/types.yaml
+  - vendor/docker-plugin.yaml
+
+inputs:
+  web_port:
+    type: integer
+    default: 28110
+  api_port:
+    type: integer
+    default: 28111
+
+node_templates:
+  api:
+    type: cloudify.nodes.docker.container
+    properties:
+      client_config:
+        docker_sock_file: /var/run/docker.sock
+      resource_config:
+        image_tag: nginx:1.29-alpine
+        container_args:
+          name: cfy07-api
+          detach: true
+          ports:
+            80/tcp: { get_input: api_port }
+
+  web:
+    type: cloudify.nodes.docker.container
+    properties:
+      client_config:
+        docker_sock_file: /var/run/docker.sock
+      resource_config:
+        image_tag: nginx:1.29-alpine
+        container_args:
+          name: cfy07-web
+          detach: true
+          ports:
+            80/tcp: { get_input: web_port }
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: api
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              implementation: scripts/rel_establish.py
+
+outputs:
+  backend_endpoint:
+    description: api container coordinates captured by the establish hook
+    value: { get_attribute: [web, backend_endpoint] }

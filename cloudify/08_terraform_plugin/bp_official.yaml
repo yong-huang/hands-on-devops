@@ -1,0 +1,26 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# NEGATIVE case (kept as evidence): the official cloudify-terraform-plugin
+# validates fine but its install task hard-depends on Manager-only runtime
+# env. Measured locally (2026-10-27):
+#   - without REST env:  Task failed 'cloudify_tf.tasks.install' ->
+#                        inet_pton() argument 2 must be str, not None
+#   - with REST_HOST hijacked to a non-Manager port: task hangs waiting for
+#     a REST file server that does not exist in local mode
+imports:
+  - vendor/types.yaml
+  - vendor/terraform-plugin.yaml
+
+inputs:
+  tf_binary:
+    type: string
+    default: /opt/homebrew/bin/terraform
+
+node_templates:
+  tf:
+    type: cloudify.nodes.terraform
+    properties:
+      terraform_config:
+        executable_path: { get_input: tf_binary }
+      resource_config:
+        use_existing_resource: true

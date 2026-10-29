@@ -48,6 +48,7 @@ cd labs/06_ansible_role_vault && ./ansible_role_vault.sh
 | 9200 / 9201 | 实验 03 一次性 MinIO | 即起即删 |
 | 90xx | hands-on-mlops | 相邻系列，永久错峰 |
 | 18090 | hands-on-cicd 项目 09/10 | 相邻系列蓝绿/金丝雀 |
+| 28100-28129 | cloudify 清单（docs/cloudify.md） | 28100/28101 Manager、28102 干净 Manager（快照恢复）、2811x 容器、28120 kind、28125 终局 nginx；项目 1-6/15 不占端口 |
 
 ## 实验列表
 

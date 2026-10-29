@@ -1,0 +1,14 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# negative case: `url` is a mandatory property and must be provided.
+# NOTE (measured): dsl_1_5 does NOT type-check property VALUES - `url: 28185`
+# (integer) validates fine. The parse-time guard for properties is `required`.
+imports:
+  - vendor/types.yaml
+  - vendor/plugin.yaml
+
+node_templates:
+  check:
+    type: handson.nodes.HttpCheck
+    properties:
+      expect_status: 200

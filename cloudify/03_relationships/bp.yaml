@@ -1,0 +1,63 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML. Demonstrates: connected_to + source_operations (establish),
+# contained_in + instances.deploy multiplication, install/uninstall ordering.
+imports:
+  - vendor/types.yaml
+
+node_types:
+  handson.nodes.Database:
+    derived_from: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/db_create.py
+  handson.nodes.App:
+    derived_from: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/app_create.py
+  handson.nodes.Host:
+    derived_from: cloudify.nodes.Root
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/host_create.py
+
+node_templates:
+  db:
+    type: handson.nodes.Database
+
+  # connected_to: the establish source operation reads the TARGET's runtime
+  # properties (via ctx.target) and writes into the SOURCE instance
+  app:
+    type: handson.nodes.App
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: db
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              implementation: scripts/establish.py
+
+  # contained_in + instances.deploy: 3 hosts, each carrying one worker -> 3 workers
+  worker:
+    type: handson.nodes.App
+    relationships:
+      - type: cloudify.relationships.contained_in
+        target: host
+  host:
+    type: handson.nodes.Host
+    instances:
+      deploy: 3
+
+outputs:
+  db_endpoint:
+    description: written by the establish source operation (cross-node data flow)
+    value: { get_attribute: [app, db_endpoint] }
+  worker_roles:
+    description: get_attribute on a scaled node returns a list (one entry per instance)
+    value: { get_attribute: [worker, role] }
+  host_ids:
+    value: { get_attribute: [host, host_id] }

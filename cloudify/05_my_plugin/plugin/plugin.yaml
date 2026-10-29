@@ -1,0 +1,40 @@
+plugins:
+  handson:
+    executor: central_deployment_agent
+    package_name: handson-plugin
+    package_version: 0.1.0
+
+node_types:
+  handson.nodes.HttpCheck:
+    derived_from: cloudify.nodes.Root
+    properties:
+      url:
+        type: string
+      expect_status:
+        type: integer
+        default: 200
+      max_attempts:
+        type: integer
+        default: 5
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: handson.handson_plugin.tasks.check_http
+          max_retries: 3
+          retry_interval: 2
+        delete:
+          implementation: handson.handson_plugin.tasks.noop
+
+  handson.nodes.RenderedFile:
+    derived_from: cloudify.nodes.Root
+    properties:
+      path:
+        type: string
+      content:
+        type: string
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: handson.handson_plugin.tasks.render_file
+        delete:
+          implementation: handson.handson_plugin.tasks.remove_file

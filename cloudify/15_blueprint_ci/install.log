@@ -1,0 +1,17 @@
+2026-10-27 17:31:51.068  CFY <ci> Starting 'install' workflow execution
+2026-10-27 17:31:51.069  CFY <None> Subgraph started 'install_hello_sjl3vf'
+2026-10-27 17:31:51.069  CFY <ci> [hello_sjl3vf] Validating node instance before creation: nothing to do
+2026-10-27 17:31:51.069  CFY <ci> [hello_sjl3vf] Precreating node instance: nothing to do
+2026-10-27 17:31:51.069  CFY <ci> [hello_sjl3vf] Creating node instance
+2026-10-27 17:31:51.070  CFY <ci> [hello_sjl3vf.create] Task started 'script_runner.tasks.run'
+2026-10-27 17:31:51.075  LOG <ci> [hello_sjl3vf.create] INFO: Process created, PID: 43
+2026-10-27 17:31:51.122  LOG <ci> [hello_sjl3vf.create] INFO: create.sh running for node=hello, who=hello
+2026-10-27 17:31:51.176  LOG <ci> [hello_sjl3vf.create] INFO: Execution done (PID=43, return_code=0): /tmp/W1S8Z/create.sh
+2026-10-27 17:31:51.248  CFY <ci> [hello_sjl3vf.create] Task succeeded 'script_runner.tasks.run'
+2026-10-27 17:31:51.249  CFY <ci> [hello_sjl3vf] Node instance created
+2026-10-27 17:31:51.249  CFY <ci> [hello_sjl3vf] Configuring node instance: nothing to do
+2026-10-27 17:31:51.249  CFY <ci> [hello_sjl3vf] Starting node instance: nothing to do
+2026-10-27 17:31:51.249  CFY <ci> [hello_sjl3vf] Poststarting node instance: nothing to do
+2026-10-27 17:31:51.249  CFY <ci> [hello_sjl3vf] Node instance started
+2026-10-27 17:31:51.249  CFY <None> Subgraph succeeded 'install_hello_sjl3vf'
+2026-10-27 17:31:51.249  CFY <ci> 'install' workflow execution succeeded

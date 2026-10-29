@@ -1,0 +1,829 @@
+plugins:
+
+  kubernetes:
+    executor: central_deployment_agent
+    package_name: cloudify-kubernetes-plugin
+    package_version: '2.13.31'
+
+data_types:
+
+  cloudify.kubernetes.types.FileResource:
+    properties:
+      resource_path:
+        type: string
+        description: File relative to blueprint path.
+        required: false
+      target_path:
+        type: string
+        description: Do not use.
+        required: false
+      template_variables:
+        required: false
+
+  cloudify.kubernetes.types.ApiOptions:
+    properties:
+      host:
+        type: string
+        required: false
+        description: >
+          HTTP/HTTPS URL to Kubernetes API
+
+      ssl_ca_cert:
+        description: Either a path to a file or the content of a CA Cert file.
+        type: string
+        required: false
+
+      cert_file:
+        description: Either a path to a file or the content of a Cert file.
+        type: string
+        required: false
+
+      key_file:
+        type: string
+        description: Either a path to a file or the content of a key file.
+        required: false
+
+      verify_ssl:
+        type: string
+        required: false
+
+      api_key:
+        type: string
+        required: false
+
+      debug:
+        type: boolean
+        required: false
+
+  cloudify.kubernetes.types.ConfigurationVariant:
+    description: >
+      Type representing all Kubernetes API configuration variants.
+      Each property represents separate supported variant of configuration.
+      You should choose one variant and fill in only on property.
+    properties:
+      blueprint_file_name:
+        type: string
+        required: false
+        description: >
+          Name of Kubernetes configuration file attached to blueprint
+
+      manager_file_path:
+        type: string
+        required: false
+        description: >
+          Path to Kubernetes configuration file placed on Cloudify Manager VM
+
+      file_content:
+        required: false
+        description: >
+          Content (YAML) of Kubernetes configuration file
+
+      api_options:
+        type: cloudify.kubernetes.types.ApiOptions
+        required: false
+        description: >
+          Set of basic properties describing Kubernetes API access
+
+  cloudify.kubernetes.types.AuthenticationVariant:
+    description: >
+      Type representing all authentication variants
+      for different Kubernetes cloud providers.
+      Each property represents separate supported variant of authentication.
+      You should choose one variant and fill in only on property.
+    properties:
+      gcp_service_account:
+        type: string
+        required: false
+        description: >
+          (JSON) Content of Google Cloud Platform Service Account file
+      azure_service_account:
+        type: dict
+        required: false
+        description: >
+          A dictionary containing all keys supported by the Azure plugin client_config property.
+          In addition, the keys "resource_group_name" and "cluster_name" must be provided with values as well.
+
+  cloudify.kubernetes.types.ApiMappingEntry:
+    description: >
+      Type defining python Kubernetes API objects and methods definitions for particular operation
+    properties:
+      api:
+        type: string
+        description: >
+          Name of python Kubernetes API object which will be used to as request for particular operation type
+        required: true
+      method:
+        type: string
+        description: >
+          Method name of python Kubernetes API object which will be used as request for particular operation type
+        required: true
+      payload:
+        type: string
+        description: >
+          Name of python Kubernetes API object which will be used as request data for particular operation type
+        required: false
+
+  cloudify.kubernetes.types.ApiMapping:
+    description: >
+      Type containing python Kubernetes API objects and methods definitions for all supported operations
+    properties:
+      create:
+        type: cloudify.kubernetes.types.ApiMappingEntry
+        description: >
+          Python Kubernetes API objects and methods definitions for create operation
+      read:
+        type: cloudify.kubernetes.types.ApiMappingEntry
+        description: >
+          Python Kubernetes API objects and methods definitions for read operation
+      update:
+        type: cloudify.kubernetes.types.ApiMappingEntry
+        description: >
+          Python Kubernetes API objects and methods definitions for update operation
+      delete:
+        type: cloudify.kubernetes.types.ApiMappingEntry
+        description: >
+          Python Kubernetes API objects and methods definitions for delete operation
+
+  cloudify.kubernetes.types.AbstractResource:
+    description: >
+      Type defining common base structure for any Kubernetes resource
+      It is some kind of wrapper for native Kubernetes YAML definition
+    properties:
+      apiVersion:
+        type: string
+        description: >
+          Kubernetes API version as a string
+        default: v1
+      kind:
+        type: string
+        required: false
+      metadata:
+        description: >
+          Metadata section related to single Kubernetes resource
+        default: {}
+
+  cloudify.kubernetes.types.ResourceDefinition:
+    derived_from: cloudify.kubernetes.types.AbstractResource
+    description: >
+      Type defining single Kubernetes resource e.g. Pod, Sevice, ...
+      It is some kind of wrapper for native Kubernetes YAML definition
+    properties:
+      spec:
+        description: >
+          Kuberneres resource object specification
+        default: {}
+
+  cloudify.kubernetes.types.RoleBindingDefinition:
+    derived_from: cloudify.kubernetes.types.AbstractResource
+    description: >
+      Type defining single Kubernetes resource e.g. Role, ...
+      It is some kind of wrapper for native Kubernetes YAML definition
+    properties:
+      roleRef:
+        description: >
+          RoleRef can only reference a ClusterRole in the global namespace.
+          If the RoleRef cannot be resolved, the Authorizer must return an error.
+        default: {}
+      subjects:
+        description: >
+          Subjects holds references to the objects the role applies to.
+        default: []
+
+  cloudify.kubernetes.types.RoleDefinition:
+    derived_from: cloudify.kubernetes.types.AbstractResource
+    description: >
+      Type defining single Kubernetes resource e.g. Role, ...
+      It is some kind of wrapper for native Kubernetes YAML definition
+    properties:
+      rules:
+        description: >
+          Rules holds all the PolicyRules for this Role.
+        default: []
+
+  cloudify.kubernetes.types.ClusterRoleDefinition:
+    derived_from: cloudify.kubernetes.types.RoleDefinition
+    description: >
+      Type defining single Kubernetes resource e.g. ClusterRole, ...
+      It is some kind of wrapper for native Kubernetes YAML definition
+
+  cloudify.kubernetes.types.StorageClassResourceDefinition:
+    derived_from: cloudify.kubernetes.types.AbstractResource
+    description: >
+      Type defining single Kubernetes resource e.g. StorageClass
+      It is some kind of wrapper for native Kubernetes YAML definition
+    properties:
+      parameters:
+        required: false
+        description: >
+          Additional parameters for object creation
+      provisioner:
+        required: false
+        description: >
+          Class provisioner for object creation
+
+  cloudify.kubernetes.types.ServiceAccountDefinition:
+    derived_from: cloudify.kubernetes.types.AbstractResource
+    description: >
+      ServiceAccount binds together: a name, understood by users,
+      and perhaps by peripheral systems, for an identity a principal
+      that can be authenticated and authorized * a set of secrets
+    properties:
+      automountServiceAccountToken:
+        description: >
+          AutomountServiceAccountToken indicates whether pods running
+          as this service account should have an API token automatically mounted.
+          Can be overridden at the pod level..
+        type: boolean
+        default: false
+      imagePullSecrets:
+        description: >
+          ImagePullSecrets is a list of references to secrets in the same namespace to use for pulling any images
+          in pods that reference this ServiceAccount. ImagePullSecrets are distinct
+          from Secrets because Secrets can be mounted in the pod,
+          but ImagePullSecrets are only accessed by the kubelet.
+        default: []
+      secrets:
+        description: >
+          Secrets is the list of secrets allowed to be used by pods running using this ServiceAccount.
+        default: []
+
+  cloudify.kubernetes.types.SecretDefinition:
+    derived_from: cloudify.kubernetes.types.AbstractResource
+    description: >
+      Secret holds secret data of a certain type.
+      The total bytes of the values in the Data field must be less than MaxSecretSize bytes
+    properties:
+      type:
+        description: >
+          Used to facilitate programmatic handling of secret data.
+        type: string
+        required: false
+      data:
+        description: >
+          Data contains the secret data.
+        default: {}
+      stringData:
+        description: >
+          stringData allows specifying non-binary secret data in string form.
+          It is provided as a write-only convenience method.
+          All keys and values are merged into the data field on write,
+          overwriting any existing values. It is never output when reading from the API..
+        default: {}
+
+  cloudify.kubernetes.types.ConfigClassResourceDefinition:
+    derived_from: cloudify.kubernetes.types.ResourceDefinition
+    description: >
+      Type defining Kubernetes resource for storing data.
+      It is some kind of wrapper for native Kubernetes YAML definition
+    properties:
+      data:
+        description: >
+          Contains data to store in ConfigMap, Secret..
+        default: {}
+
+  cloudify.kubernetes.types.ClientConfig:
+    description: >
+      Configuration properties of kubernetes API and
+      authentication properties of Kubernetes Cloud providers.
+    properties:
+      configuration:
+        type: cloudify.kubernetes.types.ConfigurationVariant
+        description: >
+          Configuration properties of Kubernetes API. One of four configuration options can be used
+          1. Kubernetes config file contained by blueprint archive
+          2. Kubernetes config file previously uploaded into Cloudify Manager VM
+          3. Content of Kubernetes config file (YAML)
+          4. Kubernetes API set o properties
+      authentication:
+        type: cloudify.kubernetes.types.AuthenticationVariant
+        required: false
+        description: >
+          Authentication properties of Kubernetes Cloud providers. Optional.
+          Currently supported providers: Google Cloud Platform.
+
+  cloudify.kubernetes.types.Options:
+    description: API options depending on API operations execution.
+    properties:
+      namespace:
+        type: string
+        description: The resource namespace.
+        default: default
+      grace_period_seconds:
+        type: integer
+        required: false
+      propagation_policy:
+        type: string
+        required: false
+
+  cloudify.kubernetes.types.CustomObjectsOptions:
+    description: API options depending on API operations execution.
+    properties:
+      namespace:
+        type: string
+        description: The resource namespace.
+        default: default
+      group:
+        type: string
+        description: The custom object resource API group.
+        required: true
+      plural:
+        type: string
+        description: The custom object resource API plural name.
+        required: true
+      version:
+        type: string
+        description: The custom object resource API version.
+        required: true
+
+node_types:
+
+  cloudify.nodes.kubernetes.Master:
+    derived_from: cloudify.nodes.Root
+    properties:
+      configuration:
+        type: cloudify.kubernetes.types.ConfigurationVariant
+        description: >
+          Configuration properties of Kubernetes API. One of four configuration options can be used
+          1. Kubernetes config file contained by blueprint archive
+          2. Kubernetes config file previously uploaded into Cloudify Manager VM
+          3. Content of Kubernetes config file (YAML)
+          4. Kubernetes API set o properties
+      authentication:
+        type: cloudify.kubernetes.types.AuthenticationVariant
+        required: false
+        description: >
+          Authentication properties of Kubernetes Cloud providers. Optional.
+          Currently supported providers: Google Cloud Platform.
+
+  cloudify.kubernetes.nodes.Master:
+    derived_from: cloudify.nodes.kubernetes.Master
+
+  cloudify.nodes.kubernetes.resources.ResourceBase:
+    derived_from: cloudify.nodes.Root
+    properties:
+      client_config: &client_config
+        type: cloudify.kubernetes.types.ClientConfig
+        required: false
+        description: >
+          Configuration properties of kubernetes API and
+          authentication properties of Kubernetes Cloud providers.
+      allow_node_redefinition:
+        type: boolean
+        description: >
+          Permit changing the name and kind and number of resources defined in file.
+        default: true
+      use_external_resource:
+        type: boolean
+        description: >
+          If the resource is expected to already exist.
+        default: false
+      create_if_missing:
+        type: boolean
+        description: >
+          If the resource is supposed to exist, and it does not, then create. Such resources will not deleted on uninstall.
+        default: false
+      use_if_exists:
+        type: boolean
+        description: >
+          If a resource with this name and kind already exists in the provided namespace, then use it instead of failing because the resource already exists. Such resources will be deleted on uninstall.
+        default: true
+      options:
+        description: API options depending on API operations execution.
+        type: cloudify.kubernetes.types.Options
+
+  cloudify.kubernetes.resources.ResourceBase:
+    derived_from: cloudify.nodes.kubernetes.resources.ResourceBase
+
+  cloudify.nodes.kubernetes.resources.ResourceWithValidateStatus:
+    derived_from: cloudify.kubernetes.resources.ResourceBase
+    properties:
+      validate_resource_status:
+        type: boolean
+        description: Set this to "true" if you want Cloudify to wait for a predetermined state.
+        default: false
+
+  cloudify.kubernetes.resources.ResourceWithValidateStatus:
+    derived_from: cloudify.nodes.kubernetes.resources.ResourceWithValidateStatus
+
+  cloudify.nodes.kubernetes.resources.BlueprintDefinedResource:
+    derived_from: cloudify.kubernetes.resources.ResourceWithValidateStatus
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.ResourceDefinition
+        description: >
+          Definition of resource object using native Kubernetes YAML spec
+    interfaces:
+      cloudify.interfaces.validation:
+        check_status:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_read_check_status
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_read_check_drift
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_create
+        poststart:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_read
+        update:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_update
+        delete:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_delete
+        pull:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_read
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.resource_read_check_drift
+
+  cloudify.kubernetes.resources.BlueprintDefinedResource:
+    derived_from: cloudify.nodes.kubernetes.resources.BlueprintDefinedResource
+
+  cloudify.nodes.kubernetes.resources.ClusterRoleBinding:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.RoleBindingDefinition
+        description: >
+          Definition of role binding using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.ClusterRoleBinding:
+    derived_from: cloudify.nodes.kubernetes.resources.ClusterRoleBinding
+
+  cloudify.nodes.kubernetes.resources.RoleBinding:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.RoleBindingDefinition
+        description: >
+          Definition of role binding using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.RoleBinding:
+    derived_from: cloudify.nodes.kubernetes.resources.RoleBinding
+
+  cloudify.nodes.kubernetes.resources.Role:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.RoleDefinition
+        description: >
+          Definition of role using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.Role:
+     derived_from: cloudify.nodes.kubernetes.resources.Role
+
+  cloudify.nodes.kubernetes.resources.ClusterRole:
+    derived_from: cloudify.kubernetes.resources.Role
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.ClusterRoleDefinition
+        description: >
+          Definition of cluster role using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.ClusterRole:
+    derived_from: cloudify.nodes.kubernetes.resources.ClusterRole
+
+  cloudify.nodes.kubernetes.resources.Secret:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.SecretDefinition
+        description: >
+          Definition of secret using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.Secret:
+    derived_from: cloudify.nodes.kubernetes.resources.Secret
+
+  cloudify.nodes.kubernetes.resources.ServiceAccount:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.ServiceAccountDefinition
+        description: >
+          Definition of service account using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.ServiceAccount:
+    derived_from: cloudify.nodes.kubernetes.resources.ServiceAccount
+
+  cloudify.nodes.kubernetes.resources.Deployment:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      validate_resource_status:
+        default: true
+
+  cloudify.kubernetes.resources.Deployment:
+    derived_from: cloudify.nodes.kubernetes.resources.Deployment
+
+  cloudify.nodes.kubernetes.resources.Node:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+
+  cloudify.kubernetes.resources.Node:
+    derived_from: cloudify.nodes.kubernetes.resources.Node
+
+  cloudify.nodes.kubernetes.resources.Namespace:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+
+  cloudify.kubernetes.resources.Namespace:
+    derived_from: cloudify.nodes.kubernetes.resources.Namespace
+
+  cloudify.nodes.kubernetes.resources.Pod:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      validate_resource_status:
+        default: true
+
+  cloudify.kubernetes.resources.Pod:
+    derived_from: cloudify.nodes.kubernetes.resources.Pod
+
+  cloudify.nodes.kubernetes.resources.ReplicaSet:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      validate_resource_status:
+        default: true
+
+  cloudify.kubernetes.resources.ReplicaSet:
+    derived_from: cloudify.nodes.kubernetes.resources.ReplicaSet
+
+  cloudify.nodes.kubernetes.resources.ReplicationController:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      validate_resource_status:
+        default: true
+
+  cloudify.kubernetes.resources.ReplicationController:
+    derived_from: cloudify.nodes.kubernetes.resources.ReplicationController
+
+  cloudify.nodes.kubernetes.resources.DaemonSet:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+
+  cloudify.kubernetes.resources.DaemonSet:
+    derived_from: cloudify.nodes.kubernetes.resources.DaemonSet
+
+  cloudify.nodes.kubernetes.resources.CustomResourceDefinition:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+
+  cloudify.kubernetes.resources.CustomResourceDefinition:
+    derived_from: cloudify.nodes.kubernetes.resources.CustomResourceDefinition
+
+  cloudify.nodes.kubernetes.resources.CustomObject:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      options:
+        type: cloudify.kubernetes.types.CustomObjectsOptions
+
+  cloudify.kubernetes.resources.CustomObject:
+    derived_from: cloudify.nodes.kubernetes.resources.CustomObject
+
+  cloudify.nodes.kubernetes.resources.Service:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      validate_resource_status:
+        default: true
+
+  cloudify.kubernetes.resources.Service:
+    derived_from: cloudify.nodes.kubernetes.resources.Service
+
+  cloudify.nodes.kubernetes.resources.PersistentVolume:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      validate_resource_status:
+        default: true
+
+  cloudify.kubernetes.resources.PersistentVolume:
+    derived_from: cloudify.nodes.kubernetes.resources.PersistentVolume
+
+  cloudify.nodes.kubernetes.resources.ConfigMap:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.ConfigClassResourceDefinition
+
+  cloudify.kubernetes.resources.ConfigMap:
+    derived_from: cloudify.nodes.kubernetes.resources.ConfigMap
+
+  cloudify.nodes.kubernetes.resources.StorageClass:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        type: cloudify.kubernetes.types.StorageClassResourceDefinition
+        description: >
+          Definition of resource object using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.StorageClass:
+    derived_from: cloudify.nodes.kubernetes.resources.StorageClass
+
+  cloudify.nodes.kubernetes.resources.StatefulSet:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        default: {}
+        description: >
+          Definition of resource object using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.StatefulSet:
+    derived_from: cloudify.nodes.kubernetes.resources.StatefulSet
+
+  cloudify.nodes.kubernetes.resources.PodSecurityPolicy:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        default: {}
+        description: >
+          Definition of resource object using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.PodSecurityPolicy:
+    derived_from: cloudify.nodes.kubernetes.resources.PodSecurityPolicy
+
+  cloudify.nodes.kubernetes.resources.NetworkPolicy:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        default: {}
+        description: >
+          Definition of resource object using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.NetworkPolicy:
+    derived_from: cloudify.nodes.kubernetes.resources.NetworkPolicy
+
+  cloudify.nodes.kubernetes.resources.Ingress:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        default: {}
+        description: >
+          Definition of resource object using native Kubernetes YAML spec
+
+  cloudify.kubernetes.resources.Ingress:
+    derived_from: cloudify.nodes.kubernetes.resources.Ingress
+
+  cloudify.nodes.kubernetes.resources.PersistentVolumeClaim:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      definition:
+        default: {}
+        description: >
+          Definition of resource object using native Kubernetes YAML spec
+      validate_resource_status:
+        default: true
+
+  cloudify.kubernetes.resources.PersistentVolumeClaim:
+    derived_from: cloudify.nodes.kubernetes.resources.PersistentVolumeClaim
+
+  cloudify.nodes.kubernetes.resources.CustomBlueprintDefinedResource:
+    derived_from: cloudify.kubernetes.resources.BlueprintDefinedResource
+    properties:
+      api_mapping:
+        type: cloudify.kubernetes.types.ApiMapping
+        description: >
+          Python Kubernetes API objects and methods definitions used for given resource type
+    interfaces:
+      cloudify.interfaces.validation:
+        check_status:
+          implementation: kubernetes.cloudify_kubernetes.tasks.custom_check_status
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.custom_check_drift
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: kubernetes.cloudify_kubernetes.tasks.custom_resource_create
+        delete:
+          implementation: kubernetes.cloudify_kubernetes.tasks.custom_resource_delete
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.custom_check_drift
+
+  cloudify.kubernetes.resources.CustomBlueprintDefinedResource:
+    derived_from: cloudify.nodes.kubernetes.resources.CustomBlueprintDefinedResource
+
+  cloudify.nodes.kubernetes.resources.FileDefinedResource:
+    derived_from: cloudify.kubernetes.resources.ResourceWithValidateStatus
+    properties:
+      file:
+        type: cloudify.kubernetes.types.FileResource
+        description: >
+          A path to YAML file containing the resource definition.
+      allow_node_redefinition:
+        type: boolean
+        description: >
+          Permit changing the name and kind and number of resources defined in file.
+        default: false
+    interfaces:
+      cloudify.interfaces.validation:
+        check_status:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_check_status
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_check_drift
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_create
+        poststart:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_read
+        update:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_update
+        delete:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_delete
+        pull:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_read
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.file_resource_check_drift
+
+  cloudify.kubernetes.resources.FileDefinedResource:
+    derived_from: cloudify.nodes.kubernetes.resources.FileDefinedResource
+
+  cloudify.nodes.kubernetes.resources.MultipleFileDefinedResources:
+    derived_from: cloudify.kubernetes.resources.ResourceWithValidateStatus
+    properties:
+      files:
+        description: >
+          A list of paths to YAML files containing the resources definition.
+      allow_node_redefinition:
+        type: boolean
+        description: >
+          Permit changing the name and kind and number of resources defined in file.
+        default: false
+    interfaces:
+      cloudify.interfaces.validation:
+        check_status:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_check_status
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_check_drift
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_create
+        poststart:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_read
+        update:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_update
+        delete:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_delete
+        pull:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_read
+        check_drift:
+          implementation: kubernetes.cloudify_kubernetes.tasks.multiple_file_resource_check_drift
+
+  cloudify.kubernetes.resources.MultipleFileDefinedResources:
+    derived_from: cloudify.nodes.kubernetes.resources.MultipleFileDefinedResources
+
+  cloudify.nodes.kubernetes.resources.SharedCluster:
+    derived_from: cloudify.nodes.SharedResource
+    properties:
+      client_config: *client_config
+      options:
+        description: API options depending on API operations execution.
+        type: cloudify.kubernetes.types.Options
+    interfaces:
+      cloudify.interfaces.validation:
+        check_status:
+          implementation: kubernetes.cloudify_kubernetes.tasks.get_token_status
+      cloudify.interfaces.lifecycle:
+        configure:
+          implementation: kubernetes.cloudify_kubernetes.tasks.refresh_config
+        start:
+          implementation: kubernetes.cloudify_kubernetes.tasks.create_token
+        poststart:
+          implementation: kubernetes.cloudify_kubernetes.tasks.read_token
+        prestop:
+          implementation: kubernetes.cloudify_kubernetes.tasks.refresh_config
+        stop:
+          implementation: kubernetes.cloudify_kubernetes.tasks.delete_token
+        pull:
+          implementation: kubernetes.cloudify_kubernetes.tasks.read_token
+
+  cloudify.kubernetes.resources.SharedCluster:
+    derived_from: cloudify.nodes.kubernetes.resources.SharedCluster
+
+relationships:
+
+  cloudify.relationships.kubernetes.managed_by_master:
+    derived_from: cloudify.relationships.connected_to
+
+  cloudify.kubernetes.relationships.managed_by_master:
+    derived_from: cloudify.relationships.kubernetes.managed_by_master
+
+  cloudify.relationships.kubernetes.connected_to_shared_cluster:
+    derived_from: cloudify.relationships.connected_to
+
+workflows:
+
+  update_resource_definition:
+    mapping: kubernetes.cloudify_kubernetes.workflows.update_resource_definition
+    parameters:
+      node_instance_id:
+        type: string
+        description: The id of the node-instance that you want to modify.
+      resource_definition_changes:
+        description: The changes to the resource definition that you are making.
+        default: {}
+
+  refresh_and_store_token:
+    mapping: kubernetes.cloudify_kubernetes.workflows.refresh_and_store_token
+    parameters:
+      kubernetes_cluster_node_instance_id:
+        type: string
+        default: eks_cluster
+      deployment_capability_name:
+        type: string
+        default: connection_details
+      service_account_node_instance_id:
+        type: string
+        default: new_service_account
+      secret_token_node_instance_id:
+        type: string
+        default: secret
+      store_token_and_kubeconfig_id:
+        type: string
+        default: store_token_and_kubeconfig

@@ -1,0 +1,17 @@
+name: bad-validate
+on: push
+
+env:
+  PIP_ONLY_BINARY: "pyyaml,PyYAML"
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: validate blueprint with wrong node type
+        run: |
+          python3 -m pip install -q --break-system-packages --ignore-installed cryptography -i https://pypi.tuna.tsinghua.edu.cn/simple cloudify==7.0.5 cloudify-common==7.0.5 "setuptools<81"
+          # bad.yaml is the "missing required url" negative (validate must reject);
+          # break the node type as well for a double-negative
+          sed 's/handson.nodes.HttpCheck/cloudify.nodes.Nope/' bad.yaml > worse.yaml
+          cfy blueprints validate worse.yaml

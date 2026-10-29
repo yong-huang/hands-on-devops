@@ -1,0 +1,170 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML. THE FINALE: one blueprint across four worlds + a custom
+# plugin, all in local mode.
+#   TF (script-wrapped)      : private network + api container   <- substrate
+#   docker plugin            : web container JOINING the TF network (cross-tool
+#                              data flow: TF output -> container_args.network)
+#   ansible (establish hook) : configure the web container in the relationship
+#   kubernetes plugin        : ConfigMap + Deployment + Service on kind (parallel branch)
+#   handson plugin           : HttpCheck polls the web host port until 200
+#   handson-flow plugin      : rolling_restart Day-2 workflow over the web node
+imports:
+  - vendor/types.yaml
+  - vendor/docker-plugin.yaml
+  - vendor/kubernetes-plugin.yaml
+  - vendor/handson-plugin.yaml
+  - vendor/handsonflow-plugin.yaml
+
+inputs:
+  tf_binary:
+    type: string
+    default: /opt/homebrew/bin/terraform
+  tf_zip:
+    type: string
+    default: /tmp/handson16/tf-module.zip
+  tf_cli_config:
+    type: string
+    default: ""
+  workdir:
+    type: string
+    default: /tmp/handson16/work
+  stage_dir:
+    type: string
+    default: /tmp/handson16
+  web_port:
+    type: integer
+    default: 28130
+
+node_types:
+  handson.nodes.TfBase:
+    derived_from: cloudify.nodes.Root
+    properties:
+      tf_binary: { type: string }
+      tf_zip: { type: string }
+      tf_cli_config: { type: string }
+      workdir: { type: string }
+
+  handson.nodes.Configurator:
+    derived_from: cloudify.nodes.Root
+    properties:
+      stage_dir: { type: string }
+
+workflows:
+  rolling_restart:
+    mapping: handsonflow.handson_flow.workflows.rolling_restart
+    parameters:
+      batch:
+        type: integer
+        default: 2
+
+node_templates:
+  tf_base:
+    type: handson.nodes.TfBase
+    properties:
+      tf_binary: { get_input: tf_binary }
+      tf_zip: { get_input: tf_zip }
+      tf_cli_config: { get_input: tf_cli_config }
+      workdir: { get_input: workdir }
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/tf_apply.sh
+          inputs:
+            tf_binary: { get_input: tf_binary }
+            tf_zip: { get_input: tf_zip }
+            tf_cli_config: { get_input: tf_cli_config }
+            workdir: { get_input: workdir }
+        delete:
+          implementation: scripts/tf_destroy.sh
+          inputs:
+            tf_binary: { get_input: tf_binary }
+            tf_cli_config: { get_input: tf_cli_config }
+            workdir: { get_input: workdir }
+
+  web:
+    type: cloudify.nodes.docker.container
+    properties:
+      client_config:
+        docker_sock_file: /var/run/docker.sock
+      resource_config:
+        image_tag: python:3.12-slim
+        container_args:
+          name: cfy16-web
+          detach: true
+          command: sleep infinity
+          ports:
+            80/tcp: { get_input: web_port }
+    interfaces:
+      handsonflow.interfaces.lifecycle:
+        restart:
+          implementation: handsonflow.handson_flow.tasks.restart
+          max_retries: 2
+          retry_interval: 1
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: tf_base
+
+  configurator:
+    type: handson.nodes.Configurator
+    properties:
+      stage_dir: { get_input: stage_dir }
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: web
+        source_interfaces:
+          cloudify.interfaces.relationship_lifecycle:
+            establish:
+              implementation: scripts/rel_establish16.py
+
+  net_recorder:
+    type: cloudify.nodes.Root
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: tf_base
+    interfaces:
+      cloudify.interfaces.lifecycle:
+        create:
+          implementation: scripts/record_network.sh
+          # get_attribute in OPERATION INPUTS evaluates at task-call time:
+          # the TF node has already published its output by then. (In
+          # resource_config it would evaluate at plan time and be empty -
+          # measured TypeError unhashable dict.)
+          inputs:
+            net: { get_attribute: [tf_base, tf_network] }
+
+  check:
+    type: handson.nodes.HttpCheck
+    properties:
+      url:
+        concat: ['http://127.0.0.1:', { get_input: web_port }, '/']
+      expect_status: 200
+      max_attempts: 5
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: web
+
+  k8s_master:
+    type: cloudify.kubernetes.nodes.Master
+    properties:
+      configuration:
+        blueprint_file_name: kubeconfig.yaml
+  k8s_web:
+    type: cloudify.kubernetes.resources.FileDefinedResource
+    properties:
+      client_config:
+        configuration:
+          blueprint_file_name: kubeconfig.yaml
+      file:
+        resource_path: manifest16.yaml
+    relationships:
+      - type: cloudify.relationships.connected_to
+        target: k8s_master
+
+outputs:
+  finale_url:
+    description: assembled from two nodes' properties (web name + host port)
+    value:
+      concat: ['http://', { get_attribute: [web, container] }, ':local-port-', { get_input: web_port }]
+  status_code:
+    value: { get_attribute: [check, status_code] }

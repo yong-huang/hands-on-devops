@@ -1,0 +1,9 @@
+setup.py
+handson_plugin/__init__.py
+handson_plugin/tasks.py
+handson_plugin.egg-info/PKG-INFO
+handson_plugin.egg-info/SOURCES.txt
+handson_plugin.egg-info/dependency_links.txt
+handson_plugin.egg-info/requires.txt
+handson_plugin.egg-info/top_level.txt
+tests/test_tasks.py

@@ -1,0 +1,34 @@
+tosca_definitions_version: cloudify_dsl_1_5
+
+# ASCII only in YAML. Demonstrates a self-written plugin: vendor its plugin.yaml
+# (plugins section + custom node types), install the package into the CLI venv,
+# and the local engine imports handson_plugin.tasks.* at execution time.
+imports:
+  - vendor/types.yaml
+  - vendor/plugin.yaml
+
+inputs:
+  http_port:
+    type: integer
+    default: 28185
+
+node_templates:
+  check:
+    type: handson.nodes.HttpCheck
+    properties:
+      url:
+        concat: ['http://127.0.0.1:', { get_input: http_port }, '/']
+      expect_status: 200
+      max_attempts: 3
+
+  rendered:
+    type: handson.nodes.RenderedFile
+    properties:
+      path: /tmp/handson05-rendered.txt
+      content: rendered by handson-plugin 0.1.0
+
+outputs:
+  status_code:
+    value: { get_attribute: [check, status_code] }
+  rendered_path:
+    value: { get_attribute: [rendered, rendered_path] }
