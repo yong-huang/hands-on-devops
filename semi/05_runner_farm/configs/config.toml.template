@@ -1,0 +1,19 @@
+# runner 容器内的 /etc/gitlab-runner/config.toml 模板
+# 占位符由 runner_farm.sh 注入：__CONCURRENT__ __NAME__ __TAGS__ __TOKEN__
+# 声明式注册：GitLab 16+ 已废除 registration token，这里直接用 API 签发的 glrt- 认证令牌
+concurrent = __CONCURRENT__
+check_interval = 3
+
+[[runners]]
+  name = "__NAME__"
+  url = "http://gitlab/"
+  token = "__TOKEN__"
+  executor = "docker"
+  clone_url = "http://gitlab/"
+  [runners.docker]
+    image = "docker.1ms.run/library/alpine:3"
+    network_mode = "semi-gitlab_default"   # job 容器进 GitLab 网络：可直连 gitlab 与（后续的）registry
+    pull_policy = ["if-not-present"]
+    volumes = ["/cache"]
+  [runners.cache]
+    Type = ""

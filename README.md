@@ -49,6 +49,7 @@ cd labs/06_ansible_role_vault && ./ansible_role_vault.sh
 | 90xx | hands-on-mlops | 相邻系列，永久错峰 |
 | 18090 | hands-on-cicd 项目 09/10 | 相邻系列蓝绿/金丝雀 |
 | 28100-28129 | cloudify 清单（docs/cloudify.md） | 28100/28101 Manager、28102 干净 Manager（快照恢复）、2811x 容器、28120 kind、28125 终局 nginx；项目 1-6/15 不占端口 |
+| 28200-28279 | 半导体 CI/CD 清单（docs/cicd-semi.md） | 28200 GitLab HTTP、28222 GitLab SSH、28210 Pages、28250 GitLab Registry、28252 mirror 私仓、28261 license-mock、28270 webhook-listener |
 
 ## 实验列表
 
@@ -110,6 +111,40 @@ devops.md 的互补进阶线：**GitHub Actions 为轴**，本机 act 离线迭�
 | 16 | 🏁 终极串联：生产级发布系统 | 全部 ☁️ | ✅ 真机验证 |
 
 > ☁️ = 需推送 GitHub 真仓库（公共仓库免费）；其余纯本机可跑。
+
+## 半导体 CI/CD 系列（semi/）
+
+devops.md 的半导体特化互补线：自建 GitLab + 开源 EDA（verilator/yosys/nextpnr/cocotb）+
+回归农场 + License 门禁 + FPGA 构建发布，端口占 28200-28279 段（见分配表）。
+清单：`docs/cicd-semi.md`。
+
+| 编号 | 实验 | 工具 | 状态 |
+|:---|:---|:---|:---|
+| 01 | GitLab CE 单机上线（内存减配 + 就绪信号学） | GitLab CE | ✅ 真机验证 |
+| 02 | 设计部门工作区（组树/保护分支/全局 server hook） | GitLab API + Gitaly | ✅ 真机验证 |
+| 03 | rtl-gcd 载体入库与 Git-LFS 大文件治理 | git-lfs + cocotb | ✅ 真机验证 |
+| 04 | ⛓️ 集成点①：MR 评审流 + 平台验收九条断言 | GitLab API + webhook | ✅ 真机验证 |
+| 05 | Runner 注册与标签资源池（glrt 令牌 + concurrent 排队证明） | gitlab-runner | ✅ 真机验证 |
+| 06 | EDA 标准执行镜像（Registry 28250 + eda-base:1.0） | Container Registry | ✅ 真机验证 |
+| 07 | kind 弹性农场（K8s executor + Pending 队列观测） | kind + kubectl | ✅ 真机验证 |
+| 08 | Lint 门禁（verilator → codequality → MR 注错验证） | GitLab CI | ✅ 真机验证 |
+| 09 | 单元仿真（cocotb + JUnit 上 MR 测试 Tab） | GitLab CI | ✅ 真机验证 |
+| 10 | 编译仿真与缓存（verilator --cc + RTL 哈希缓存 + 波形排除） | GitLab CI | ✅ 真机验证 |
+| 11 | ⛓️ 集成点②：needs DAG 全流水线 + 双注错验证 | GitLab CI | ✅ 真机验证 |
+| 12 | 种子回归矩阵（16 路 parallel:matrix + 聚合器） | GitLab CI | ✅ 真机验证 |
+| 13 | 夜间回归（schedule + flaky_hunter + 定点重跑） | GitLab CI | ✅ 真机验证 |
+| 14 | License 门禁（license-mock 令牌池 + TTL 回收） | GitLab CI | ✅ 真机验证 |
+| 15 | HPC 队列对接（sbatch 语义 + FIFO 并发 2） | GitLab CI | ✅ 真机验证 |
+| 16 | 回归仪表盘（真实历史快照 + 静态 SVG 趋势站） | nginx :28210 | ✅ 真机验证 |
+| 17 | FPGA 综合流水线（yosys+nextpnr + fmax 门禁 + bitstream） | GitLab CI | ✅ 真机验证 |
+| 18 | 制品治理（Generic Packages + cosign 签名 + 不可变守卫） | GitLab CI | ✅ 真机验证 |
+| 19 | 发布工程（vTag → Release + 客户交付包 + 审计单） | GitLab CI | ✅ 真机验证 |
+| 20 | ⛓️ 集成点③：全链 DAG 总装 + 断点阻断实证 | GitLab CI | ✅ 真机验证 |
+| 21 | 流水线安全加固（三把锁断言：变量/仓库/对象） | GitLab API | ✅ 真机验证 |
+| 22 | 气隙供给（mirror 私仓 + internal 网络断网 runner） | GitLab CI | ✅ 真机验证 |
+| 23 | 备份容灾（7.2G 备份 + 毁卷恢复 + RTO 262s） | GitLab CI | ✅ 真机验证 |
+| 24 | 流水线度量（DORA 四指标 + 瓶颈定位交叉验证） | GitLab API | ✅ 真机验证 |
+| 25 | 🏁 终极串联：平台一键重建 + 12 条验收断言 | 全部 | ✅ 真机验证 |
 
 ## Pulumi 互补线（pulumi/）
 

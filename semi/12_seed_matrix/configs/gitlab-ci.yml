@@ -1,0 +1,119 @@
+# rtl-gcd · .gitlab-ci.yml（12 加装种子回归矩阵：parallel:matrix 16 seeds + 聚合器）
+# DAG：lint → unit → sim（上游红，下游因 needs 不执行）——这是与并行独立阶段的核心差异
+stages:
+  - lint
+  - unit
+  - sim
+  - regression
+
+variables:
+  GIT_LFS_SKIP_SMUDGE: "1"
+
+lint:
+  stage: lint
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - verilator --lint-only -Wall rtl/*.v > lint.log 2>&1 || true
+    - cat lint.log
+    - python3 tools/verilator2codequality.py lint.log codequality.json
+    - python3 -c "import json,sys; n=len(json.load(open('codequality.json'))); print(f'lint 告警 {n} 条'); sys.exit(1 if n else 0)"
+    - echo "lint 干净"
+  artifacts:
+    when: always
+    reports:
+      codequality: codequality.json
+    paths: [lint.log, codequality.json]
+    expire_in: 7 day
+
+unit:
+  stage: unit
+  needs: [lint]                        # DAG：lint 红 → unit 不执行（canceled）
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - python3 sim/run_tests.py
+  artifacts:
+    when: always
+    reports:
+      junit: sim/results.xml
+    paths: [sim/results.xml]
+    expire_in: 7 day
+
+sim:
+  stage: sim
+  needs: [unit]                        # DAG：unit 红 → sim 不执行
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  cache:
+    key:
+      files:
+        - rtl/gcd.v
+        - sim/tb_main.cpp
+    paths: [sim/obj_dir]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - cd sim
+    - hit=$([ -x obj_dir/Vgcd ] && echo true || echo false)
+    - t0=$(date +%s)
+    - |
+      if [ "$hit" = "true" ]; then
+        echo "cache HIT"
+      else
+        verilator --cc --exe --build -Wno-fatal ../rtl/gcd.v tb_main.cpp --top-module gcd -CFLAGS "-O2" > verilator.log 2>&1
+        echo "cache MISS"
+      fi
+    - t1=$(date +%s)
+    - ./obj_dir/Vgcd > sim_run.log 2>&1
+    - cat sim_run.log
+    - echo "cache_hit=$hit compile_seconds=$((t1 - t0))" > sim_meta.json
+    - cd ..
+  artifacts:
+    when: always
+    paths: [sim/sim_run.log, sim/sim_meta.json]
+    exclude: [sim/wave.vcd]
+    expire_in: 7 day
+
+# ── 12 加装：种子回归矩阵（16 seeds 随机向量对拍参考模型；聚合器汇总）──
+regression:
+  stage: regression
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  parallel:
+    matrix:
+      - SEED: ["1", "2", "3", "4", "5", "6", "7", "8",
+               "9", "10", "11", "12", "13", "14", "15", "16"]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - python3 sim/run_regression.py
+  artifacts:
+    when: always
+    reports:
+      junit: sim/results_seed_${SEED}.xml
+    paths: [sim/summary_seed_*.json]
+    expire_in: 7 day
+
+aggregate:
+  stage: regression
+  needs: [regression]          # 全部 16 个子 job 完成后才跑；artifacts 自动下载
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - python3 tools/aggregate_results.py
+  artifacts:
+    when: always
+    paths: [sim/summary.json]
+    expire_in: 7 day

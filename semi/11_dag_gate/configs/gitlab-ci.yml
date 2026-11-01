@@ -1,0 +1,82 @@
+# rtl-gcd · .gitlab-ci.yml 终装（11 集成点②：needs DAG 全流水线 + badge）
+# DAG：lint → unit → sim（上游红，下游因 needs 不执行）——这是与并行独立阶段的核心差异
+stages:
+  - lint
+  - unit
+  - sim
+
+variables:
+  GIT_LFS_SKIP_SMUDGE: "1"
+
+lint:
+  stage: lint
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - verilator --lint-only -Wall rtl/*.v > lint.log 2>&1 || true
+    - cat lint.log
+    - python3 tools/verilator2codequality.py lint.log codequality.json
+    - python3 -c "import json,sys; n=len(json.load(open('codequality.json'))); print(f'lint 告警 {n} 条'); sys.exit(1 if n else 0)"
+    - echo "lint 干净"
+  artifacts:
+    when: always
+    reports:
+      codequality: codequality.json
+    paths: [lint.log, codequality.json]
+    expire_in: 7 day
+
+unit:
+  stage: unit
+  needs: [lint]                        # DAG：lint 红 → unit 不执行（canceled）
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - python3 sim/run_tests.py
+  artifacts:
+    when: always
+    reports:
+      junit: sim/results.xml
+    paths: [sim/results.xml]
+    expire_in: 7 day
+
+sim:
+  stage: sim
+  needs: [unit]                        # DAG：unit 红 → sim 不执行
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  cache:
+    key:
+      files:
+        - rtl/gcd.v
+        - sim/tb_main.cpp
+    paths: [sim/obj_dir]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - cd sim
+    - hit=$([ -x obj_dir/Vgcd ] && echo true || echo false)
+    - t0=$(date +%s)
+    - |
+      if [ "$hit" = "true" ]; then
+        echo "cache HIT"
+      else
+        verilator --cc --exe --build -Wno-fatal ../rtl/gcd.v tb_main.cpp --top-module gcd -CFLAGS "-O2" > verilator.log 2>&1
+        echo "cache MISS"
+      fi
+    - t1=$(date +%s)
+    - ./obj_dir/Vgcd > sim_run.log 2>&1
+    - cat sim_run.log
+    - echo "cache_hit=$hit compile_seconds=$((t1 - t0))" > sim_meta.json
+    - cd ..
+  artifacts:
+    when: always
+    paths: [sim/sim_run.log, sim/sim_meta.json]
+    exclude: [sim/wave.vcd]
+    expire_in: 7 day

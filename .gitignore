@@ -64,3 +64,20 @@ cloudify/.venv/
 cloudify/**/.logs/
 cloudify/15_blueprint_ci/plugin/
 cloudify/15_blueprint_ci/plugin-broken/
+
+# semi 系列临时凭据（root PAT，rails runner 动态生成）
+semi/**/.root-token
+
+# semi 系列本地工作克隆
+semi/03_rtl_lfs/.work/
+semi/04_mr_gate/.dev1-token
+semi/04_mr_gate/data/
+semi/05_runner_farm/data/
+semi/08_lint_gate/.work/
+
+# semi 系列运行时大件（备份 tar / registry 存储 / cosign 二进制 / kubeconfig）
+semi/23_dr/data/
+semi/22_airgap/data/
+semi/25_capstone/data_backup/
+semi/18_artifacts/configs/1.1/cosign
+semi/07_kind_farm/.kubeconfig

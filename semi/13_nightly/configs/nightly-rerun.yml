@@ -1,0 +1,27 @@
+# rtl-gcd · 追加 13：夜间回归 schedule 用的 child pipeline（只重跑失败种子）
+# 触发方式：pipeline schedule 变量 NIGHTLY_RERUN=true + FAILED_SEEDS="7,12"
+# 只实例化失败种子的矩阵子 job（needs 拓扑不变）
+regression_rerun:
+  stage: regression
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  rules:
+    - if: $NIGHTLY_RERUN == "true" && $FAILED_SEEDS
+  parallel:
+    matrix:
+      - SEED: ["1", "2", "3", "4", "5", "6", "7", "8",
+               "9", "10", "11", "12", "13", "14", "15", "16"]
+  script:
+    # SEEDS 变量外的种子直接跳过（parallel 会为每个 SEED 建一个 job，
+    # 用脚本级守卫保证只有失败种子真正执行仿真）
+    - |
+      case ",$FAILED_SEEDS," in
+        *",$SEED,"*) echo "rerun seed $SEED"; python3 sim/run_regression.py ;;
+        *) echo "seed $SEED not in FAILED_SEEDS, skip"; exit 0 ;;
+      esac
+  artifacts:
+    when: always
+    reports:
+      junit: sim/results_seed_${SEED}.xml
+    paths: [sim/summary_seed_*.json]
+    expire_in: 3 day

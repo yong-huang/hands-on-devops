@@ -1,0 +1,29 @@
+# rtl-gcd · .gitlab-ci.yml（08 加装 lint 门禁；09/10 会继续追加 stage）
+stages:
+  - lint
+
+# Pod 内拉 LFS 会走 GitLab 广播的 localhost 端点（不可达）：lint 不需要大文件，跳过 smudge
+variables:
+  GIT_LFS_SKIP_SMUDGE: "1"
+
+# Lint 门禁：verilator -Wall，告警即红，codequality 上 MR widget
+lint:
+  stage: lint
+  image: localhost:28250/semi/eda-base:1.0
+  tags: [eda]
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == "main"
+  script:
+    - verilator --lint-only -Wall rtl/*.v > lint.log 2>&1 || true
+    - cat lint.log
+    - python3 tools/verilator2codequality.py lint.log codequality.json
+    # 门禁按 JSON 条数判（[] 也是非空文件，[ -s ] 会误伤干净 lint）
+    - python3 -c "import json,sys; n=len(json.load(open('codequality.json'))); print(f'lint 告警 {n} 条'); sys.exit(1 if n else 0)"
+    - echo "lint 干净"
+  artifacts:
+    when: always
+    reports:
+      codequality: codequality.json
+    paths: [lint.log, codequality.json]   # 双写：reports 给 MR widget，paths 进归档供 API 拉取
+    expire_in: 7 day

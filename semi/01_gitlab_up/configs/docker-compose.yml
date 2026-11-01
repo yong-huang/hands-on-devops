@@ -1,0 +1,30 @@
+# semi/01_gitlab_up · GitLab CE 单机
+# 端口约定：全系列分配表 28200-28279 段（根 README），本实验占 28200/28222/卷内数据
+# 镜像：官方多架构（arm64 已容器实跑验证）。⚠️ 该镜像源大层（1.5GB）易断流：
+#       拉取失败时跑 ./scripts/fallback_pull.sh（R2 签名 URL 小片续传 + docker load，README 坑 1）
+name: semi-gitlab
+
+services:
+  gitlab:
+    image: docker.1ms.run/gitlab/gitlab-ce:latest
+    container_name: gitlab            # 固定容器名：验收断言 `docker exec gitlab ...` 依赖它
+    labels:
+      dev.orbstack.group: semi-cicd   # OrbStack UI 分组（与 semi/ctl.sh 对应）
+    restart: unless-stopped           # 平台是后续 24 个项目的载体，日常随 Docker 自启
+    shm_size: '256m'                  # Prometheus 默认要的共享内存；monitoring 关了也无害
+    mem_limit: 4500m                  # 4.5GB 限额：减配后稳态 ~3GB，防失控吃满宿主
+    ports:
+      - '28200:80'                    # HTTP —— external_url 同款端口
+      - '28222:22'                    # git+ssh
+      - '28250:5050'                  # Container Registry（06 加装）
+    volumes:
+      - gitlab-config:/etc/gitlab     # 配置/密钥/初始密码（含 secrets，备份实验 23 的主角）
+      - gitlab-logs:/var/log/gitlab
+      - gitlab-data:/var/opt/gitlab   # 全部应用数据：仓库/PostgreSQL/LFS 对象/Registry 存储
+      # 仓库内调优文件盖到卷上同名文件：清单断言 `grep puma gitlab.rb` 针对的就是它
+      - ./gitlab.rb:/etc/gitlab/gitlab.rb:ro
+
+volumes:
+  gitlab-config:
+  gitlab-logs:
+  gitlab-data:

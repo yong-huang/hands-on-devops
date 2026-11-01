@@ -1,0 +1,32 @@
+# semi/02_org_guard · 组织与 IP 保护声明（bootstrap_org.py 读它，幂等 apply）
+# 设计原则：半导体 IP（芯片源码/PDK/版图）不出内网 → 组树即权限边界，受保护分支 + 平台级
+# server hook 双道闸。成员角色沿组层级继承，声明文件即"权限矩阵"，改动重跑 bootstrap 即生效。
+
+url: http://localhost:28200
+
+groups:                          # 自上而下创建；path 相对父组（首项为顶层组）
+  - path: semi
+    name: 半导体设计部门          # 顶层组：creator（root）自动成为 Owner(50)
+  - path: ip
+    name: IP 资产库              # 子组：可见性沿组树继承
+  - path: design
+    name: 设计组
+    members:                    # 挂在 design 组上的成员矩阵
+      - username: dev1
+        access_level: 30        # 30=Developer：可推普通分支；受保护分支/合并/MR 审批无权
+
+users:                          # 实验用户（仅本机靶场，口令非生产强度）
+  - username: dev1
+    name: 设计工程师·一
+    email: dev1@semi.local
+    password: Kq7Wz2mVp9xD4rTb    # 随机 16 位字母数字：GitLab 19 拒常见词组合；纯字母数字免 URL 转义
+
+projects:
+  - path: push-lab              # 全路径 semi/ip/design/push-lab —— 验收用靶场仓库
+    name: Push 靶场
+    initial_branch: main
+    initial_file: README.md     # 首提交内容文件（commits API 走 web 通道，绕开 git push）
+    protected_branches:
+      - name: main
+        push_access_level: 0    # 0=No access：main 禁一切 git 直推（含 Maintainer），只许走 MR
+        merge_access_level: 40  # 40=Maintainer：MR 合并权限在 root（项目 4 演练 API 合并）

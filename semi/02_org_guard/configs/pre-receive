@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# 平台级 server hook（pre-receive）：拦截超大文件直推，IP 保护的一部分。
+# 安装位置：/var/opt/gitlab/gitaly/custom_hooks/pre-receive.d/50-block-huge-blobs
+#          （GitLab 19 全局 hook 必须放 <类型>.d/ 子目录且属主 git:git，见 org_guard.sh install_hook）
+# 原理：git push 先把新对象放进隔离区（quarantine）再跑本 hook；逐个量新引入 blob 的
+#       体积，超过 50MB 直接拒绝并提示走 LFS——LFS 指针只有 ~130 字节，不受影响。
+# 输入：stdin 每行 "<旧sha> <新sha> <ref>"；退出非 0 = 整个 push 被拒。
+set -euo pipefail
+
+MAX_BYTES="${MAX_PUSH_BLOB_BYTES:-52428800}"   # 50MB：超过它的 blob 不许入库
+zero="0000000000000000000000000000000000000000"
+declare -A seen=()                             # 同一次 push 多 ref 共享对象，按 sha 去重
+violations=0
+
+while read -r old new ref; do
+    [ "$new" = "$zero" ] && continue            # 删分支/删 tag：没有新对象，放行
+    # rev-list 列出"这次 push 新引入"的对象（sha + 路径）：
+    #   新建分支：new 减去所有已存在引用；普通 push：old..new 区间
+    if [ "$old" = "$zero" ]; then
+        listing=$(git rev-list --objects "$new" --not --all)
+    else
+        listing=$(git rev-list --objects "$old..$new")
+    fi
+    while read -r sha path; do
+        [ -n "$sha" ] || continue
+        [ -z "${seen[$sha]:-}" ] || continue; seen[$sha]=1
+        line=$(git cat-file --batch-check='%(objecttype) %(objectsize)' <<< "$sha") || continue
+        otype=${line%% *}; osize=${line##* }
+        if [ "$otype" = "blob" ] && [ "$osize" -gt "$MAX_BYTES" ]; then
+            violations=$(( violations + 1 ))
+            {
+                echo "[pre-receive] 拒绝：$ref 引入超大文件 ${path:-$sha}（$(( osize / 1048576 ))MB > 50MB）"
+                echo "[pre-receive] 大文件请走 LFS：git lfs track \"<模式>\" 后重新提交（指针仅 ~130B，不受此限制）"
+            } >&2
+        fi
+    done <<< "$listing"
+done
+
+[ "$violations" -eq 0 ] || exit 1
+exit 0

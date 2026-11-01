@@ -1,0 +1,17 @@
+{
+ "window_days": 30,
+ "pipelines_total": 67,
+ "pipelines_success": 37,
+ "pipelines_failed": 27,
+ "success_rate_pct": 55.2,
+ "change_failure_rate_pct": 40.3,
+ "deploy_frequency_per_day": 0.13,
+ "releases": 4,
+ "mttr_minutes": 6.2,
+ "avg_pipeline_minutes": 0.6,
+ "worst_stage": {
+  "stage": "regression",
+  "seconds": 942.0,
+  "share_pct": 71.3
+ }
+}

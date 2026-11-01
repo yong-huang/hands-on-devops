@@ -1,0 +1,10 @@
+{
+ "expected": 16,
+ "collected": 1,
+ "passed": 15,
+ "failed": 1,
+ "failed_seeds": [
+  "7"
+ ],
+ "verdict": "fail"
+}

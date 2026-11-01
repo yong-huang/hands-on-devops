@@ -1,0 +1,22 @@
+# runner-k8s 的 config.toml（ConfigMap 挂载进 runner Pod）
+# 占位符：__HOST_IP__（Mac 局域网 IP，Pod 拿它回连宿主 GitLab）、__TOKEN__（glrt-）
+concurrent = 2
+check_interval = 3
+
+[[runners]]
+  name = "runner-k8s"
+  url = "http://__HOST_IP__:28200/"
+  token = "__TOKEN__"
+  executor = "kubernetes"
+  clone_url = "http://__HOST_IP__:28200/"
+  [runners.kubernetes]
+    namespace = "gitlab"
+    image = "docker.m.daocloud.io/library/alpine:3"
+    image_pull_secrets = []
+    cpu_request = "100m"
+    memory_request = "64Mi"
+    cpu_limit = "100m"
+    memory_limit = "128Mi"
+    service_account = "gitlab-runner"
+    # helper 镜像走 daocloud（registry.gitlab.com 在节点上被墙，pod 卡 ContainerCreating）
+    helper_image = "docker.m.daocloud.io/gitlab/gitlab-runner-helper:arm64-v19.5.2"

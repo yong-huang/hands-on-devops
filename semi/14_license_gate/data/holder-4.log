@@ -1,0 +1,4 @@
+[with_license] lease wait 0s（池满，排队中）
+[with_license] lease wait 5s（池满，排队中）
+[with_license] lease acquired: e75fe725（holder=job-4）
+[with_license] lease released (rc=0)
