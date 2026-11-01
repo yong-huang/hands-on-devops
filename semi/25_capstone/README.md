@@ -38,6 +38,8 @@
 ./capstone.sh all         # bootstrap + accept 一条龙
 ```
 
+磁盘管理：`./ctl.sh disk` 分类报表；`./ctl.sh scrub` 列出可再生大件（dry-run），`scrub --apply` 真删（.work 工作副本/旧备份/tmp 残留）——GitLab 卷内 LFS 走 rtl_lfs.sh clean。
+
 `accept` 的真实输出（实测 2026-11-01，节选；11/⑫ 各有复合断言双行）：
 
 ```
