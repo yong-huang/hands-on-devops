@@ -75,16 +75,16 @@ cd labs/06_ansible_role_vault && ./ansible_role_vault.sh
 | 18 | Gitea + Actions | Gitea Actions | ✅ |
 | 19 | Woodpecker（⚠️ 兼容性诊断） | Woodpecker | ⚠️ 部分验证 |
 | 20 | 完整 CI/CD | Gitea Actions | ✅ |
-| 21 | Flux GitOps | Flux | ⬜ |
-| 22 | 策略即代码（OPA） | OPA/Conftest | ⬜ |
-| 23 | IaC 安全扫描 | tfsec/trivy | ⬜ |
-| 24 | 密钥治理 | SOPS/age | ⬜ |
-| 25 | 集成点③：合规流水线 | — | ⬜ |
-| 26 | 监控栈 | Prometheus/Grafana | ⬜ |
-| 27 | 集中日志 | Loki | ⬜ |
-| 28 | 配置漂移检测与治理 | TF/Ansible | ⬜ |
-| 29 | 备份与灾难恢复 | — | ⬜ |
-| 30 | 终极串联——DevOps 一体机 | 全部 | ⬜ |
+| 21 | Flux GitOps | Flux | ✅ 真机验证 |
+| 22 | 策略即代码（OPA） | OPA/Conftest | ✅ 真机验证 |
+| 23 | IaC 安全扫描 | tfsec/trivy | ✅ 真机验证 |
+| 24 | 密钥治理 | SOPS/age | ✅ 真机验证 |
+| 25 | 集成点③：合规流水线 | conftest/trivy/gitleaks | ✅ 真机验证 |
+| 26 | 监控栈 | Prometheus/Grafana | ✅ 真机验证 |
+| 27 | 集中日志 | Loki | ✅ 真机验证 |
+| 28 | 配置漂移检测与治理 | TF/Ansible | ✅ 真机验证 |
+| 29 | 备份与灾难恢复 | tar/volume | ✅ 真机验证 |
+| 30 | 终极串联——DevOps 一体机 | 全部 | ✅ 真机验证 |
 
 ## CI/CD 进阶系列（cicd/）
 
