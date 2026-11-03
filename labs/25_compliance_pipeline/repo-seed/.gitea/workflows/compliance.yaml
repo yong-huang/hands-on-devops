@@ -1,0 +1,34 @@
+# =============================================================================
+# 实验 25 · 合规流水线（集成点③）：三道门串行，任一红即全链阻断
+#   gate1 策略门 conftest  —— manifests/ 全部过 OPA 规则
+#   gate2 安全门 trivy     —— iac/ 全部过 HIGH+ 阈值
+#   gate3 密钥门 gitleaks  —— 全仓库无明文凭证
+# =============================================================================
+name: compliance
+on:
+  push:
+    branches: [main]
+
+jobs:
+  gates:
+    runs-on: lab
+    steps:
+      # Gitea Actions 不会自动拉源码：job 容器的 workspace 起步为空，
+      # 没有 checkout 时 manifests/ 等目录全部不存在（实测 stat no such file）
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: gate1-policy
+        run: |
+          echo "▶ gate1: conftest 策略门"
+          conftest test manifests/ -p policies/
+          echo "✅ gate1 passed"
+      - name: gate2-security
+        run: |
+          echo "▶ gate2: trivy 安全门（HIGH+ 阻断）"
+          trivy config --severity HIGH,CRITICAL --exit-code 1 iac/
+          echo "✅ gate2 passed"
+      - name: gate3-secret
+        run: |
+          echo "▶ gate3: gitleaks 密钥门"
+          gitleaks detect --no-git -c .gitleaks.toml --source .
+          echo "✅ gate3 passed"

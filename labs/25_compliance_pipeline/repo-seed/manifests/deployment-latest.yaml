@@ -1,0 +1,18 @@
+resource:
+  type: kubernetes
+  kind: Deployment
+  metadata:
+    labels:
+      app: web
+      team: platform
+  spec:
+    template:
+      spec:
+        containers:
+          - name: web
+            image: nginx:latest
+            resources:
+              limits:
+                cpu: 100m
+            securityContext:
+              runAsNonRoot: true

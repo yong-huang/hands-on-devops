@@ -1,12 +1,38 @@
+# =============================================================================
+# 26 · 监控栈：Prometheus + Grafana + node-exporter + pushgateway + Alertmanager
+# 钉版本 tag（:latest 会漂移）；全部镜像 arm64 可用
+# =============================================================================
 services:
   prometheus:
-    image: prom/prometheus:latest
-    ports: ["9090:9090"]
-    volumes: ["./prometheus.yml:/etc/prometheus/prometheus.yml"]
+    image: prom/prometheus:v2.53.0
+    ports: ["29190:9090"]
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./alerts.yml:/etc/prometheus/alerts.yml:ro
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
   grafana:
-    image: grafana/grafana:latest
-    ports: ["3001:3000"]
-    environment: [GF_SECURITY_ADMIN_PASSWORD=admin]
+    image: grafana/grafana:11.1.0
+    ports: ["29101:3000"]
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./configs/grafana/dashboards:/var/lib/grafana/dashboards:ro
   node-exporter:
-    image: prom/node-exporter:latest
-    ports: ["9100:9100"]
+    image: prom/node-exporter:v1.8.2
+    ports: ["29102:9100"]
+  pushgateway:
+    image: prom/pushgateway:v1.9.0
+    ports: ["29191:9091"]
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    ports: ["29193:9093"]
+    volumes:
+      - ./configs/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+  webhook-receiver:
+    image: python:3.12-slim
+    ports: ["29194:9000"]
+    volumes:
+      - ./configs/webhook_receiver.py:/receiver.py:ro
+      - ./tmp:/data
+    command: ["python3", "/receiver.py"]

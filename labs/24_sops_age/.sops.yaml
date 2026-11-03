@@ -1,0 +1,5 @@
+# 只加密值（encrypted_regex），键名与结构保持明文——git diff/review 只看得见"哪个值变了"
+creation_rules:
+  - path_regex: secrets/.*\.yaml$
+    encrypted_regex: '^(data|stringData|password|username|endpoint|token)'
+    age: age1tcypxrwrg5dunr356rk7phsrfea4hcjk72wadeuesg4pm6z085qs9y9598

@@ -1,0 +1,10 @@
+# Loki ruler 规则：ERROR 速率 > 0 触发（local storage 规则须挂 /loki/rules/fake/<ns>.yml）
+groups:
+  - name: ci-log-alerts
+    rules:
+      - alert: CILogErrorRate
+        expr: sum(count_over_time({app="ci"} |= "ERROR" [1m])) > 0
+        for: 0s
+        labels: {severity: critical}
+        annotations:
+          summary: "CI 日志 1 分钟内出现 ERROR"

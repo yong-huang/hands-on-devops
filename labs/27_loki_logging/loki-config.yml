@@ -1,0 +1,29 @@
+# Loki 3.x 单机（monolithic）：filesystem 存储 + 本地 ruler
+auth_enabled: false
+server:
+  http_listen_port: 3100
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore: {store: inmemory}
+schema_config:
+  configs:
+    - from: "2024-01-01"
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index: {prefix: index_, period: 24h}
+ruler:
+  alertmanager_url: http://alertmanager:9093
+  # Loki 3.1 ruler 无 enable_api_v2 字段（实测 unmarshal 报错），默认打 AM v1 API
+  # → AM 钉 v0.25.0（v0.27 已移除 v1 API，告警 410 Gone 送不到）
+  ring: {kvstore: {store: inmemory}}
+  enable_api: true
+limits_config:
+  allow_structured_metadata: true

@@ -1,0 +1,21 @@
+# 自定义凭证规则：扫描器内置的允许清单会放行 AWS 文档示例 key，
+# 自带规则也覆盖不到 TF variable 默认值——规则自己写，也是代码。
+title = "hands-on lab 23 custom secret rules"
+
+[[rules]]
+id = "tf-plaintext-password-default"
+description = "Terraform variable 默认值里的明文口令"
+regex = '''default\s*=\s*"([^"]{8,})"'''
+keywords = ["password", "secret", "token"]
+path = '''\.tf$'''
+
+[[rules]]
+id = "aws-access-key-id"
+description = "AWS Access Key ID 硬编码"
+regex = '''AKIA[0-9A-Z]{16}'''
+
+[[rules]]
+id = "aws-secret-access-key"
+description = "AWS Secret Access Key 硬编码"
+regex = '''(?i)secret_key\s*=\s*"[A-Za-z0-9/+=]{40}"'''
+

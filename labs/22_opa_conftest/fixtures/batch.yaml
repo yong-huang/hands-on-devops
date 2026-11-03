@@ -1,0 +1,40 @@
+# 多文档：conftest 对每个文档独立求值，一个违规即整体失败（CI 门禁语义）
+# 注意输入契约：kind/spec 必须在 resource 之下（与 JSON fixtures 同构，
+# 写错层级时策略规则全体空转、违规静默通过——本实验的隐藏考点）
+resource:
+  type: kubernetes
+  kind: Deployment
+  metadata:
+    labels:
+      app: web
+      team: platform
+  spec:
+    template:
+      spec:
+        containers:
+          - name: web
+            image: nginx:1.27
+            resources:
+              limits:
+                cpu: 100m
+            securityContext:
+              runAsNonRoot: true
+---
+resource:
+  type: kubernetes
+  kind: Deployment
+  metadata:
+    labels:
+      app: web
+      team: platform
+  spec:
+    template:
+      spec:
+        containers:
+          - name: sidecar
+            image: nginx:latest
+            resources:
+              limits:
+                cpu: 100m
+            securityContext:
+              runAsNonRoot: true

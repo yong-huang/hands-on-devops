@@ -1,0 +1,10 @@
+{
+  "title": "CI 流水线（实验 26）",
+  "uid": "ci-pipeline-26",
+  "panels": [
+    {"type": "timeseries", "title": "构建次数", "targets": [{"expr": "sum(ci_builds_total) by (status)"}]},
+    {"type": "timeseries", "title": "构建时长（秒）", "targets": [{"expr": "ci_build_duration_seconds"}]},
+    {"type": "gauge", "title": "构建成功率", "targets": [{"expr": "sum(ci_builds_total{status=\"success\"}) / sum(ci_builds_total)"}]}
+  ],
+  "schemaVersion": 39
+}

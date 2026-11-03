@@ -1,1 +1,1 @@
-{"resource":{"type":"kubernetes","kind":"Deployment","spec":{"template":{"spec":{"containers":[{"name":"web","image":"nginx:latest","securityContext":{"runAsNonRoot":true}}]}}}}}
+{"resource": {"type": "kubernetes", "kind": "Deployment", "metadata": {"labels": {"app": "web", "team": "platform"}}, "spec": {"template": {"spec": {"containers": [{"name": "web", "image": "nginx:latest", "securityContext": {"runAsNonRoot": true}}]}}}}}

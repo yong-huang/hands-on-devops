@@ -1,0 +1,17 @@
+# 期望配置（ansible 管容器内文件）：--check 检测漂移，正常 apply 回正
+- hosts: drift28-web
+  gather_facts: false
+  vars:
+    ansible_connection: community.docker.docker
+    ansible_python_interpreter: /usr/local/bin/python3
+  tasks:
+    - name: baseline motd（漂移标记板）
+      ansible.builtin.copy:
+        content: "drift28 baseline\n"
+        dest: /etc/motd
+
+    - name: web root index（期望页面）
+      ansible.builtin.copy:
+        content: "drift28 expected page\n"
+        dest: /srv/index.html
+        mode: "0644"

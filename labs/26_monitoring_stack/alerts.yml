@@ -1,0 +1,18 @@
+# 告警规则：构建失败率与队列积压——for: 0s 教学即时触发
+groups:
+  - name: ci-pipeline
+    rules:
+      - alert: BuildFailureRateHigh
+        # 教学：counter 只推了一个样本时 rate() 无从计算（需窗口内 >=2 点），
+        # 即时值语义在本实验更稳：有任何失败即触发（生产可用 increase/rate）
+        expr: sum(ci_builds_total{status="failure"}) > 0
+        for: 0s
+        labels: {severity: critical}
+        annotations:
+          summary: "CI 构建失败率 > 0（近 10 分钟）"
+      - alert: QueueBacklog
+        expr: ci_queue_depth > 0
+        for: 0s
+        labels: {severity: warning}
+        annotations:
+          summary: "CI 队列积压（depth > 0）"
