@@ -23,7 +23,9 @@ push_demo_image() {
     mkdir -p ctx
     cat > ctx/Dockerfile <<'EOF'
 FROM alpine:3.20
-RUN apk add --no-cache curl
+# 本网络对 dl-cdn.alpinelinux.org 不友好——先换 TUNA 源再装包（失败快速暴露）
+RUN sed -i 's#dl-cdn.alpinelinux.org#mirrors.tuna.tsinghua.edu.cn#g' /etc/apk/repositories && \
+    apk add --no-cache curl
 CMD ["crond", "-f"]
 EOF
     docker build -q -t "$IMG" ctx >/dev/null
@@ -66,7 +68,8 @@ do_tamper() {
     mkdir -p ctx
     cat > ctx/Dockerfile <<'EOF'
 FROM alpine:3.20
-RUN apk add --no-cache curl && echo "malicious" > /etc/malware
+RUN sed -i 's#dl-cdn.alpinelinux.org#mirrors.tuna.tsinghua.edu.cn#g' /etc/apk/repositories && \
+    apk add --no-cache curl && echo "malicious" > /etc/malware
 CMD ["crond", "-f"]
 EOF
     docker build -q -t "$IMG" ctx >/dev/null

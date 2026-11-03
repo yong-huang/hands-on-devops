@@ -33,6 +33,17 @@ wait_http() {
     echo "    [ok] $name 就绪"
 }
 
+# act_runner 的 job 结果不打印到自己的 stdout（只流回 Gitea）——
+# 在 runner 日志里 grep ✅ 永远等不到。权威状态源：Gitea DB（镜像自带 sqlite3）。
+# status 字典：1=Success 2=Failure 3=Cancelled 4=Skipped 5=Waiting 6=Running 7=Blocked
+last_run_status() {
+    docker exec "$G" sqlite3 /data/gitea/gitea.db \
+        "SELECT status FROM action_run ORDER BY id DESC LIMIT 1" 2>/dev/null || echo ""
+}
+status_name() {
+    case "$1" in 1) echo Success;; 2) echo Failure;; 3) echo Cancelled;; 4) echo Skipped;; 5) echo Waiting;; 6) echo Running;; 7) echo Blocked;; *) echo "unknown($1)";; esac
+}
+
 do_apply() {
     step "apply" "起 Gitea（Actions）+ act_runner"
     docker network create "$NET" >/dev/null 2>&1 || true
@@ -69,21 +80,19 @@ do_apply() {
     fi
     git -C repo push -q "http://devops:devops123@localhost:3355/devops/demo.git" main 2>/dev/null || true
 
-    step "apply" "等待流水线"
-    local n=0 status
+    step "apply" "等待流水线（状态源：Gitea DB）"
+    local n=0 st=""
     while :; do
-        sleep 5; n=$((n+1)); [ $n -gt 30 ] && { echo "    [!] 超时" >&2; exit 1; }
-        status=$(docker logs --since 5s "$R" 2>&1 | grep -aoE "✅|❌" | tail -1)
-        [ -n "$status" ] && break
-        local log_line
-        log_line=$(docker logs --tail 1 "$R" 2>&1)
-        echo "$log_line" | grep -q "✅" && break
+        sleep 3; n=$((n+1)); [ $n -gt 40 ] && { note "[!] 超时——看 $GU/devops/demo/actions" >&2; exit 1; }
+        st=$(last_run_status)
+        case "$st" in
+            1) break ;;
+            2) echo "        ❌ 流水线 Failure——看 $GU/devops/demo/actions" >&2; exit 1 ;;
+            5|6|"") echo "        …$(status_name "${st:-6}")" ;;
+            *) echo "        ❌ 流水线异常状态：$(status_name "$st")" >&2; exit 1 ;;
+        esac
     done
-    # 从 runner 日志判定
-    local ok
-    ok=$(docker logs "$R" 2>&1 | grep -ac "✅" || true)
-    [ "$ok" -gt 0 ] && note "[ok] 流水线全绿（runner 日志含 ✅）" \
-        || { note "[x] 未检测到成功标记" >&2; exit 1; }
+    note "[ok] 流水线全绿（Gitea status=Success）"
 }
 
 do_fail() {
@@ -94,11 +103,14 @@ do_fail() {
 EOF
     git -C repo add -A && git -C repo -c user.email=lab@local -c user.name=lab commit -qm inject
     git -C repo push -q "http://devops:devops123@localhost:3355/devops/demo.git" main 2>/dev/null || true
-    sleep 25
-    local err
-    err=$(docker logs --since 30s "$R" 2>&1 | grep -ac "❌\|exit code 1" || true)
-    [ "$err" -gt 0 ] && note "[检出] 注入被抓住（runner 日志含 ❌/exit 1）" \
-        || note "[i] 注入结果待人工确认"
+    local n=0 st=""
+    while :; do
+        sleep 3; n=$((n+1)); [ $n -gt 20 ] && break
+        st=$(last_run_status)
+        { [ "$st" = "2" ] || [ "$st" = "1" ]; } && break
+    done
+    [ "$st" = "2" ] && note "[检出] 注入被抓住（run status=Failure，流水线阻断）" \
+        || { echo "        ❌ 注入未被标记 Failure（status=$(status_name "$st")）" >&2; exit 1; }
     git -C repo revert --no-edit HEAD >/dev/null 2>&1 || true
     git -C repo push -q "http://devops:devops123@localhost:3355/devops/demo.git" main 2>/dev/null || true
     note "[ok] 已 revert"

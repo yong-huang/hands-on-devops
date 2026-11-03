@@ -10,5 +10,15 @@
   vars:
     ansible_python_interpreter: /usr/local/bin/python3
   gather_facts: true
+  pre_tasks:
+    # 换源在 role 首任务里做（tuna，实测 13s）；这里只加 apt 超时——
+    # 哪天镜像源也挂了，60s 内失败暴露，而不是无限挂起
+    - name: 写 apt 超时（快速失败保护）
+      ansible.builtin.copy:
+        content: |
+          Acquire::http::Timeout "15";
+          Acquire::https::Timeout "15";
+          Acquire::Retries "2";
+        dest: /etc/apt/apt.conf.d/99ci-timeout
   roles:
     - role: nginx-pack

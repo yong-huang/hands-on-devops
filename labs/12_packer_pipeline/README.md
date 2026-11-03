@@ -113,6 +113,11 @@ post-processors {                     # 嵌套块 = 顺序链：tag 的产物交
   实验 14 的 SBOM/签名再补"里面是什么、谁签的名"。
 - **provisioner 选型？** shell 最通用；ansible/puppet 复用已有配置管理资产；
   这正是"配置管理资产在镜像时代继续增值"的路径。
+- **构建"卡住"好几分钟是坏了吗？** 多半不是：apt update 走 deb.debian.org
+  （Fastly CDN）国内实测 220s，而早期脚本把输出全重定向进 tmp_build.log，
+  控制台零输出，看起来就是死锁（实为慢下载，DNS 解析只需毫秒）。role 现已把
+  源换到 mirrors.tuna.tsinghua.edu.cn（实测 13s；aliyun 192s / ustc 230s 也慢），
+  脚本改为 tee 实时打印。Ctrl+C 中断不算失败、不触发重试，重跑即可（换源幂等）。
 
 ## 8. 总结
 

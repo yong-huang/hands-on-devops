@@ -1,4 +1,10 @@
 ---
+- name: 换用清华 debian 源（deb.debian.org 走 Fastly CDN，国内实测 update 220s；tuna 13s）
+  ansible.builtin.replace:
+    path: /etc/apt/sources.list.d/debian.sources
+    regexp: 'deb\.debian\.org'
+    replace: mirrors.tuna.tsinghua.edu.cn
+
 - name: 安装 nginx（apt 原生幂等）
   ansible.builtin.apt:
     name: nginx

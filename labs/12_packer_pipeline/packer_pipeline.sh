@@ -19,13 +19,21 @@ do_build() {
     step "build" "packer init（校验插件；已离线安装到 ~/.packer.d/plugins）"
     packer init nginx.pkr.hcl 2>&1 | sed 's/^/        /' || true
 
-    step "build" "packer build：builder → ansible provisioner → 推 :5500"
-    # 插件经 SSH(端口转发)连容器，偶发抖动——失败自动重试一次
+    step "build" "packer build：builder → ansible provisioner → 推 :5500（输出实时流式打印）"
+    # 实时流式打印：历史上输出全进日志，控制台 6 分钟黑屏像卡死（实为 apt 慢源），已改 tee 直打
     local rc=0
-    packer build -var "app_version=1.0.0" nginx.pkr.hcl > tmp_build.log 2>&1 || rc=$?
+    packer build -var "app_version=1.0.0" nginx.pkr.hcl 2>&1 | tee tmp_build.log || rc=$?
+    if LC_ALL=C grep -aqE "User interrupted|Cleanly cancelled" tmp_build.log; then
+        note "[!] 构建被手动中断（Ctrl+C）——不是故障，不重试；重跑本命令即可"
+        exit 130
+    fi
     if [ $rc -ne 0 ]; then
-        note "[i] 第一次失败（模拟架构下 SSH 偶发抖动），重试……"
-        packer build -var "app_version=1.0.0" nginx.pkr.hcl > tmp_build.log 2>&1 || rc=$?
+        note "[i] 第一次失败（网络抖动），自动重试一次……"
+        packer build -var "app_version=1.0.0" nginx.pkr.hcl 2>&1 | tee tmp_build.log || rc=$?
+        if LC_ALL=C grep -aqE "User interrupted|Cleanly cancelled" tmp_build.log; then
+            note "[!] 重试被手动中断，退出"
+            exit 130
+        fi
     fi
     LC_ALL=C grep -a "Builds finished" tmp_build.log >/dev/null || { tail -6 tmp_build.log | LC_ALL=C sed 's/^/        /'; exit 1; }
     LC_ALL=C grep -aE "docker-push|Builds finished" tmp_build.log | tail -3 | LC_ALL=C sed 's/^/        /'

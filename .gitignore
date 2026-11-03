@@ -81,3 +81,13 @@ semi/22_airgap/data/
 semi/25_capstone/data_backup/
 semi/18_artifacts/configs/1.1/cosign
 semi/07_kind_farm/.kubeconfig
+
+# ---- registry auth（脚本每次运行由 htpasswd -Bbn 重新生成，运行时产物不入库）----
+labs/13_registry_governance/auth/
+labs/14_sbom_signing/ctx/
+labs/12_packer_pipeline/tmp_build.log
+
+# ---- SOPS/age 实验运行时（私钥与密文全部由脚本重生成）----
+labs/24_sops_age/tmp/
+labs/27_loki_logging/.logs/
+labs/29_backup_restore/backups/
