@@ -20,6 +20,16 @@ WORKER_A="tmp/worker-a"
 WORKER_B="tmp/worker-b"
 LOCK_ID="11111111-2222-3333-4444-555555555555"
 
+# 自家 ObjStor (Rust S3 兼容存储, github.com/yong-huang/objstor)——
+# minio 镜像在受限网络全线 denied 时的回退后端 (宿主进程模式, 免镜像构建)
+# ⚠️ 此行在脚本自身 cd 之后执行, 必须用 PWD (而非 $0) 推导, 否则相对式调用必挂
+OBJSTOR_SRC="$(cd "$PWD/../../.." && pwd)/objstor"
+OBJSTOR_DATA="$PWD/tmp/objstor-data"
+OBJSTOR_LOG="$PWD/tmp/objstor.log"
+BACKEND_KIND="minio"
+OBJSTOR_PID=""
+OBJSTOR_PID_FILE="$PWD/tmp/objstor.pid"
+
 step() { echo; echo "=====> [$1] $2"; }
 note() { echo "        $1"; }
 
@@ -38,18 +48,60 @@ make_worker() {
 }
 
 do_backend() {
-    step "backend" "启动 MinIO（S3 兼容）并初始化远端后端"
+    step "backend" "初始化远端后端 (MinIO 优先; 镜像拉不到时回退自家 ObjStor)"
     docker network create tf03-net >/dev/null 2>&1 || true
-    docker rm -f tf03-minio >/dev/null 2>&1 || true
-    # 宿主端口 92xx：一次性 minio 专用段（91xx 归 lab 05 长驻靶场，90xx 归 mlops；容器内仍是 9000）
-    docker run -d --name tf03-minio --network tf03-net -p 9200:9000 -p 9201:9001 \
-        -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
-        minio/minio server /data --console-address ":9001" >/dev/null
-    local i=0
-    until curl -fsS http://localhost:9200/minio/health/live >/dev/null 2>&1; do
-        i=$((i+1)); [ $i -gt 30 ] && { echo "    [!] MinIO 30s 未就绪" >&2; exit 1; }
-        sleep 1
-    done
+    if docker pull minio/minio:latest >/dev/null 2>&1; then
+        BACKEND_KIND="minio"
+        docker rm -f tf03-minio >/dev/null 2>&1 || true
+        # 宿主端口 92xx：一次性 minio 专用段（91xx 归 lab 05 长驻靶场，90xx 归 mlops；容器内仍是 9000）
+        docker run -d --name tf03-minio --network tf03-net -p 9200:9000 -p 9201:9001 \
+            -e MINIO_ROOT_USER=minioadmin -e MINIO_ROOT_PASSWORD=minioadmin \
+            minio/minio server /data --console-address ":9001" >/dev/null
+        local i=0
+        until curl -fsS http://localhost:9200/minio/health/live >/dev/null 2>&1; do
+            i=$((i+1)); [ $i -gt 30 ] && { echo "    [!] MinIO 30s 未就绪" >&2; exit 1; }
+            sleep 1
+        done
+    else
+        BACKEND_KIND="objstor"
+        echo "    [!] minio/minio 拉取失败 (Docker Hub 限流+DNS 污染) —— 回退自家 ObjStor (Rust S3 兼容存储, 宿主进程模式)"
+        local bin="$OBJSTOR_SRC/target/release/objstor"
+        [ -x "$bin" ] || { echo "    构建 ObjStor release 二进制 (首次约 1 分钟)..."; ( cd "$OBJSTOR_SRC" && cargo build --release >/dev/null ); }
+        [ -x "$bin" ] || { echo "    [!] ObjStor 构建失败 (需要 Rust 工具链)" >&2; exit 1; }
+        rm -rf "$OBJSTOR_DATA" && mkdir -p "$OBJSTOR_DATA/data/config"
+        # 专属配置: S3 端口 9200 (与 MinIO 模式同端口, 下游 Terraform/脚本零改动)。
+        # ⚠️ ObjStor 从进程 CWD 读硬编码相对路径 data/config/objstor.json
+        # (见 src/config/mod.rs load_or_create) —— 所以必须 cd 进专属目录启动
+        OBJSTOR_DATA="$OBJSTOR_DATA" python3 - <<'PY'
+import json, os
+data = os.environ["OBJSTOR_DATA"]
+cfg = {
+    "server": {"host": "0.0.0.0", "port": 9200, "s3_port": 9200, "enable_tls": False,
+               "tls_cert": "", "tls_key": "", "max_request_size": 5368709120,
+               "log_level": "info", "log_dir": "./logs"},
+    "storage": {"data_dir": os.path.join(data, "data"),
+                "pools": [{"id": "pool-001", "path": os.path.join(data, "pool"),
+                           "capacity": 107374182400, "max_objects": 1000000,
+                           "quota_enabled": False, "tier": "hot"}],
+                "scheduler": {"strategy": "least_loaded", "rebalance_threshold": 0.2}},
+    "ai": {"enabled": False, "api_endpoint": "", "api_key": "", "model": "",
+           "max_tokens": 1024, "timeout_secs": 15, "auto_tag": False}
+}
+open(os.path.join(data, "data", "config", "objstor.json"), "w").write(json.dumps(cfg, indent=2))
+PY
+        ( cd "$OBJSTOR_DATA" && OBJSTOR_DATA_DIR="$OBJSTOR_DATA" "$bin" >> "$OBJSTOR_LOG" 2>&1 & echo $! > "$OBJSTOR_PID_FILE" )
+        OBJSTOR_PID=$(cat "$OBJSTOR_PID_FILE")
+        local i=0
+        until curl -fsS http://localhost:9200/health >/dev/null 2>&1; do
+            i=$((i+1)); [ $i -gt 30 ] && { echo "    [!] ObjStor 30s 未就绪 (日志: $OBJSTOR_LOG)" >&2; exit 1; }
+            sleep 1
+        done
+        # 种下与 versions.tf 一致的 minioadmin 凭据 (已存在则忽略)
+        curl -sf -X POST http://localhost:9200/api/v1/access-keys \
+            -H "Content-Type: application/json" \
+            -d '{"access_key_id":"minioadmin","secret_key":"minioadmin"}' >/dev/null 2>&1 \
+            || true
+    fi
     ensure_bucket
     # 清掉上次失败运行可能遗留的本地对象（被 state rm 遗忘的资源不在 destroy 范围内）
     docker rm -f tf03-keeper >/dev/null 2>&1 || true
@@ -64,8 +116,12 @@ do_backend() {
     # 本地 .terraform 缓存可能存有旧 state 快照，不清掉会"复活"已销毁的资源
     rm -rf configs/.terraform
     $TF init -input=false
-    note "state 已写入 MinIO：bucket=tfstate key=lab03/terraform.tfstate"
-    docker exec tf03-minio sh -c 'ls -la /data/tfstate/lab03/' 2>/dev/null | sed 's/^/        /' || true
+    note "state 已写入远端后端：bucket=tfstate key=lab03/terraform.tfstate"
+    if [ "$BACKEND_KIND" = "minio" ]; then
+        docker exec tf03-minio sh -c 'ls -la /data/tfstate/lab03/' 2>/dev/null | sed 's/^/        /' || true
+    else
+        note "ObjStor 后端: 对象存于自家存储池 ($OBJSTOR_DATA/data)"
+    fi
 }
 
 do_apply() {
@@ -167,7 +223,12 @@ do_clean() {
     # state rm 遗忘掉的资源 TF 不会销毁——手工兜底（这正是 state rm 的含义）
     docker rm -f tf03-keeper >/dev/null 2>&1 || true
     docker volume rm -f tf03-db tf03-orphan >/dev/null 2>&1 || true
-    docker rm -f tf03-minio >/dev/null 2>&1 || true
+    docker rm -f tf03-minio tf03-objstor >/dev/null 2>&1 || true
+    if [ -n "${OBJSTOR_PID:-}" ] && [ -n "${OBJSTOR_PID_FILE:-}" ] && [ -f "$OBJSTOR_PID_FILE" ]; then
+        OBJSTOR_PID=$(cat "$OBJSTOR_PID_FILE")
+        kill "${OBJSTOR_PID}" 2>/dev/null || true
+    fi
+    rm -f "${OBJSTOR_PID_FILE:-/nonexistent}"
     docker network rm tf03-net >/dev/null 2>&1 || true
     rm -f /tmp/lab03_lock*.log
     rm -rf tmp
