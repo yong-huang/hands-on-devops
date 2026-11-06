@@ -91,3 +91,5 @@ labs/12_packer_pipeline/tmp_build.log
 labs/24_sops_age/tmp/
 labs/27_loki_logging/.logs/
 labs/29_backup_restore/backups/
+# ObjStor 回退后端的本地数据目录 (labs/05)
+labs/05_lab_foundation/objstor-data/

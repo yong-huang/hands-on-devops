@@ -70,7 +70,11 @@ resource "docker_volume" "registry_data" {
 }
 
 # ---- S3 兼容存储：state 后端 / 备份目标 ----
+# minio 镜像在受限网络全线 denied 时, lab_foundation.sh 以 -var enable_minio=false
+# 跳过本资源, 改用宿主进程 ObjStor 在同一端口 (9100) 提供同款 S3 API
 resource "docker_container" "minio" {
+  count = var.enable_minio ? 1 : 0
+
   name  = "lab-minio"
   image = "minio/minio:latest"
 
@@ -90,7 +94,7 @@ resource "docker_container" "minio" {
   env = ["MINIO_ROOT_USER=minioadmin", "MINIO_ROOT_PASSWORD=minioadmin"]
 
   volumes {
-    volume_name    = docker_volume.minio_data.name
+    volume_name    = docker_volume.minio_data[0].name
     container_path = "/data"
   }
 
@@ -106,6 +110,8 @@ resource "docker_container" "minio" {
 }
 
 resource "docker_volume" "minio_data" {
+  count = var.enable_minio ? 1 : 0
+
   name = "lab-minio-data"
 }
 

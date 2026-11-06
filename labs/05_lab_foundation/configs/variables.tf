@@ -31,3 +31,9 @@ variable "gitea_admin_password" {
   default     = "devops123"
   sensitive   = true
 }
+
+variable "enable_minio" {
+  description = "拉起 lab-minio 容器（false = 宿主进程 ObjStor 在 9100 提供同款 S3 API，规避 minio 镜像不可拉取）"
+  type        = bool
+  default     = true
+}
