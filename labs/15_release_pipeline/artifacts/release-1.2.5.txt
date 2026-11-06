@@ -1,0 +1,7 @@
+版本:        1.2.5
+镜像:        localhost:5500/demo/webapp:1.2.5
+镜像 digest: sha256:f22ddb18ff82d105ce3fdde188d0daa3121a75b1447c7459cb32ecf898642f3c
+SBOM 校验和: 034654a74890092b42a7fb83022d16c8e93ae94157ddb8e00e4f723fd961adc0
+签名 tag:    sha256-f22ddb18ff82d105ce3fdde188d0daa3121a75b1447c7459cb32ecf898642f3c.sig
+部署位置:    demo-webapp@devops-lab :28099
+冒烟结果:    healthz 200 @ 2026-11-06 22:05:51
