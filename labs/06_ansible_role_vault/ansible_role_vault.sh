@@ -26,6 +26,12 @@ ensure_prereq() {
         ansible-vault encrypt group_vars/all/vault.yml >/dev/null 2>&1
         note "[ok] vault.yml 已加密（密文入库，口令在 tmp/vault-pass）"
     fi
+    # 前置强校验: 靶场 (lab 05) 不在跑时, 动态清单发现 0 台主机, playbook
+    # 会整体 skip 且不报错 —— 与其静默跳过, 不如响亮失败并指路
+    if ! docker ps --format '{{.Names}}' | grep -qx 'lab-nginx'; then
+        echo "!! 靶场未运行 (缺 lab-nginx 容器) —— 先执行: ../05_lab_foundation/lab_foundation.sh apply（或 make lab-up）" >&2
+        exit 1
+    fi
 }
 
 do_apply() {
