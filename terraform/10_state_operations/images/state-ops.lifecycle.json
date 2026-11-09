@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "容器身份四状态：纳管、改名、摘除与收编",
+    "output": "images/state-ops.lifecycle.html",
+    "viewBox": [
+      1080,
+      570
+    ],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "locale": "zh-CN"
+  },
+  "lanes": [
+    {
+      "id": "main",
+      "label": "资源身份旅程"
+    }
+  ],
+  "states": [
+    {
+      "id": "unmanaged",
+      "type": "start",
+      "label": "存量（未纳管）",
+      "sublabel": "引擎有、账本无",
+      "lane": "main",
+      "col": 0,
+      "step": "01",
+      "tag": "存量"
+    },
+    {
+      "id": "imported",
+      "type": "active",
+      "label": "已纳管",
+      "sublabel": "plan 零变更",
+      "lane": "main",
+      "col": 1,
+      "step": "02",
+      "tag": "import"
+    },
+    {
+      "id": "renamed",
+      "type": "active",
+      "label": "改名后",
+      "sublabel": "moved / state mv",
+      "lane": "main",
+      "col": 2,
+      "step": "03",
+      "tag": "0 destroy"
+    },
+    {
+      "id": "orphan",
+      "type": "decision",
+      "label": "摘除后",
+      "sublabel": "state rm：实体还在",
+      "lane": "main",
+      "col": 3,
+      "step": "04",
+      "tag": "重建风险"
+    },
+    {
+      "id": "deleted",
+      "type": "success",
+      "label": "已删除",
+      "sublabel": "docker rm / destroy",
+      "lane": "main",
+      "col": 4,
+      "step": "05",
+      "tag": "收场"
+    }
+  ],
+  "transitions": [
+    {
+      "from": "unmanaged",
+      "to": "imported",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "imported",
+      "to": "renamed",
+      "variant": "default",
+      "route": "straight"
+    },
+    {
+      "from": "renamed",
+      "to": "orphan",
+      "variant": "security",
+      "route": "straight"
+    },
+    {
+      "from": "orphan",
+      "to": "deleted",
+      "variant": "default",
+      "route": "straight"
+    },
+    {
+      "from": "orphan",
+      "to": "imported",
+      "variant": "dashed",
+      "route": "bottom-channel"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "两条纳管路线",
+      "items": [
+        "import block 进配置可 review，apply 生效（本实验路线）",
+        "terraform import 是一次性手工命令，不进配置",
+        "纳管收敛的钥匙是配置生成：config == state，plan 直接 No changes"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "改名的两条等价路",
+      "items": [
+        "moved block 是声明式（进配置），state mv 是命令式（即时生效）",
+        "两者都只挪账本：plan 0 to destroy，引擎里的实体纹丝不动",
+        "改名必须配置与 state 同步，只动一边就会触发重建"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "摘除不等于删除",
+      "items": [
+        "state rm 只抹账本，容器还在引擎里活着",
+        "下一次 plan 会试图重建同名资源——名字冲突危险面",
+        "生产正道：重新 import 收编进账本，或确认无主后删除实体"
+      ]
+    }
+  ]
+}

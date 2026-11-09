@@ -1,0 +1,216 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "pg backend 状态锁：并发竞争、假死滞留与强解",
+    "output": "images/pg-lock.sequence.html",
+    "viewBox": [
+      1000,
+      560
+    ],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "locale": "zh-CN"
+  },
+  "participants": [
+    {
+      "id": "tfa",
+      "type": "external",
+      "label": "终端 A",
+      "sublabel": "apply#1"
+    },
+    {
+      "id": "pg",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "advisory lock"
+    },
+    {
+      "id": "tfb",
+      "type": "external",
+      "label": "终端 B/C",
+      "sublabel": "apply#2-4"
+    },
+    {
+      "id": "dba",
+      "type": "security",
+      "label": "DBA",
+      "sublabel": "强解"
+    }
+  ],
+  "segments": [
+    {
+      "from": 150,
+      "to": 262,
+      "label": "并发撞锁"
+    },
+    {
+      "from": 270,
+      "to": 318,
+      "label": "假死滞留"
+    },
+    {
+      "from": 326,
+      "to": 430,
+      "label": "强解"
+    },
+    {
+      "from": 438,
+      "to": 488,
+      "label": "恢复"
+    }
+  ],
+  "messages": [
+    {
+      "id": "a-lock",
+      "from": "tfa",
+      "to": "pg",
+      "y": 166,
+      "label": "apply#1 请求 pg_advisory_lock",
+      "variant": "default"
+    },
+    {
+      "id": "a-grant",
+      "from": "pg",
+      "to": "tfa",
+      "y": 194,
+      "label": "锁授予（会话级）",
+      "variant": "emphasis"
+    },
+    {
+      "id": "b-lock",
+      "from": "tfb",
+      "to": "pg",
+      "y": 222,
+      "label": "apply#2 请求锁",
+      "variant": "emphasis"
+    },
+    {
+      "id": "b-deny",
+      "from": "pg",
+      "to": "tfb",
+      "y": 250,
+      "label": "拒绝：Error acquiring the state lock",
+      "variant": "security"
+    },
+    {
+      "id": "c-lock",
+      "from": "tfb",
+      "to": "pg",
+      "y": 278,
+      "label": "apply#3 请求锁（A 已被 SIGSTOP）",
+      "variant": "default"
+    },
+    {
+      "id": "c-deny",
+      "from": "pg",
+      "to": "tfb",
+      "y": 306,
+      "label": "仍拒绝——连接在，锁就在",
+      "variant": "security"
+    },
+    {
+      "id": "dba-term",
+      "from": "dba",
+      "to": "pg",
+      "y": 334,
+      "label": "pg_terminate_backend(持有者 pid)",
+      "variant": "security"
+    },
+    {
+      "id": "pg-drop",
+      "from": "pg",
+      "to": "dba",
+      "y": 362,
+      "label": "连接断 → advisory 锁释放",
+      "variant": "return"
+    },
+    {
+      "id": "dba-check",
+      "from": "dba",
+      "to": "pg",
+      "y": 390,
+      "label": "复查 pg_locks：granted = 0",
+      "variant": "default"
+    },
+    {
+      "id": "pg-empty",
+      "from": "pg",
+      "to": "dba",
+      "y": 418,
+      "label": "空",
+      "variant": "return"
+    },
+    {
+      "id": "d-lock",
+      "from": "tfb",
+      "to": "pg",
+      "y": 446,
+      "label": "apply#4 请求锁",
+      "variant": "emphasis"
+    },
+    {
+      "id": "d-grant",
+      "from": "pg",
+      "to": "tfb",
+      "y": 474,
+      "label": "锁授予 → 正常执行",
+      "variant": "return"
+    }
+  ],
+  "activations": [
+    {
+      "participant": "tfa",
+      "from": 160,
+      "to": 258,
+      "type": "external"
+    },
+    {
+      "participant": "pg",
+      "from": 162,
+      "to": 480,
+      "type": "database"
+    },
+    {
+      "participant": "tfb",
+      "from": 216,
+      "to": 256,
+      "type": "external"
+    },
+    {
+      "participant": "dba",
+      "from": 328,
+      "to": 424,
+      "type": "security"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "锁的语义",
+      "items": [
+        "pg_advisory_lock 是会话级：连接在锁在，连接亡锁归西",
+        "拒绝报错自带 Lock Info——Lock ID 由此取得",
+        "pg_locks 表里 advisory 锁当场可查，不是黑盒"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "卡死与强解",
+      "items": [
+        "SIGSTOP 是假死：进程在、连接在、锁也在——锁卡死的原型",
+        "terraform force-unlock 报成功但锁不动（本机实测）",
+        "真正强解是 pg_terminate_backend 掐断持有者连接"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "pg vs S3+DynamoDB",
+      "items": [
+        "pg：进程死 → 连接断 → 锁自动回收，少一种卡死事故",
+        "S3+DynamoDB：锁对象是数据，持有者死了必须 force-unlock",
+        "两种后端的锁差异是后端选型的核心考点"
+      ]
+    }
+  ]
+}

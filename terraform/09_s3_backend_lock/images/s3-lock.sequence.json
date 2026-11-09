@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "S3 backend 状态锁：锁是数据、滞留与真解",
+    "output": "images/s3-lock.sequence.html",
+    "viewBox": [1000, 560],
+    "animation": "trace",
+    "quality_profile": "showcase",
+    "locale": "zh-CN"
+  },
+  "participants": [
+    { "id": "tfa", "type": "external", "label": "终端 A", "sublabel": "apply#1" },
+    { "id": "obj", "type": "database", "label": "ObjStor", "sublabel": "S3 API :9200" },
+    { "id": "tfb", "type": "external", "label": "终端 B/C", "sublabel": "apply#2-4" },
+    { "id": "op", "type": "security", "label": "运维", "sublabel": "force-unlock" }
+  ],
+  "segments": [
+    { "from": 150, "to": 262, "label": "并发撞锁" },
+    { "from": 270, "to": 318, "label": "击毙滞留" },
+    { "from": 326, "to": 430, "label": "真解" },
+    { "from": 438, "to": 488, "label": "远程性" }
+  ],
+  "messages": [
+    { "id": "a-put", "from": "tfa", "to": "obj", "y": 166, "label": "PUT <key>.tflock（apply#1 取锁）", "variant": "default" },
+    { "id": "a-grant", "from": "obj", "to": "tfa", "y": 194, "label": "200 锁授予", "variant": "emphasis" },
+    { "id": "b-lock", "from": "tfb", "to": "obj", "y": 222, "label": "apply#2 取锁", "variant": "emphasis" },
+    { "id": "b-deny", "from": "obj", "to": "tfb", "y": 250, "label": "拒绝：tflock 已存在", "variant": "security" },
+    { "id": "c-lock", "from": "tfb", "to": "obj", "y": 278, "label": "apply#3 取锁（A 已被 SIGKILL）", "variant": "default" },
+    { "id": "c-deny", "from": "obj", "to": "tfb", "y": 306, "label": "仍拒绝——锁对象还在桶里", "variant": "security" },
+    { "id": "op-del", "from": "op", "to": "obj", "y": 334, "label": "DELETE tflock（force-unlock）", "variant": "security" },
+    { "id": "obj-del", "from": "obj", "to": "op", "y": 362, "label": "204 锁对象已删", "variant": "return" },
+    { "id": "op-get", "from": "op", "to": "obj", "y": 390, "label": "GET tflock → 404", "variant": "default" },
+    { "id": "obj-empty", "from": "obj", "to": "op", "y": 418, "label": "空", "variant": "return" },
+    { "id": "d-lock", "from": "tfb", "to": "obj", "y": 446, "label": "apply#4 / plan 取锁", "variant": "emphasis" },
+    { "id": "d-grant", "from": "obj", "to": "tfb", "y": 474, "label": "放行 → 正常执行", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "tfa", "from": 160, "to": 258, "type": "external" },
+    { "participant": "obj", "from": 162, "to": 480, "type": "database" },
+    { "participant": "tfb", "from": 216, "to": 256, "type": "external" },
+    { "participant": "op", "from": 328, "to": 424, "type": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "锁是数据",
+      "items": [
+        "tflock 是桶里的普通对象，cat 出来就是持锁者信息",
+        "pg 的锁在 pg_locks 视图里，S3 系的锁在桶里——都看得见",
+        "锁对象的存在与否就是互斥的唯一依据"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "滞留与真解",
+      "items": [
+        "SIGKILL 持锁者后锁对象仍在——与 pg 的连接断自动回收相反",
+        "force-unlock 删掉锁对象，S3 系上它是真解（pg 上是假成功）",
+        "滞留锁不只 apply 会留：plan 崩溃同样会留"
+      ]
+    },
+    {
+      "dot": "orange",
+      "title": "远程性",
+      "items": [
+        "杀掉 ObjStor 进程再拉起，state 完好——数据在对象存储不在进程",
+        "state 对象写入是原子 PUT，不会写一半",
+        "进程只负责服务数据，数据才是真相"
+      ]
+    }
+  ]
+}
