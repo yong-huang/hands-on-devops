@@ -3,5 +3,26 @@
 - name: Converge
   hosts: all
   gather_facts: true
+  pre_tasks:
+    # 本网络对 deb.debian.org 黑洞化/龟速（实测 220s+，python:3.12-slim 已是 trixie
+    # 且 arm64 索引 404 过）——换 TUNA（lab 12 实测 13s）+ apt 超时，失败快速暴露
+    # 而不是挂死。放 pre_task 而非 role 内：换源是环境准备，role 保持可移植。
+    - name: 探测 deb822 源文件
+      ansible.builtin.stat:
+        path: /etc/apt/sources.list.d/debian.sources
+      register: deb822
+    - name: 换 Debian 源到清华镜像
+      ansible.builtin.replace:
+        path: /etc/apt/sources.list.d/debian.sources
+        regexp: 'deb\.debian\.org/debian'
+        replace: 'mirrors.tuna.tsinghua.edu.cn/debian'
+      when: deb822.stat.exists
+    - name: 写 apt 超时（15s 超时 + 2 重试，装不上 60s 内失败）
+      ansible.builtin.copy:
+        content: |
+          Acquire::http::Timeout "15";
+          Acquire::https::Timeout "15";
+          Acquire::Retries "2";
+        dest: /etc/apt/apt.conf.d/99molecule-timeout
   roles:
     - role: webconf

@@ -23,6 +23,7 @@ PUPPET="/opt/puppetlabs/bin/puppet"
 MP="/etc/puppetlabs/code/environments/production/modules"
 step() { echo; echo "=====> [$1] $2"; }
 note() { echo "        $1"; }
+ok()   { echo "        ✅ $1"; }
 
 wait_container() {
     local i=0
@@ -48,8 +49,27 @@ do_apply() {
         /etc/puppetlabs/code/environments/production/manifests/site.pp \
         && note "[ok] 语法通过"
 
-    # 准备包索引（容器首启一次性；生产中这属于镜像层或 prepare 阶段）
-    docker exec "$C" /usr/bin/apt-get update >/dev/null 2>&1 || true
+    # apt 换 TUNA 源 + 超时加固（puppet-agent = Ubuntu bionic；archive.ubuntu.com
+    # 在本网络极慢，amd64 模拟下更慢——不换源 apt update 会挂到人工 Ctrl-C）
+    # TUNA 对 bionic 的 InRelease 实测 200；用 http 避免 https 传输依赖
+    docker exec "$C" /bin/bash -c '
+        sed -i "s#http://archive.ubuntu.com/ubuntu#http://mirrors.tuna.tsinghua.edu.cn/ubuntu#g; s#http://security.ubuntu.com/ubuntu#http://mirrors.tuna.tsinghua.edu.cn/ubuntu#g" /etc/apt/sources.list
+        # apt.puppetlabs.com 本网络拉不到 InRelease（报 not signed）——镜像内置
+        # puppet 7 已够用，该更新源直接禁用
+        mv /etc/apt/sources.list.d/puppet7.list /etc/apt/sources.list.d/puppet7.list.disabled 2>/dev/null || true
+        printf "Acquire::http::Timeout \"15\";\nAcquire::https::Timeout \"15\";\nAcquire::Retries \"2\";\n" > /etc/apt/apt.conf.d/99lab10-timeout
+    '
+    note "apt 已换 TUNA 源 + 超时加固"
+
+    step "apply" "刷新包索引（显式失败：不带着空索引进 apply）"
+    mkdir -p tmp
+    set +e
+    docker exec "$C" /usr/bin/apt-get update > tmp/apt-update.log 2>&1
+    local arc=$?
+    set -e
+    tail -1 tmp/apt-update.log | LC_ALL=C sed 's/^/        /'
+    [ "$arc" = "0" ] || fail "apt update 失败（rc=${arc}，看 tmp/apt-update.log）——换源/重跑"
+    ok "包索引就绪"
 
     step "apply" "puppet apply site.pp（首次收敛，装 nginx + 渲染配置 + 启动）"
     docker exec "$C" "$PUPPET" apply --modulepath="$MP" \

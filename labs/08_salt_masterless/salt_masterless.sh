@@ -43,6 +43,13 @@ do_apply() {
     note "grain 设定机器事实：env=dev"
     docker exec "$C" salt-call --local grains.setval env dev >/dev/null
 
+    # apk 换 TUNA 源（dl-cdn.alpinelinux.org 在本网络挂死，lab 14 同款）。
+    # state 里 pkg.installed 带 refresh:true 会先 apk update——慢源会卡死整个收敛。
+    # saltstack/salt 容器基底是 Alpine（/etc/nginx/http.d/ 布局是铁证）。
+    docker exec "$C" sh -c \
+        "sed -i 's#dl-cdn.alpinelinux.org#mirrors.tuna.tsinghua.edu.cn#g' /etc/apk/repositories" \
+        && note "apk 已换 TUNA 源（Alpine 基底）"
+
     step "apply" "salt-call --local state.apply nginx（masterless 首次收敛）"
     docker exec "$C" salt-call --local state.apply nginx --state-output=terse | tail -6 | sed 's/^/        /'
 
