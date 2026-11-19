@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 08 · UF 采集链：monitor → TLS 9997 → 索引器",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "stages": [
+    {
+      "label": "文件源"
+    },
+    {
+      "label": "Universal Forwarder"
+    },
+    {
+      "label": "索引器与断言"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "file",
+      "type": "external",
+      "label": "挂载目录 app.log",
+      "sublabel": "宿主写入 · 容器内 tail",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "uf",
+      "type": "backend",
+      "label": "UF 容器",
+      "sublabel": "monitor 常驻追读",
+      "stage": 1,
+      "row": 0,
+      "tag": "停机续传"
+    },
+    {
+      "id": "idx",
+      "type": "cloud",
+      "label": "索引器 9997 TLS",
+      "sublabel": "自签证书 · s2s 自动协商",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "store",
+      "type": "cloud",
+      "label": "uf_demo 索引",
+      "sublabel": "先建索引再转发",
+      "stage": 2,
+      "row": 1,
+      "tag": "缺索引静默丢弃"
+    },
+    {
+      "id": "assert",
+      "type": "external",
+      "label": "两条断言",
+      "sublabel": "对账 / 续传 0 丢失",
+      "stage": 2,
+      "row": 2
+    }
+  ],
+  "flows": [
+    {
+      "from": "file",
+      "to": "uf",
+      "label": "monitor 追读",
+      "variant": "emphasis"
+    },
+    {
+      "from": "uf",
+      "to": "idx",
+      "label": "TLS 9997 转发",
+      "variant": "emphasis"
+    },
+    {
+      "from": "idx",
+      "to": "store",
+      "label": "路由入库",
+      "labelAt": [
+        530,
+        205
+      ]
+    },
+    {
+      "from": "store",
+      "to": "assert",
+      "label": "对账",
+      "labelAt": [
+        530,
+        340
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "UF 的价值",
+      "items": [
+        "常驻 tail：记住读到的位置",
+        "停机期间文件继续增长不丢",
+        "恢复后从上次位置续传"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "UF 目录真相",
+      "items": [
+        "SPLUNK_HOME=/opt/splunkforwarder",
+        "日志要 root 读（属主 splunk）",
+        "状态检查用 -u root"
+      ]
+    }
+  ]
+}

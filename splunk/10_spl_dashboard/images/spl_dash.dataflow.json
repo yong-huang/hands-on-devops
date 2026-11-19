@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 10 · 仪表盘验收流：JSON 定义 → 提取查询 → REST 断言",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      480
+    ]
+  },
+  "stages": [
+    {
+      "label": "仪表盘定义"
+    },
+    {
+      "label": "提取与执行"
+    },
+    {
+      "label": "断言"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "json",
+      "type": "external",
+      "label": "dashboard.json",
+      "sublabel": "Studio 定义 · 唯一事实源",
+      "stage": 0,
+      "row": 0,
+      "tag": "30s 自动刷新"
+    },
+    {
+      "id": "extract",
+      "type": "backend",
+      "label": "提取 4 查询",
+      "sublabel": "viz → primary ds → query",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "rest",
+      "type": "backend",
+      "label": "REST oneshot",
+      "sublabel": "逐条执行",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "assert",
+      "type": "external",
+      "label": "两道断言",
+      "sublabel": "结构 4+4+30s · 行数 >0",
+      "stage": 2,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "json",
+      "to": "extract",
+      "label": "解析定义",
+      "variant": "emphasis"
+    },
+    {
+      "from": "extract",
+      "to": "rest",
+      "label": "逐条提交",
+      "route": "vertical-channel",
+      "channelX": 380,
+      "labelAt": [
+        380,
+        215
+      ]
+    },
+    {
+      "from": "rest",
+      "to": "assert",
+      "label": "8/8/9/10 行",
+      "variant": "emphasis",
+      "labelAt": [
+        470,
+        240
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "四图分工",
+      "items": [
+        "趋势 timechart line",
+        "错误率 timechart eval",
+        "分布 top pie",
+        "样例 table head"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "为什么不用 UI 截图",
+      "items": [
+        "panel 查询即数据本身",
+        "REST 执行可进 CI 复跑",
+        "JSON 与 UI 一键互导"
+      ]
+    }
+  ]
+}

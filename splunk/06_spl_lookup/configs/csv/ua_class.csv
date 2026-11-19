@@ -1,0 +1,11 @@
+ua_prefix,device_class,browser
+*Googlebot*,爬虫,Googlebot
+*YandexBot*,爬虫,YandexBot
+*NetcraftSurveyAgent*,爬虫,Netcraft 探测器
+*bot*,爬虫,其他爬虫
+*Firefox/*,桌面浏览器,Firefox
+*Chrome/*,桌面浏览器,Chrome
+*MSIE*,桌面浏览器,IE
+*iPad*,移动设备,Mobile Safari
+*Opera*,桌面浏览器,Opera
+*Safari/*,桌面浏览器,Safari

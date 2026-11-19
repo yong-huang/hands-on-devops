@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 11 · 告警链路：调度搜索 → webhook → 接收器",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "stages": [
+    {
+      "label": "告警定义（应用包）"
+    },
+    {
+      "label": "调度执行"
+    },
+    {
+      "label": "送达与断言"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "app",
+      "type": "external",
+      "label": "lab_alerts 应用包",
+      "sublabel": "cron */2 · 应用包",
+      "stage": 0,
+      "row": 0,
+      "tag": "调度必须住 app"
+    },
+    {
+      "id": "scheduler",
+      "type": "backend",
+      "label": "SavedSplunker",
+      "sublabel": "每 2 分钟执行搜索",
+      "stage": 1,
+      "row": 0,
+      "tag": "sendmodalert"
+    },
+    {
+      "id": "webhook",
+      "type": "backend",
+      "label": "webhook 动作",
+      "sublabel": "POST :28321/notify",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "recv",
+      "type": "external",
+      "label": "接收器 :28321",
+      "sublabel": "载荷落盘 + 时间戳",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "assert",
+      "type": "external",
+      "label": "间隔断言",
+      "sublabel": "120s / 120s ±10s",
+      "stage": 2,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "app",
+      "to": "scheduler",
+      "label": "装载调度",
+      "variant": "emphasis"
+    },
+    {
+      "from": "scheduler",
+      "to": "webhook",
+      "label": "触发",
+      "labelAt": [
+        400,
+        205
+      ]
+    },
+    {
+      "from": "webhook",
+      "to": "recv",
+      "variant": "emphasis",
+      "label": "载荷落盘",
+      "labelAt": [
+        660,
+        265
+      ]
+    },
+    {
+      "from": "recv",
+      "to": "assert",
+      "label": "3 次到达时刻差",
+      "labelAt": [
+        530,
+        218
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "两个实测要点",
+      "items": [
+        "调度搜索必须住 app 包",
+        "动作脚本不可被应用内同名段遮蔽"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "触发语义",
+      "items": [
+        "动作只由调度器执行",
+        "手动 dispatch 不触发动作",
+        "间隔断言=到达时刻差 ±10s"
+      ]
+    }
+  ]
+}

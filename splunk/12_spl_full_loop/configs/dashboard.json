@@ -1,0 +1,38 @@
+{
+  "name": "loop_overview",
+  "title": "demo-web 观测闭环（lab 12）",
+  "description": "双通道时序 / 状态码分布——数据源 loop_demo",
+  "definition": {
+    "dataSources": {
+      "ds_ts": {
+        "type": "ds.search",
+        "options": {
+          "query": "index=loop_demo | timechart span=1m count by sourcetype",
+          "queryParameters": {"earliest": "-30m", "latest": "now"},
+          "refresh": "30s"
+        }
+      },
+      "ds_channel": {
+        "type": "ds.search",
+        "options": {
+          "query": "index=loop_demo | stats count by sourcetype",
+          "queryParameters": {"earliest": "-30m", "latest": "now"},
+          "refresh": "30s"
+        }
+      }
+    },
+    "visualizations": {
+      "viz_ts": {"type": "splunk.line", "title": "双通道事件时序", "dataSources": {"primary": "ds_ts"}, "options": {}},
+      "viz_channel": {"type": "splunk.pie", "title": "通道占比（对账用）", "dataSources": {"primary": "ds_channel"}, "options": {}}
+    },
+    "layout": {
+      "type": "absolute",
+      "options": {"width": 1440, "height": 480},
+      "structure": [
+        {"item": "viz_ts", "x": 0, "y": 0, "w": 720, "h": 460},
+        {"item": "viz_channel", "x": 720, "y": 0, "w": 720, "h": 460}
+      ]
+    },
+    "defaults": {}
+  }
+}

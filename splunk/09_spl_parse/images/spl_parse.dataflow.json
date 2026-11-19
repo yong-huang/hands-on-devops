@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 09 · 自定义解析：多行栈与 CSV 结构化双轨",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "stages": [
+    {
+      "label": "非标准数据"
+    },
+    {
+      "label": "props.conf 双轨"
+    },
+    {
+      "label": "入库与断言"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "stack_raw",
+      "type": "external",
+      "label": "多行异常栈文件",
+      "sublabel": "488 行 → 应切 100 事件",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "csv_raw",
+      "type": "external",
+      "label": "结构化 CSV 文件",
+      "sublabel": "表头 + 50 行",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "stack_props",
+      "type": "backend",
+      "label": "splk_stack",
+      "sublabel": "BREAK_ONLY_BEFORE + REPORT",
+      "stage": 1,
+      "row": 0,
+      "tag": "搜索时字段"
+    },
+    {
+      "id": "csv_props",
+      "type": "backend",
+      "label": "splk_csv_lab",
+      "sublabel": "INDEXED_EXTRACTIONS=csv",
+      "stage": 1,
+      "row": 1,
+      "tag": "索引时字段"
+    },
+    {
+      "id": "assert",
+      "type": "external",
+      "label": "四条断言",
+      "sublabel": "切分 / _time / 字段 / 对账",
+      "stage": 2,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "stack_raw",
+      "to": "stack_props",
+      "label": "oneshot",
+      "variant": "emphasis"
+    },
+    {
+      "from": "csv_raw",
+      "to": "csv_props",
+      "label": "oneshot"
+    },
+    {
+      "from": "stack_props",
+      "to": "assert",
+      "label": "条数与字段",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelAt": [
+        300,
+        205
+      ]
+    },
+    {
+      "from": "csv_props",
+      "to": "assert",
+      "label": "50 行对账"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "两条解析轨道",
+      "items": [
+        "多行：BREAK_ONLY_BEFORE 切边界",
+        "CSV：INDEXED_EXTRACTIONS 按表头",
+        "前者搜索时提取、后者索引时"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "怎么证明切对了",
+      "items": [
+        "事件数对账：488 行 ≠ 100 事件",
+        "_time 与产生器逐秒对照",
+        "REPORT 字段 null=0"
+      ]
+    }
+  ]
+}

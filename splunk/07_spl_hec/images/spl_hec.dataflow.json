@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 07 · HEC 实时接入：进程直推 JSON 事件",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "stages": [
+    {
+      "label": "事件生产"
+    },
+    {
+      "label": "HEC 通道"
+    },
+    {
+      "label": "入库与断言"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "prod",
+      "type": "backend",
+      "label": "hec_producer.py",
+      "sublabel": "1 万条 JSON · 20 批",
+      "stage": 0,
+      "row": 0,
+      "tag": "0.13s 发完"
+    },
+    {
+      "id": "ack",
+      "type": "backend",
+      "label": "ack 单事件演示",
+      "sublabel": "ackId → /ack 翻转 true",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "hec",
+      "type": "backend",
+      "label": "HEC :28088→8088",
+      "sublabel": "token 鉴权 · useACK",
+      "stage": 1,
+      "row": 0,
+      "tag": "channel 必带"
+    },
+    {
+      "id": "idx",
+      "type": "cloud",
+      "label": "hec_demo 索引",
+      "sublabel": "先建索引再发事件",
+      "stage": 2,
+      "row": 0,
+      "tag": "缺索引静默丢弃"
+    },
+    {
+      "id": "assert",
+      "type": "external",
+      "label": "三组断言",
+      "sublabel": "ack / 数量对账 / _time",
+      "stage": 2,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "prod",
+      "to": "hec",
+      "label": "批量 POST",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "ack",
+      "to": "hec",
+      "label": "单事件+回执"
+    },
+    {
+      "from": "hec",
+      "to": "idx",
+      "label": "JSON 解析入库",
+      "variant": "emphasis"
+    },
+    {
+      "from": "idx",
+      "to": "assert",
+      "label": "三组断言全绿",
+      "labelAt": [
+        530,
+        205
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "HEC 协议要点",
+      "items": [
+        "useACK=true 强制带 channel",
+        "ack 异步翻转：处理完才 true",
+        "响应形态是 {ackId: bool} 对象"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "两个静默坑",
+      "items": [
+        "索引不存在：code=0 但丢事件",
+        "_time 取事件 time 字段非接收时刻",
+        "time 字段缺省才用接收时间"
+      ]
+    }
+  ]
+}

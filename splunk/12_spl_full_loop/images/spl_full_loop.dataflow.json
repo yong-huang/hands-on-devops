@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "🏁 实验 12 · demo-web 观测闭环：双通道汇流 + 演练断言",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      480
+    ]
+  },
+  "stages": [
+    {
+      "label": "被观测服务"
+    },
+    {
+      "label": "双通道采集"
+    },
+    {
+      "label": "汇流与闭环"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "web",
+      "type": "backend",
+      "label": "demo-web 服务",
+      "sublabel": "每请求双写",
+      "stage": 0,
+      "row": 0,
+      "tag": "/hit · /boom"
+    },
+    {
+      "id": "hec",
+      "type": "backend",
+      "label": "HEC 直报",
+      "sublabel": "JSON 结构化事件",
+      "stage": 1,
+      "row": 0
+    },
+    {
+      "id": "uf",
+      "type": "backend",
+      "label": "UF 文件采集",
+      "sublabel": "monitor + TLS 9997",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "idx",
+      "type": "cloud",
+      "label": "loop_demo 索引",
+      "sublabel": "双通道汇流",
+      "stage": 2,
+      "row": 0
+    },
+    {
+      "id": "closed",
+      "type": "external",
+      "label": "闭环三件套",
+      "sublabel": "差额 0 · 演练 kill/重启",
+      "stage": 2,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "web",
+      "to": "hec",
+      "label": "HTTP POST",
+      "route": "straight"
+    },
+    {
+      "from": "web",
+      "to": "uf",
+      "label": "写文件日志",
+      "route": "bottom-channel"
+    },
+    {
+      "from": "hec",
+      "to": "idx",
+      "label": "JSON 解析",
+      "route": "straight"
+    },
+    {
+      "from": "uf",
+      "to": "idx",
+      "label": "s2s 转发",
+      "route": "vertical-channel",
+      "channelX": 455
+    },
+    {
+      "from": "idx",
+      "to": "closed",
+      "label": "差额 0",
+      "variant": "emphasis",
+      "route": "straight",
+      "labelAt": [
+        530,
+        215
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "闭环断言三条",
+      "items": [
+        "对账：UF=HEC=文件行数",
+        "演练：kill → 下线告警 ≤300s",
+        "恢复：重启后对账差额仍 0"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "双通道语义",
+      "items": [
+        "HEC=结构化明细",
+        "UF=原始行镜像",
+        "同一请求必然 1:1"
+      ]
+    }
+  ]
+}

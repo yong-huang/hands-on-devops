@@ -9,6 +9,7 @@ Prometheus/Loki/Grafana · SOPS/Vault · cosign/syft 等工具链。
 > 进阶系列：`docs/cicd.md`（CI/CD 进阶 16 项目 · GitHub Actions 为轴 · 实验在 `cicd/` 目录）
 > 互补线：`docs/pulumi.md`（Pulumi 快速上手 12 项目 · TS 主线 + Python 对照 · Docker/kind/LocalStack 三 Provider 零云）
 > 安全线：`docs/devsecops.md`（DevSecOps 安全纵深 30 项目 · 本机零云攻防靶场）
+> 观测线：`docs/splunk.md`（Splunk 数据观测 12 项目 · SPL 分析/真实接入/告警闭环 · 实验在 `splunk/` 目录）
 
 ## 环境要求
 
@@ -50,6 +51,7 @@ cd labs/06_ansible_role_vault && ./ansible_role_vault.sh
 | 18090 | hands-on-cicd 项目 09/10 | 相邻系列蓝绿/金丝雀 |
 | 28100-28129 | cloudify 清单（docs/cloudify.md） | 28100/28101 Manager、28102 干净 Manager（快照恢复）、2811x 容器、28120 kind、28125 终局 nginx；项目 1-6/15 不占端口 |
 | 28200-28279 | 半导体 CI/CD 清单（docs/cicd-semi.md） | 28200 GitLab HTTP、28222 GitLab SSH、28210 Pages、28250 GitLab Registry、28252 mirror 私仓、28261 license-mock、28270 webhook-listener |
+| 28000 / 28089 / 28088 / 29997 | Splunk 观测线（splunk/ 目录，docs/splunk.md） | Splunk Web / splunkd 管理 REST / HEC（预留）/ Forwarder 接收口（预留） |
 
 ## 实验列表
 
@@ -168,6 +170,30 @@ devops.md 的互补线：IaC 的「通用编程语言」视角，与 labs/ 01-05
 
 > 零云：Docker + kind + LocalStack 全本机免费；TypeScript 主线，项目 7 用 Python 对照。**12/12 全部完成（2026-10-15）**。
 
+## Splunk 数据观测系列（splunk/）
+
+devops.md 的数据观测互补线：以 Splunk 为载体补齐日志/指标之外的第三种检索平台——SPL 分析 →
+真实数据接入（HEC/Forwarder）→ 仪表盘与告警闭环（关系对照见 `docs/splunk.md` 文末）。
+清单：`docs/splunk.md`（12 项目 · 4 阶段）。注意：官方镜像**无 arm64**，实验跑在
+Rosetta 模拟的 amd64 容器上（实测记录见清单文末速查表）。
+
+> **12/12 全部完成（2026-11-19）**——含 🏁 终极串联（demo-web 双通道观测闭环 + 故障演练）。
+
+| 编号 | 实验 | 工具 | 状态 |
+|:---|:---|:---|:---|
+| 01 | Splunk Enterprise 单机部署（amd64 模拟 + 两卷持久化） | Splunk 9.4 | ✅ 真机验证 |
+| 02 | 教程数据入库与四元组认知（109,864 事件 / 3 sourcetype / 5 host） | Splunk SPL | ✅ 真机验证 |
+| 03 | SPL 首搜——速查卡即验收（14 条 0 报错，卡片即唯一事实源） | Splunk SPL | ✅ 真机验证 |
+| 04 | 统计管道——三问 × 双口径对照（SPL vs Python，误差 ≤1% 断言） | Splunk SPL + Python | ✅ 真机验证 |
+| 05 | 字段工程——rex/REPORT 两条提取路 + 两层参照验证（20/20） | props/transforms | ✅ 真机验证 |
+| 06 | lookup 数据富化——三张字典 × 三种匹配 + join/lookup 计时（2.2x） | lookup/transforms | ✅ 真机验证 |
+| 07 | HEC 实时接入——1 万条 JSON 直推（ack 回执 + 对账差额 0 + _time 实证） | HEC/Python | ✅ 真机验证 |
+| 08 | Universal Forwarder 采集链（TLS 9997 + 100 行 10s 入库 + 断网续传 0 丢失） | UF/TLS | ✅ 真机验证 |
+| 09 | 自定义 sourcetype——多行栈 488 行切 100 事件 + CSV 索引时字段（四断言） | props/transforms | ✅ 真机验证 |
+| 10 | 运维仪表盘——Studio JSON 即验收对象（4 panel REST 断言） | Dashboard Studio | ✅ 真机验证 |
+| 11 | 告警引擎——调度搜索 → webhook 送达（3 次间隔 120s/120s） | savedsearches | ✅ 真机验证 |
+| 12 | 🏁 终极串联——demo-web 双通道闭环（对账差额 0 + kill 后 54s 送达 + 演练恢复） | 全部 | ✅ 真机验证 |
+
 ## 目录结构
 
 ```
@@ -176,7 +202,9 @@ hands-on-devops/
 ├── docs/
 │   ├── devops.md                    # DevOps 主线 30 项目清单
 │   ├── cicd.md                      # CI/CD 进阶 16 项目清单
-│   └── pulumi.md                    # Pulumi 快速上手 12 项目清单（互补线）
+│   ├── pulumi.md                    # Pulumi 快速上手 12 项目清单（互补线）
+│   ├── devsecops.md                 # DevSecOps 安全线 30 项目清单
+│   └── splunk.md                    # Splunk 数据观测 12 项目清单（labs 31+）
 ├── Makefile                         # 统一入口（lab-up / lab-down / demo）
 ├── scripts/
 │   ├── load_resources.sh            # 镜像预载（含 daocloud 回源）
@@ -194,8 +222,10 @@ hands-on-devops/
 │           └── xxx.svg              # 双主题矢量图（README 内嵌）
 ├── cicd/                            # CI/CD 进阶线（01-16，编号与 cicd.md 项目号 1:1 对应）
 │   └── NN_short_name/               # 结构与 labs/ 一致；声明式配置按领域取名为 workflows/ 等
-└── pulumi/                          # Pulumi 互补线（01-12，编号与 pulumi.md 项目号 1:1 对应）
-    └── NN_short_name/               # README 六段式 + 主脚本 + program/（TS 程序）+ images 图三件套
+├── pulumi/                          # Pulumi 互补线（01-12，编号与 pulumi.md 项目号 1:1 对应）
+│   └── NN_short_name/               # README 六段式 + 主脚本 + program/（TS 程序）+ images 图三件套
+└── splunk/                          # Splunk 数据观测线（01-12，编号与 splunk.md 项目号 1:1 对应）
+    └── NN_short_name/               # 结构与 labs/ 一致；README 六段式 + 主脚本 + configs/ + images 图三件套
 ```
 
 ## 每实验脚本约定

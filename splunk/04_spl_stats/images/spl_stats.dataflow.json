@@ -1,0 +1,109 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 04 · 双口径对照：同一份日志，两条独立实现",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "stages": [
+    {
+      "label": "同一份原始日志"
+    },
+    {
+      "label": "两条独立实现"
+    },
+    {
+      "label": "对照断言"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "raw",
+      "type": "external",
+      "label": "access 日志原文",
+      "sublabel": "www1/2/3 · 39532 行",
+      "stage": 0,
+      "row": 0,
+      "tag": "0 行跳过"
+    },
+    {
+      "id": "spl",
+      "type": "backend",
+      "label": "SPL 管道",
+      "sublabel": "timechart / top / 条件聚合",
+      "stage": 1,
+      "row": 0,
+      "tag": "oneshot"
+    },
+    {
+      "id": "py",
+      "type": "backend",
+      "label": "Python 正则",
+      "sublabel": "crosscheck.py 逐行解析",
+      "stage": 1,
+      "row": 1,
+      "tag": "零共享代码"
+    },
+    {
+      "id": "cmp",
+      "type": "external",
+      "label": "对照断言 ≤1%",
+      "sublabel": "15 桶 / Top10 / 占比",
+      "stage": 2,
+      "row": 0
+    }
+  ],
+  "flows": [
+    {
+      "from": "raw",
+      "to": "spl",
+      "label": "已入库（lab 02）",
+      "variant": "emphasis"
+    },
+    {
+      "from": "raw",
+      "to": "py",
+      "label": "直接读文件",
+      "labelDy": 30,
+      "route": "bottom-channel"
+    },
+    {
+      "from": "spl",
+      "to": "cmp",
+      "label": "四条查询结果"
+    },
+    {
+      "from": "py",
+      "to": "cmp",
+      "label": "三项指标",
+      "variant": "emphasis",
+      "route": "vertical-channel",
+      "channelX": 520
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "双口径为什么可信",
+      "items": [
+        "两实现零共享代码",
+        "跳过行数 = 解析器体检",
+        "404 占比 1.7454% 完全一致"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "同题两种写法",
+      "items": [
+        "timechart vs bin+stats",
+        "top vs sort+stats",
+        "count(eval) vs eval+sum"
+      ]
+    }
+  ]
+}

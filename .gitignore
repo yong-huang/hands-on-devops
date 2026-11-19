@@ -14,6 +14,9 @@ rbac/
 
 # ---- 实验运行时生成的密钥/敏感物（绝不入库）----
 labs/**/tmp/
+splunk/**/tmp/
+splunk/01_splunk_deploy/.env
+*.agekey
 *.agekey
 age-key.txt
 cosign.key

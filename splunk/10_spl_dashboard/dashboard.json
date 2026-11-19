@@ -1,0 +1,58 @@
+{
+  "name": "ops_overview_lab",
+  "title": "服务概览 · 教程数据四图盘（lab 10）",
+  "description": "QPS 趋势 / 错误率曲线 / 状态码分布 / 错误样例——四个 panel 共用 tutorial 索引",
+  "definition": {
+    "dataSources": {
+      "ds_qps": {
+        "type": "ds.search",
+        "options": {
+          "query": "index=tutorial sourcetype=access_combined_wcookie | timechart span=1d count",
+          "queryParameters": {"earliest": "0", "latest": "now"},
+          "refresh": "30s"
+        }
+      },
+      "ds_err": {
+        "type": "ds.search",
+        "options": {
+          "query": "index=tutorial sourcetype=access_combined_wcookie | timechart span=1d count(eval(status>=400)) as err, count as total | eval pct=round(err/total*100,2)",
+          "queryParameters": {"earliest": "0", "latest": "now"},
+          "refresh": "30s"
+        }
+      },
+      "ds_status": {
+        "type": "ds.search",
+        "options": {
+          "query": "index=tutorial sourcetype=access_combined_wcookie | top status",
+          "queryParameters": {"earliest": "0", "latest": "now"},
+          "refresh": "30s"
+        }
+      },
+      "ds_sample": {
+        "type": "ds.search",
+        "options": {
+          "query": "index=tutorial sourcetype=access_combined_wcookie status>=400 | sort -_time | table _time, clientip, uri_path, status, bytes | head 10",
+          "queryParameters": {"earliest": "0", "latest": "now"},
+          "refresh": "30s"
+        }
+      }
+    },
+    "visualizations": {
+      "viz_qps": {"type": "splunk.line", "title": "访问量趋势（按天）", "dataSources": {"primary": "ds_qps"}, "options": {}},
+      "viz_err": {"type": "splunk.line", "title": "错误率曲线（%）", "dataSources": {"primary": "ds_err"}, "options": {}},
+      "viz_status": {"type": "splunk.pie", "title": "状态码分布", "dataSources": {"primary": "ds_status"}, "options": {}},
+      "viz_sample": {"type": "splunk.table", "title": "最新错误请求样例", "dataSources": {"primary": "ds_sample"}, "options": {"count": 10}}
+    },
+    "layout": {
+      "type": "absolute",
+      "options": {"width": 1440, "height": 960},
+      "structure": [
+        {"item": "viz_qps", "x": 0, "y": 0, "w": 720, "h": 460},
+        {"item": "viz_err", "x": 720, "y": 0, "w": 720, "h": 460},
+        {"item": "viz_status", "x": 0, "y": 480, "w": 720, "h": 460},
+        {"item": "viz_sample", "x": 720, "y": 480, "w": 720, "h": 460}
+      ]
+    },
+    "defaults": {}
+  }
+}

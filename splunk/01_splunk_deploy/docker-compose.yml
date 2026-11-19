@@ -1,0 +1,38 @@
+# =============================================================================
+# 01 · Splunk Enterprise 单机部署（清单项目 1）
+#
+# 为什么有 platform: linux/amd64——官方 splunk/splunk 镜像至今没有 arm64
+# manifest（latest/10.0/9.4/9.3 全部实测 no matching manifest，2026-11-15），
+# Apple Silicon 上必须显式指定 amd64，由 OrbStack 的 Rosetta 2 转译运行。
+# 不写 platform 会直接报 "no matching manifest for linux/arm64"。
+#
+# 端口约定（宿主 28xxx / 29997 → 容器默认端口，与本仓 291xx 系列错开）：
+#   28000:8000  Splunk Web 登录页
+#   28089:8089  splunkd 管理 REST API（本实验探活与搜索全走它，HTTPS 自签）
+#   28088:8088  HEC HTTP Event Collector（清单项目 7 启用后才用，先占位）
+#   29997:9997  索引器接收口（清单项目 8 Universal Forwarder 用，先占位）
+# =============================================================================
+services:
+  splunk:
+    image: splunk/splunk:9.4            # 本地已实测：9.4.17 冷启动 ~45s（Rosetta 模拟）
+    platform: linux/amd64               # 无此行：Apple Silicon 拉不到镜像
+    container_name: splunk-deploy
+    environment:
+      - SPLUNK_START_ARGS=--accept-license   # 首次启动必须显式接受许可，否则入口脚本拒绝
+      - SPLUNK_PASSWORD=${SPLUNK_PASSWORD:?请在 labs/31_splunk_deploy/.env 设置（.env.example 有模板）}
+    ports:
+      - "28000:8000"
+      - "28089:8089"
+      - "28088:8088"
+      - "29997:9997"
+    volumes:
+      # etc 卷：配置 / App / 修改过的本地配置。telemetry.conf 以文件级 bind mount
+      # 叠挂进卷内目录（docker 允许子路径挂载）。注意不能加 :ro——首次启动的
+      # 入口脚本要递归 chown 整个 etc 树，只读挂载会让它重试 60 次后失败退出
+      - splunk-etc:/opt/splunk/etc
+      # var 卷：索引数据（$SPLUNK_DB）——persist 断言证明重启不丢全靠它
+      - splunk-var:/opt/splunk/var
+      - ./configs/telemetry.conf:/opt/splunk/etc/system/local/telemetry.conf
+volumes:
+  splunk-etc:
+  splunk-var:

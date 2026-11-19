@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 05 · 字段工程：三种提取途径与两层验证",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "stages": [
+    {
+      "label": "原始 _raw"
+    },
+    {
+      "label": "三条提取途径"
+    },
+    {
+      "label": "两层验证"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "raw",
+      "type": "external",
+      "label": "access 原始行",
+      "sublabel": "_raw 全文",
+      "stage": 0,
+      "row": 0
+    },
+    {
+      "id": "builtin",
+      "type": "backend",
+      "label": "出厂内置解析",
+      "sublabel": "access_combined_wcookie",
+      "stage": 1,
+      "row": 0,
+      "tag": "参照物"
+    },
+    {
+      "id": "rex",
+      "type": "backend",
+      "label": "rex 内联提取",
+      "sublabel": "命名捕获 rex_*",
+      "stage": 1,
+      "row": 1
+    },
+    {
+      "id": "report",
+      "type": "backend",
+      "label": "REPORT 持久抽取",
+      "sublabel": "props + transforms",
+      "stage": 1,
+      "row": 2,
+      "tag": "自定义 sourcetype"
+    },
+    {
+      "id": "cmp",
+      "type": "external",
+      "label": "两层验证",
+      "sublabel": "双层对照断言",
+      "stage": 2,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "raw",
+      "to": "builtin",
+      "label": "出厂即带字段"
+    },
+    {
+      "from": "raw",
+      "to": "rex",
+      "label": "搜索时内联",
+      "variant": "emphasis",
+      "route": "bottom-channel"
+    },
+    {
+      "from": "raw",
+      "to": "report",
+      "label": "配置化持久",
+      "route": "bottom-channel"
+    },
+    {
+      "from": "rex",
+      "to": "cmp",
+      "label": "同事件对照",
+      "route": "top-channel"
+    },
+    {
+      "from": "report",
+      "to": "cmp",
+      "label": "Python 独立参照",
+      "variant": "emphasis",
+      "route": "vertical-channel",
+      "channelX": 520,
+      "labelDy": 32
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三条途径怎么选",
+      "items": [
+        "rex：临时/探索，随查询走",
+        "REPORT：团队共享，配置入库",
+        "内置：标准格式零配置"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "两层验证设计",
+      "items": [
+        "rex 对照出厂字段（同事件）",
+        "REPORT 对照 Python 独立解析",
+        "搜索时提取：改配置旧事件也生效"
+      ]
+    }
+  ]
+}

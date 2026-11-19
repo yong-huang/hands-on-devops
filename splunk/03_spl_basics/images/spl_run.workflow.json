@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "实验 03 · SPL 首搜验收流：速查卡 → 提取 → 逐条断言",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      480
+    ]
+  },
+  "lanes": [
+    {
+      "id": "card",
+      "label": "速查卡（唯一事实源）"
+    },
+    {
+      "id": "runner",
+      "label": "spl_run.sh"
+    },
+    {
+      "id": "rest",
+      "label": "Splunk REST"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "cheatsheet",
+      "lane": "card",
+      "col": 0,
+      "type": "external",
+      "label": "cheatsheet.md",
+      "sublabel": "14 条 SPL · 围栏"
+    },
+    {
+      "id": "extract",
+      "lane": "runner",
+      "col": 1,
+      "type": "backend",
+      "label": "提取与断言",
+      "sublabel": "剥注释 · ≥12 条"
+    },
+    {
+      "id": "post",
+      "lane": "rest",
+      "col": 2,
+      "type": "backend",
+      "label": "search/jobs",
+      "sublabel": "oneshot 同步",
+      "tag": "逐条同步执行"
+    },
+    {
+      "id": "verify",
+      "lane": "runner",
+      "col": 3,
+      "type": "external",
+      "label": "断言与报告",
+      "sublabel": "0 报错才 PASS",
+      "tag": "14/14"
+    }
+  ],
+  "edges": [
+    {
+      "from": "cheatsheet",
+      "to": "extract",
+      "label": "提取为 SPL 列表",
+      "role": "main"
+    },
+    {
+      "from": "extract",
+      "to": "post",
+      "label": "逐条提交",
+      "role": "main",
+      "variant": "emphasis"
+    },
+    {
+      "from": "post",
+      "to": "verify",
+      "label": "结果 JSON",
+      "role": "main"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "为什么卡片是唯一事实源",
+      "items": [
+        "卡片改一条，验收跟着变",
+        "提取时剥 # 注释行",
+        "结构断言先于执行"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "断言两道关",
+      "items": [
+        "结构关：条数与组合数",
+        "执行关：0 报错才计 PASS",
+        "oneshot 不落盘，零残留"
+      ]
+    }
+  ]
+}

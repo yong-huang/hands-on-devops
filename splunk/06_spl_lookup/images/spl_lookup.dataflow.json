@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "实验 06 · lookup 富化管线：三张字典接入事件流",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [
+      1080,
+      520
+    ]
+  },
+  "stages": [
+    {
+      "label": "输入"
+    },
+    {
+      "label": "lookup 富化"
+    },
+    {
+      "label": "断言与计时"
+    }
+  ],
+  "nodes": [
+    {
+      "id": "dicts",
+      "type": "cloud",
+      "label": "三张 CSV 字典",
+      "sublabel": "状态码 / UA(WILDCARD) / 资产",
+      "stage": 0,
+      "row": 0,
+      "tag": "system/lookups"
+    },
+    {
+      "id": "events",
+      "type": "external",
+      "label": "tutorial 事件流",
+      "sublabel": "39532 条 access 事件",
+      "stage": 0,
+      "row": 1
+    },
+    {
+      "id": "enrich",
+      "type": "backend",
+      "label": "lookup 富化",
+      "sublabel": "OUTPUT 挂新字段",
+      "stage": 1,
+      "row": 0,
+      "tag": "搜索时生效"
+    },
+    {
+      "id": "assert",
+      "type": "external",
+      "label": "四条断言",
+      "sublabel": "null 率 / 行数 / 回读",
+      "stage": 2,
+      "row": 0,
+      "tag": "全部 0 偏差"
+    },
+    {
+      "id": "perf",
+      "type": "backend",
+      "label": "join vs lookup 计时",
+      "sublabel": "0.49s vs 0.22s = 2.2x",
+      "stage": 2,
+      "row": 1
+    }
+  ],
+  "flows": [
+    {
+      "from": "dicts",
+      "to": "enrich",
+      "label": "字典键匹配",
+      "variant": "emphasis",
+      "route": "straight"
+    },
+    {
+      "from": "events",
+      "to": "enrich",
+      "label": "status/useragent/host"
+    },
+    {
+      "from": "enrich",
+      "to": "assert",
+      "label": "富化结果",
+      "route": "straight"
+    },
+    {
+      "from": "enrich",
+      "to": "perf",
+      "label": "join(子搜索) 对照",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "三种匹配形态",
+      "items": [
+        "精确匹配：status/host 等值",
+        "WILDCARD：ua_prefix 带 *",
+        "行序即优先级（Chrome 在 Safari 前）"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "join 慢的机理",
+      "items": [
+        "join 子搜索每次全量扫描",
+        "lookup 读预聚合字典",
+        "outputlookup 即 summary 思路"
+      ]
+    }
+  ]
+}

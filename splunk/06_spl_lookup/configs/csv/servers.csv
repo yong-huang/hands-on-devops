@@ -1,0 +1,6 @@
+host,env,role,owner,region
+www1,prod,web-server,alice,cn-north
+www2,prod,web-server,alice,cn-north
+www3,prod,web-server,bob,cn-east
+mailsv1,prod,mail-server,carol,cn-north
+vendor001,prod,vendor-gateway,dave,cn-east

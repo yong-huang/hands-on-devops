@@ -1,0 +1,129 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "实验 01 · Splunk Enterprise 单机部署：amd64 镜像 + 两卷持久化",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "viewBox": [1080, 480]
+  },
+  "components": [
+    {
+      "id": "browser",
+      "type": "external",
+      "label": "浏览器登录",
+      "sublabel": "Splunk Web :28000",
+      "pos": [30, 110],
+      "size": [200, 64]
+    },
+    {
+      "id": "script",
+      "type": "external",
+      "label": "splunk_deploy.sh",
+      "sublabel": "REST 探活 / oneshot 搜索 :28089",
+      "pos": [30, 300],
+      "size": [200, 64]
+    },
+    {
+      "id": "orb",
+      "type": "backend",
+      "label": "OrbStack",
+      "sublabel": "Rosetta 2 转译 amd64",
+      "pos": [310, 205],
+      "size": [200, 64],
+      "tag": "官方无 arm64 镜像"
+    },
+    {
+      "id": "splunk",
+      "type": "backend",
+      "label": "splunk-deploy 容器",
+      "sublabel": "splunk/splunk:9.4 · linux/amd64",
+      "pos": [570, 200],
+      "size": [220, 74],
+      "tag": "cpu_arch: x86_64"
+    },
+    {
+      "id": "vole",
+      "type": "cloud",
+      "label": "splunk-etc 卷",
+      "sublabel": "配置 · telemetry.conf",
+      "pos": [860, 105],
+      "size": [190, 72]
+    },
+    {
+      "id": "volv",
+      "type": "cloud",
+      "label": "splunk-var 卷",
+      "sublabel": "索引数据 $SPLUNK_DB",
+      "pos": [860, 330],
+      "size": [190, 72]
+    }
+  ],
+  "connections": [
+    {
+      "id": "browser-splunk",
+      "from": "browser",
+      "to": "splunk",
+      "label": "Web 登录 28000→8000",
+      "variant": "dashed",
+      "fromSide": "right",
+      "toSide": "top"
+    },
+    {
+      "id": "script-splunk",
+      "from": "script",
+      "to": "splunk",
+      "label": "探活 / 搜索 28089→8089",
+      "variant": "emphasis",
+      "labelAt": [546, 288],
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "orb-splunk",
+      "from": "orb",
+      "to": "splunk",
+      "label": "运行（Rosetta 转译）",
+      "labelAt": [540, 192],
+      "fromSide": "right",
+      "toSide": "left"
+    },
+    {
+      "id": "splunk-vole",
+      "from": "splunk",
+      "to": "vole",
+      "label": "配置落盘",
+      "fromSide": "top",
+      "toSide": "left"
+    },
+    {
+      "id": "splunk-volv",
+      "from": "splunk",
+      "to": "volv",
+      "label": "事件落盘（重启不丢）",
+      "variant": "emphasis",
+      "fromSide": "bottom",
+      "toSide": "left"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "镜像现实",
+      "items": [
+        "官方 6 个 tag 实测均无 arm64",
+        "platform: linux/amd64 + Rosetta 2 转译",
+        "冷启动实测约 65 秒"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "持久化分工",
+      "items": [
+        "var 卷存索引，etc 卷存配置",
+        "重启后标记事件计数不变",
+        "oneshot 是最轻量入库通道"
+      ]
+    }
+  ]
+}
